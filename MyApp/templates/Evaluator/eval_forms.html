@@ -32,6 +32,10 @@
   --not-bg:#f3f4f6;
   --not-text:#6b7280;
 
+  --warning-bg:#fff8e8;
+  --warning-border:#f4d58d;
+  --warning-text:#8a5a00;
+
   --shadow:0 10px 28px rgba(31, 41, 55, 0.08);
 }
 
@@ -398,9 +402,25 @@ body{
   border-color:var(--success-border);
 }
 
+.step-chip.locked{
+  background:#f9fafb;
+  color:#9ca3af;
+  border-color:#e5e7eb;
+  cursor:not-allowed;
+}
+
+.step-chip.locked:hover{
+  border-color:#e5e7eb;
+  color:#9ca3af;
+}
+
 .question-card{
   padding:18px;
   margin-bottom:16px;
+}
+
+.question-card.readonly{
+  opacity:.7;
 }
 
 .question-title{
@@ -485,6 +505,18 @@ body{
   border-color:var(--primary);
 }
 
+.rating-option.readonly .rating-label,
+.rating-option input:disabled + .rating-label{
+  cursor:not-allowed;
+  background:#f9fafb;
+  border-color:#e5e7eb;
+}
+
+.rating-option input:disabled + .rating-label:hover{
+  background:#f9fafb;
+  border-color:#e5e7eb;
+}
+
 .footer-card{
   padding:18px;
   margin-top:18px;
@@ -499,6 +531,15 @@ body{
   color:var(--muted);
   font-size:.92rem;
   line-height:1.5;
+}
+
+.warning-note{
+  margin-top:14px;
+  border:1px dashed var(--warning-border);
+  background:var(--warning-bg);
+  color:var(--warning-text);
+  border-radius:16px;
+  padding:12px 14px;
 }
 
 .hidden{
@@ -559,6 +600,11 @@ body{
   background:#f3f4f6;
   border-color:#d1d5db;
   color:#111827;
+}
+
+.btn:disabled,
+.btn.disabled{
+  opacity:.72;
 }
 
 .alert-light{
@@ -688,7 +734,7 @@ body{
           </div>
 
           <div class="helper-box">
-            <strong>Flow:</strong> Choose a category, answer the form, submit it, then return here to see which categories are already completed.
+            <strong>Flow:</strong> Choose a category, finish every required evaluation inside that category, then submit the category after all answers are complete.
           </div>
 
           <div class="row g-4" id="categoryCardsContainer"></div>
@@ -750,26 +796,35 @@ body{
               <div class="copy-peers-info">
                 <div class="fw-bold">Apply Current Answers to Other Peers</div>
                 <div class="muted-note">
-                  Click once to enable live copy. Future changes from this peer will keep syncing to others, except answers manually changed for a certain person.
+                  Only one peer can be the live source at a time. While live copy is on, other peer pages become view-only until you turn it off.
                 </div>
               </div>
 
-              <div class="copy-peers-actions">
+              <div class="copy-peers-actions d-flex flex-wrap gap-2">
                 <button
                   type="button"
                   class="btn btn-outline-primary copy-peer-btn"
                   id="copyPeersBtn"
                   onclick="copyCurrentEvaluationToOtherPeers()"
                 >
-                  <span class="copy-btn-default">Copy to Other Peers</span>
+                  <span class="copy-btn-default">Set as Live Source</span>
                   <span class="copy-btn-success">
                     <span class="check-anim">
                       <svg viewBox="0 0 24 24" fill="none" class="check-icon">
                         <path d="M5 12.5L10 17L19 8" pathLength="1"></path>
                       </svg>
                     </span>
-                    Live Copy Active
+                    Current Live Source
                   </span>
+                </button>
+
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary d-none"
+                  id="disableCopyBtn"
+                  onclick="disableLivePeerCopy()"
+                >
+                  Turn Off Live Copy
                 </button>
               </div>
             </div>
@@ -797,13 +852,13 @@ body{
                 </div>
               </div>
 
-              <div class="d-flex flex-wrap gap-2">
+              <div class="d-flex flex-wrap gap-2" id="quickApplyWrap">
                 <button type="button" class="score-chip" onclick="applyScoreToCurrentSection(5)">5</button>
                 <button type="button" class="score-chip" onclick="applyScoreToCurrentSection(4)">4</button>
                 <button type="button" class="score-chip" onclick="applyScoreToCurrentSection(3)">3</button>
                 <button type="button" class="score-chip" onclick="applyScoreToCurrentSection(2)">2</button>
                 <button type="button" class="score-chip" onclick="applyScoreToCurrentSection(1)">1</button>
-                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="clearCurrentSectionScores()">Clear</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" id="clearSectionBtn" onclick="clearCurrentSectionScores()">Clear</button>
               </div>
             </div>
           </div>
@@ -1003,6 +1058,7 @@ body{
 
     let currentCategory = null;
     let currentSectionIndex = 0;
+    let lastSelectedEvaluateeId = null;
 
     const ratings = {};
     const submissionStatus = {
@@ -1014,11 +1070,7 @@ body{
     let appModalInstance = null;
     let appModalConfirmHandler = null;
 
-    // Live sync source peers
-    const peerLiveSyncSources = {};
-
-    // Locked manual answers: peerManualLocks[targetPeerId][sectionKey][questionIndex] = true
-    const peerManualLocks = {};
+    let activePeerLiveSourceId = null;
 
     function initModal() {
       const modalEl = document.getElementById("appActionModal");
@@ -1055,23 +1107,6 @@ body{
       appModalInstance.show();
     }
 
-    function showConfirmModal(title, message, onConfirm, confirmText = "Confirm", cancelText = "Cancel") {
-      document.getElementById("appActionModalLabel").textContent = title;
-      document.getElementById("appActionModalMessage").innerHTML = message;
-
-      const cancelBtn = document.getElementById("appModalCancelBtn");
-      const confirmBtn = document.getElementById("appModalConfirmBtn");
-
-      cancelBtn.classList.remove("d-none");
-      cancelBtn.textContent = cancelText;
-
-      confirmBtn.textContent = confirmText;
-      confirmBtn.className = "btn btn-primary";
-
-      appModalConfirmHandler = onConfirm;
-      appModalInstance.show();
-    }
-
     function scrollFormToTop() {
       window.scrollTo({
         top: 0,
@@ -1095,115 +1130,174 @@ body{
       return String(document.getElementById("evaluateeSelect").value);
     }
 
-    function getAvailablePeerTargets() {
-      return evaluatees.filter(e => CURRENT_USER.role === "head" ? true : !e.isHead);
+    function getCategoryEvaluatees(categoryKey = currentCategory) {
+      if (categoryKey === "self") {
+        return [{ id: "self", name: CURRENT_USER.name + " (Self)" }];
+      }
+
+      if (categoryKey === "peer") {
+        return evaluatees.filter(e => CURRENT_USER.role === "head" ? true : !e.isHead);
+      }
+
+      if (categoryKey === "immediate") {
+        return [...evaluatees];
+      }
+
+      return [];
+    }
+
+    function getPeerNameById(peerId) {
+      const peer = getCategoryEvaluatees("peer").find(p => String(p.id) === String(peerId));
+      return peer ? peer.name : "selected peer";
+    }
+
+    function ensureCategoryEvaluateePath(categoryKey, evaluateeId) {
+      const evalId = String(evaluateeId);
+
+      if (!ratings[categoryKey]) ratings[categoryKey] = {};
+      if (!ratings[categoryKey][evalId]) ratings[categoryKey][evalId] = {};
+
+      sections.forEach(section => {
+        if (!ratings[categoryKey][evalId][section.key]) {
+          ratings[categoryKey][evalId][section.key] = {};
+        }
+      });
     }
 
     function ensureDataPath() {
-      const evaluateeId = getCurrentEvaluateeId();
-
-      if (!ratings[currentCategory]) ratings[currentCategory] = {};
-      if (!ratings[currentCategory][evaluateeId]) ratings[currentCategory][evaluateeId] = {};
-
-      sections.forEach(section => {
-        if (!ratings[currentCategory][evaluateeId][section.key]) {
-          ratings[currentCategory][evaluateeId][section.key] = {};
-        }
-      });
+      ensureCategoryEvaluateePath(currentCategory, getCurrentEvaluateeId());
     }
 
-    function ensurePeerPath(peerId) {
-      const peerKey = String(peerId);
-
-      if (!ratings.peer) ratings.peer = {};
-      if (!ratings.peer[peerKey]) ratings.peer[peerKey] = {};
-
-      sections.forEach(section => {
-        if (!ratings.peer[peerKey][section.key]) {
-          ratings.peer[peerKey][section.key] = {};
-        }
-      });
+    function isPeerLiveLockedForCurrentEvaluatee() {
+      return currentCategory === "peer" && activePeerLiveSourceId !== null && String(activePeerLiveSourceId) !== getCurrentEvaluateeId();
     }
 
-    function ensurePeerLockPath(peerId, sectionKey) {
-      const peerKey = String(peerId);
-
-      if (!peerManualLocks[peerKey]) peerManualLocks[peerKey] = {};
-      if (!peerManualLocks[peerKey][sectionKey]) peerManualLocks[peerKey][sectionKey] = {};
+    function isCurrentPeerLiveSource() {
+      return currentCategory === "peer" && activePeerLiveSourceId !== null && String(activePeerLiveSourceId) === getCurrentEvaluateeId();
     }
 
-    function isSectionComplete(sectionIndex) {
-      ensureDataPath();
-      const evaluateeId = getCurrentEvaluateeId();
+    function isSectionCompleteFor(categoryKey, evaluateeId, sectionIndex) {
+      ensureCategoryEvaluateePath(categoryKey, evaluateeId);
       const section = sections[sectionIndex];
-      const answers = ratings[currentCategory][evaluateeId][section.key] || {};
+      const answers = ratings[categoryKey][String(evaluateeId)][section.key] || {};
       return Object.keys(answers).length === section.questions.length;
     }
 
-    function isEntireCategoryComplete() {
-      ensureDataPath();
-      return sections.every((section, index) => isSectionComplete(index));
+    function isSectionComplete(sectionIndex) {
+      return isSectionCompleteFor(currentCategory, getCurrentEvaluateeId(), sectionIndex);
     }
 
-    function isLiveSyncActiveForCurrentPeer() {
-      if (currentCategory !== "peer") return false;
-      const peerId = getCurrentEvaluateeId();
-      return !!peerLiveSyncSources[peerId];
+    function isEvaluateeComplete(categoryKey, evaluateeId) {
+      return sections.every((section, index) => isSectionCompleteFor(categoryKey, evaluateeId, index));
+    }
+
+    function isCurrentEvaluateeComplete() {
+      return isEvaluateeComplete(currentCategory, getCurrentEvaluateeId());
+    }
+
+    function isEntireCategoryCompleteAllEvaluatees() {
+      const categoryEvaluatees = getCategoryEvaluatees(currentCategory);
+      return categoryEvaluatees.every(person => isEvaluateeComplete(currentCategory, person.id));
+    }
+
+    function getCurrentEvaluateeAnsweredCount(sectionIndex = currentSectionIndex) {
+      ensureDataPath();
+      const section = sections[sectionIndex];
+      const answers = ratings[currentCategory][getCurrentEvaluateeId()][section.key] || {};
+      return Object.keys(answers).length;
+    }
+
+    function getFirstIncompleteSectionIndexForEvaluatee(categoryKey, evaluateeId) {
+      return sections.findIndex((section, index) => !isSectionCompleteFor(categoryKey, evaluateeId, index));
+    }
+
+    function canAccessSection(index) {
+      if (index <= currentSectionIndex) return true;
+      for (let i = 0; i < index; i++) {
+        if (!isSectionComplete(i)) return false;
+      }
+      return true;
     }
 
     function syncPeerCopyAppliedUI() {
       const btn = document.getElementById("copyPeersBtn");
-      if (!btn) return;
+      const disableBtn = document.getElementById("disableCopyBtn");
+
+      if (!btn || !disableBtn) return;
 
       if (currentCategory !== "peer") {
         btn.classList.remove("applied");
         btn.disabled = false;
+        btn.innerHTML = `<span class="copy-btn-default">Set as Live Source</span>`;
+        disableBtn.classList.add("d-none");
         return;
       }
 
-      if (isLiveSyncActiveForCurrentPeer()) {
-        btn.classList.add("applied");
-        btn.disabled = false;
-      } else {
+      if (activePeerLiveSourceId === null) {
         btn.classList.remove("applied");
         btn.disabled = false;
+        btn.innerHTML = `<span class="copy-btn-default">Set as Live Source</span>`;
+        disableBtn.classList.add("d-none");
+        return;
       }
+
+      disableBtn.classList.remove("d-none");
+
+      if (isCurrentPeerLiveSource()) {
+        btn.classList.add("applied");
+        btn.disabled = true;
+        btn.innerHTML = `
+          <span class="copy-btn-success" style="display:inline-flex;">
+            <span class="check-anim">
+              <svg viewBox="0 0 24 24" fill="none" class="check-icon">
+                <path d="M5 12.5L10 17L19 8" pathLength="1"></path>
+              </svg>
+            </span>
+            Current Live Source
+          </span>
+        `;
+        return;
+      }
+
+      btn.classList.remove("applied");
+      btn.disabled = true;
+      btn.innerHTML = `<span class="copy-btn-default">Following ${getPeerNameById(activePeerLiveSourceId)}</span>`;
     }
 
     function activateLivePeerCopy(sourcePeerId) {
-      const sourceKey = String(sourcePeerId);
-      peerLiveSyncSources[sourceKey] = true;
-      applyLivePeerCopy(sourceKey);
+      activePeerLiveSourceId = String(sourcePeerId);
+      ensureCategoryEvaluateePath("peer", activePeerLiveSourceId);
+      applyLivePeerCopy();
       syncPeerCopyAppliedUI();
     }
 
-    function applyLivePeerCopy(sourcePeerId) {
-      const sourceKey = String(sourcePeerId);
+    function disableLivePeerCopy() {
+      activePeerLiveSourceId = null;
+      syncPeerCopyAppliedUI();
+      renderSection();
+      showInfoModal(
+        "Live Copy Turned Off",
+        "Other peer pages can now be edited again."
+      );
+    }
 
-      if (!peerLiveSyncSources[sourceKey]) return;
-      if (!ratings.peer || !ratings.peer[sourceKey]) return;
+    function applyLivePeerCopy() {
+      if (activePeerLiveSourceId === null || !ratings.peer || !ratings.peer[activePeerLiveSourceId]) return;
 
-      ensurePeerPath(sourceKey);
-
+      const sourceKey = String(activePeerLiveSourceId);
       const sourceData = ratings.peer[sourceKey];
-      const peers = getAvailablePeerTargets();
+      const peers = getCategoryEvaluatees("peer");
 
       peers.forEach(peer => {
         const targetId = String(peer.id);
         if (targetId === sourceKey) return;
 
-        ensurePeerPath(targetId);
+        ensureCategoryEvaluateePath("peer", targetId);
 
         sections.forEach(section => {
           const sectionKey = section.key;
-          ensurePeerLockPath(targetId, sectionKey);
-
           section.questions.forEach((q, questionIndex) => {
-            const isLocked = !!peerManualLocks[targetId][sectionKey][questionIndex];
-            if (isLocked) return;
-
             const sourceValue = sourceData[sectionKey]?.[questionIndex];
-
             if (sourceValue !== undefined) {
               ratings.peer[targetId][sectionKey][questionIndex] = sourceValue;
             } else {
@@ -1214,22 +1308,35 @@ body{
       });
     }
 
-    function applyAllActiveLivePeerCopies() {
-      Object.keys(peerLiveSyncSources).forEach(sourcePeerId => {
-        if (peerLiveSyncSources[sourcePeerId]) {
-          applyLivePeerCopy(sourcePeerId);
-        }
+    function getLockedEvaluateeMessage() {
+      return `Please finish <strong>${getPeerNameById(activePeerLiveSourceId)}</strong> or turn off live copy first.`;
+    }
+
+    function updateFormInteractivity() {
+      const isReadOnly = isPeerLiveLockedForCurrentEvaluatee();
+
+      document.querySelectorAll("#questionsContainer input[type='radio']").forEach(input => {
+        input.disabled = isReadOnly;
       });
-    }
 
-    function markPeerQuestionAsManualOverride(targetPeerId, sectionKey, questionIndex) {
-      ensurePeerLockPath(targetPeerId, sectionKey);
-      peerManualLocks[String(targetPeerId)][sectionKey][questionIndex] = true;
-    }
+      document.querySelectorAll("#questionsContainer .question-card").forEach(card => {
+        card.classList.toggle("readonly", isReadOnly);
+      });
 
-    function clearPeerQuestionManualOverride(targetPeerId, sectionKey, questionIndex) {
-      ensurePeerLockPath(targetPeerId, sectionKey);
-      delete peerManualLocks[String(targetPeerId)][sectionKey][questionIndex];
+      document.querySelectorAll("#quickApplyWrap .score-chip, #quickApplyWrap .btn").forEach(btn => {
+        btn.disabled = isReadOnly;
+      });
+
+      const existingWarning = document.getElementById("liveCopyReadonlyNote");
+      if (existingWarning) existingWarning.remove();
+
+      if (isReadOnly) {
+        const note = document.createElement("div");
+        note.id = "liveCopyReadonlyNote";
+        note.className = "warning-note";
+        note.innerHTML = `Live copy is on. This page is view-only because <strong>${getPeerNameById(activePeerLiveSourceId)}</strong> is the active source. Turn off live copy to edit this faculty.`;
+        document.getElementById("questionsContainer").prepend(note);
+      }
     }
 
     function renderDashboard() {
@@ -1328,21 +1435,33 @@ body{
 
     function populateEvaluatees() {
       const select = document.getElementById("evaluateeSelect");
-      let available = [];
-
-      if (currentCategory === "self") {
-        available = [{ id: "self", name: CURRENT_USER.name + " (Self)" }];
-      } else if (currentCategory === "peer") {
-        available = getAvailablePeerTargets();
-      } else if (currentCategory === "immediate") {
-        available = evaluatees;
-      }
+      const available = getCategoryEvaluatees(currentCategory);
 
       select.innerHTML = available.map(person =>
         `<option value="${person.id}">${person.name}${person.isHead ? " - Head" : ""}</option>`
       ).join("");
 
+      lastSelectedEvaluateeId = available.length ? String(available[0].id) : null;
+      if (lastSelectedEvaluateeId !== null) {
+        select.value = lastSelectedEvaluateeId;
+      }
+
       select.onchange = () => {
+        const nextId = String(select.value);
+        const previousId = String(lastSelectedEvaluateeId);
+
+        if (nextId === previousId) return;
+
+        if (!isEvaluateeComplete(currentCategory, previousId)) {
+          select.value = previousId;
+          showInfoModal(
+            "Finish Current Evaluation First",
+            "You cannot move to another faculty yet. Please complete all sections of the current faculty evaluation first."
+          );
+          return;
+        }
+
+        lastSelectedEvaluateeId = nextId;
         currentSectionIndex = 0;
         renderSectionStepper();
         renderSection();
@@ -1358,9 +1477,12 @@ body{
         let extraClass = "";
         if (index === currentSectionIndex) extraClass = "active";
         else if (isSectionComplete(index)) extraClass = "done";
+        else if (!canAccessSection(index)) extraClass = "locked";
+
+        const disabledAttr = canAccessSection(index) ? "" : "disabled";
 
         stepper.innerHTML += `
-          <button class="step-chip ${extraClass}" onclick="goToSection(${index})">
+          <button class="step-chip ${extraClass}" onclick="goToSection(${index})" ${disabledAttr}>
             ${section.title}
           </button>
         `;
@@ -1368,6 +1490,14 @@ body{
     }
 
     function goToSection(index) {
+      if (!canAccessSection(index)) {
+        showInfoModal(
+          "Complete This Section First",
+          "You cannot move to the next section until the current page is fully answered."
+        );
+        return;
+      }
+
       currentSectionIndex = index;
       renderSectionStepper();
       renderSection();
@@ -1381,6 +1511,7 @@ body{
       const section = sections[currentSectionIndex];
       const answers = ratings[currentCategory][evaluateeId][section.key] || {};
       const container = document.getElementById("questionsContainer");
+      const isReadOnly = isPeerLiveLockedForCurrentEvaluatee();
 
       container.innerHTML = `
         <div class="section-header">
@@ -1393,16 +1524,16 @@ body{
         const selected = answers[idx] || "";
 
         container.innerHTML += `
-          <div class="question-card">
+          <div class="question-card ${isReadOnly ? 'readonly' : ''}">
             <div class="question-title">${idx + 1}. ${q.en} <span class="text-danger">*</span></div>
             <div class="question-sub">${q.tl}</div>
 
             <div class="rating-scale">
-              ${renderRatingOption(section.key, idx, 5, "Outstanding", selected)}
-              ${renderRatingOption(section.key, idx, 4, "Very Satisfactory", selected)}
-              ${renderRatingOption(section.key, idx, 3, "Satisfactory", selected)}
-              ${renderRatingOption(section.key, idx, 2, "Fair", selected)}
-              ${renderRatingOption(section.key, idx, 1, "Needs Improvement", selected)}
+              ${renderRatingOption(section.key, idx, 5, "Outstanding", selected, isReadOnly)}
+              ${renderRatingOption(section.key, idx, 4, "Very Satisfactory", selected, isReadOnly)}
+              ${renderRatingOption(section.key, idx, 3, "Satisfactory", selected, isReadOnly)}
+              ${renderRatingOption(section.key, idx, 2, "Fair", selected, isReadOnly)}
+              ${renderRatingOption(section.key, idx, 1, "Needs Improvement", selected, isReadOnly)}
             </div>
           </div>
         `;
@@ -1412,7 +1543,7 @@ body{
       document.getElementById("pageCompletionLabel").textContent = `${answered} / ${section.questions.length} answered`;
       document.getElementById("sectionFooterTitle").textContent = section.title;
       document.getElementById("sectionFooterText").textContent = section.title;
-      document.getElementById("sectionFooterSubtext").textContent = section.subtitle;
+      document.getElementById("sectionFooterSubtext").textContent = "You may go back to previous sections to review or change answers, but you cannot proceed forward while there are blanks.";
 
       const prevBtn = document.getElementById("prevBtn");
       const nextBtn = document.getElementById("nextBtn");
@@ -1424,20 +1555,23 @@ body{
 
       togglePeerCopyCard();
       syncPeerCopyAppliedUI();
+      updateFormInteractivity();
+      updateSubmitButtonState();
     }
 
-    function renderRatingOption(sectionKey, questionIndex, value, labelText, selected) {
+    function renderRatingOption(sectionKey, questionIndex, value, labelText, selected, isReadOnly) {
       const evaluateeId = getCurrentEvaluateeId();
       const id = `${currentCategory}_${evaluateeId}_${sectionKey}_${questionIndex}_${value}`;
 
       return `
-        <div class="rating-option">
+        <div class="rating-option ${isReadOnly ? 'readonly' : ''}">
           <input
             type="radio"
             id="${id}"
             name="${currentCategory}_${evaluateeId}_${sectionKey}_${questionIndex}"
             value="${value}"
             ${String(selected) === String(value) ? "checked" : ""}
+            ${isReadOnly ? "disabled" : ""}
             onchange="setRating('${sectionKey}', ${questionIndex}, ${value})"
           />
           <label for="${id}" class="rating-label">
@@ -1449,6 +1583,14 @@ body{
     }
 
     function setRating(sectionKey, questionIndex, value) {
+      if (isPeerLiveLockedForCurrentEvaluatee()) {
+        showInfoModal(
+          "Live Copy Is On",
+          getLockedEvaluateeMessage()
+        );
+        return;
+      }
+
       ensureDataPath();
       const evaluateeId = getCurrentEvaluateeId();
       ratings[currentCategory][evaluateeId][sectionKey][questionIndex] = value;
@@ -1457,14 +1599,8 @@ body{
         submissionStatus[currentCategory] = "in_progress";
       }
 
-      if (currentCategory === "peer") {
-        if (!isLiveSyncActiveForCurrentPeer()) {
-          markPeerQuestionAsManualOverride(evaluateeId, sectionKey, questionIndex);
-        } else {
-          clearPeerQuestionManualOverride(evaluateeId, sectionKey, questionIndex);
-        }
-
-        applyAllActiveLivePeerCopies();
+      if (currentCategory === "peer" && isCurrentPeerLiveSource()) {
+        applyLivePeerCopy();
       }
 
       renderSectionStepper();
@@ -1472,28 +1608,28 @@ body{
     }
 
     function applyScoreToCurrentSection(score) {
+      if (isPeerLiveLockedForCurrentEvaluatee()) {
+        showInfoModal(
+          "Live Copy Is On",
+          getLockedEvaluateeMessage()
+        );
+        return;
+      }
+
       ensureDataPath();
       const evaluateeId = getCurrentEvaluateeId();
       const section = sections[currentSectionIndex];
 
       section.questions.forEach((q, idx) => {
         ratings[currentCategory][evaluateeId][section.key][idx] = Number(score);
-
-        if (currentCategory === "peer") {
-          if (!isLiveSyncActiveForCurrentPeer()) {
-            markPeerQuestionAsManualOverride(evaluateeId, section.key, idx);
-          } else {
-            clearPeerQuestionManualOverride(evaluateeId, section.key, idx);
-          }
-        }
       });
 
       if (submissionStatus[currentCategory] === "not_started") {
         submissionStatus[currentCategory] = "in_progress";
       }
 
-      if (currentCategory === "peer") {
-        applyAllActiveLivePeerCopies();
+      if (currentCategory === "peer" && isCurrentPeerLiveSource()) {
+        applyLivePeerCopy();
       }
 
       renderSectionStepper();
@@ -1501,24 +1637,24 @@ body{
     }
 
     function clearCurrentSectionScores() {
+      if (isPeerLiveLockedForCurrentEvaluatee()) {
+        showInfoModal(
+          "Live Copy Is On",
+          getLockedEvaluateeMessage()
+        );
+        return;
+      }
+
       ensureDataPath();
       const evaluateeId = getCurrentEvaluateeId();
       const section = sections[currentSectionIndex];
 
       section.questions.forEach((q, idx) => {
         delete ratings[currentCategory][evaluateeId][section.key][idx];
-
-        if (currentCategory === "peer") {
-          if (!isLiveSyncActiveForCurrentPeer()) {
-            markPeerQuestionAsManualOverride(evaluateeId, section.key, idx);
-          } else {
-            clearPeerQuestionManualOverride(evaluateeId, section.key, idx);
-          }
-        }
       });
 
-      if (currentCategory === "peer") {
-        applyAllActiveLivePeerCopies();
+      if (currentCategory === "peer" && isCurrentPeerLiveSource()) {
+        applyLivePeerCopy();
       }
 
       renderSectionStepper();
@@ -1529,7 +1665,7 @@ body{
       if (!isSectionComplete(currentSectionIndex)) {
         showInfoModal(
           "Incomplete Section",
-          "Please answer all questions in this section before proceeding."
+          "Please answer all questions in this section before proceeding to the next one."
         );
         return;
       }
@@ -1551,11 +1687,32 @@ body{
       }
     }
 
+    function updateSubmitButtonState() {
+      const submitBtn = document.getElementById("submitCategoryBtn");
+      if (!submitBtn) return;
+
+      const onLastSection = currentSectionIndex === sections.length - 1;
+      if (!onLastSection) return;
+
+      submitBtn.disabled = !isEntireCategoryCompleteAllEvaluatees();
+    }
+
     function submitCurrentCategory() {
-      if (!isEntireCategoryComplete()) {
+      if (!isCurrentEvaluateeComplete()) {
         showInfoModal(
           "Incomplete Evaluation",
-          "Please complete all sections before submitting this category."
+          "Please complete all sections of this faculty evaluation before submitting the category."
+        );
+        return;
+      }
+
+      if (!isEntireCategoryCompleteAllEvaluatees()) {
+        const pending = getCategoryEvaluatees(currentCategory).filter(person => !isEvaluateeComplete(currentCategory, person.id));
+        const names = pending.map(person => person.name).join(", ");
+
+        showInfoModal(
+          "Category Not Yet Complete",
+          `You cannot submit this category yet. Please finish all remaining evaluations first: <strong>${names}</strong>.`
         );
         return;
       }
@@ -1581,24 +1738,15 @@ body{
       if (currentCategory !== "peer") return;
 
       const sourcePeerId = getCurrentEvaluateeId();
+      ensureCategoryEvaluateePath("peer", sourcePeerId);
+      activateLivePeerCopy(sourcePeerId);
 
-      showConfirmModal(
-        "Enable Live Copy",
-        "This will turn on live copy for the current peer. Future changes from this peer will automatically copy to other peers, except questions you manually changed for a specific person. Continue?",
-        function () {
-          ensurePeerPath(sourcePeerId);
-          activateLivePeerCopy(sourcePeerId);
-
-          showInfoModal(
-            "Live Copy Enabled",
-            "Changes from this peer will now automatically sync to the other peers, except manually changed answers."
-          );
-
-          renderSection();
-        },
-        "Enable",
-        "Cancel"
+      showInfoModal(
+        "Live Copy Enabled",
+        "This peer is now the only live source. While live copy is on, you can view other peer pages but you will not be able to change their answers until live copy is turned off."
       );
+
+      renderSection();
     }
 
     function goBackToDashboard() {
@@ -1609,9 +1757,7 @@ body{
     }
 
     function init() {
-      document.getElementById("roleLabel").textContent =
-        CURRENT_USER.role === "head" ? "Head" : "Faculty";
-
+      document.getElementById("roleLabel").textContent = CURRENT_USER.role === "head" ? "Head" : "Faculty";
       initModal();
       renderDashboard();
     }
