@@ -1,0 +1,1191 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evaluation Login | OTP Verification</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+        :root{
+            --primary-red: #981b2e;
+            --primary-red-dark: #7d1626;
+            --primary-red-light: #f7e9ec;
+            --soft-bg: #f4f6f9;
+            --card-bg: #ffffff;
+            --text-dark: #1f2937;
+            --text-muted: #6b7280;
+            --border-soft: #e5e7eb;
+            --input-bg: #f7f9fc;
+            --success-bg: #eaf7ee;
+            --success-border: #c9e7d2;
+            --success-text: #22613a;
+            --danger-bg: #fff1f2;
+            --danger-border: #f3c5cb;
+            --danger-text: #a22735;
+            --warning-bg: #fff8e8;
+            --warning-border: #f5dfab;
+            --warning-text: #845e00;
+            --shadow-soft: 0 18px 45px rgba(17, 24, 39, 0.08);
+            --radius-xl: 24px;
+            --radius-lg: 18px;
+            --radius-md: 14px;
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100%;
+        }
+
+        body {
+            min-height: 100vh;
+            background:
+                radial-gradient(circle at top left, rgba(152, 27, 46, 0.08), transparent 25%),
+                radial-gradient(circle at bottom right, rgba(152, 27, 46, 0.06), transparent 20%),
+                var(--soft-bg);
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text-dark);
+            overflow-x: hidden;
+        }
+
+        .page-wrap {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 32px 16px;
+        }
+
+        .login-shell {
+            width: 100%;
+            max-width: 1080px;
+            display: grid;
+            grid-template-columns: 1.05fr 0.95fr;
+            background: var(--card-bg);
+            border-radius: 30px;
+            overflow: hidden;
+            box-shadow: var(--shadow-soft);
+            border: 1px solid rgba(229, 231, 235, 0.8);
+        }
+
+        .login-brand {
+            position: relative;
+            background: linear-gradient(135deg, var(--primary-red-dark), var(--primary-red));
+            color: #fff;
+            padding: 56px 44px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 680px;
+            overflow: hidden;
+        }
+
+        .login-brand::before,
+        .login-brand::after {
+            content: "";
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.08);
+            pointer-events: none;
+        }
+
+        .login-brand::before {
+            width: 220px;
+            height: 220px;
+            top: -60px;
+            right: -40px;
+        }
+
+        .login-brand::after {
+            width: 180px;
+            height: 180px;
+            bottom: -70px;
+            left: -50px;
+        }
+
+        .brand-top,
+        .brand-bottom {
+            position: relative;
+            z-index: 1;
+        }
+
+        .brand-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 16px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.12);
+            border: 1px solid rgba(255,255,255,0.18);
+            font-size: 0.9rem;
+            font-weight: 700;
+            margin-bottom: 24px;
+            backdrop-filter: blur(4px);
+        }
+
+        .brand-title {
+            margin: 0 0 16px;
+            font-size: 3rem;
+            line-height: 1.08;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            max-width: 520px;
+        }
+
+        .brand-subtitle {
+            margin: 0;
+            max-width: 510px;
+            font-size: 1.02rem;
+            line-height: 1.8;
+            color: rgba(255,255,255,0.92);
+        }
+
+        .brand-points {
+            list-style: none;
+            padding: 0;
+            margin: 34px 0 0;
+            display: grid;
+            gap: 14px;
+        }
+
+        .brand-points li {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            padding: 16px 18px;
+            border-radius: 18px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.12);
+        }
+
+        .brand-points li i {
+            font-size: 1.2rem;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
+        .brand-points strong {
+            display: block;
+            font-size: 0.98rem;
+            margin-bottom: 4px;
+        }
+
+        .brand-points span {
+            display: block;
+            color: rgba(255,255,255,0.9);
+            font-size: 0.92rem;
+            line-height: 1.6;
+        }
+
+        .brand-footer-note {
+            margin: 0;
+            font-size: 0.93rem;
+            line-height: 1.8;
+            color: rgba(255,255,255,0.88);
+            padding-top: 22px;
+            border-top: 1px solid rgba(255,255,255,0.16);
+        }
+
+        .login-panel {
+            padding: 42px 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #fff;
+            min-width: 0;
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 500px;
+            min-width: 0;
+        }
+
+        .login-header {
+            margin-bottom: 24px;
+        }
+
+        .login-header h2 {
+            font-size: 2rem;
+            font-weight: 800;
+            margin: 0 0 10px;
+            color: var(--text-dark);
+        }
+
+        .login-header p {
+            margin: 0;
+            color: var(--text-muted);
+            line-height: 1.75;
+            font-size: 0.96rem;
+        }
+
+        .info-box {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            background: #fff8e8;
+            border: 1px solid #f5dfab;
+            color: #845e00;
+            border-radius: 18px;
+            padding: 15px 16px;
+            margin-bottom: 18px;
+        }
+
+        .info-box i {
+            font-size: 1.15rem;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
+        .info-box .title {
+            display: block;
+            font-weight: 700;
+            margin-bottom: 3px;
+            font-size: 0.95rem;
+        }
+
+        .info-box .desc {
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .alert {
+            border-radius: 16px;
+            font-size: 0.92rem;
+            padding: 14px 16px;
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+            font-size: 0.94rem;
+        }
+
+        .email-group {
+            position: relative;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9aa3af;
+            font-size: 1rem;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .form-control {
+            min-height: 56px;
+            border-radius: 16px;
+            border: 1px solid var(--border-soft);
+            background: var(--input-bg);
+            padding-left: 46px;
+            padding-right: 16px;
+            color: var(--text-dark);
+            font-size: 0.96rem;
+            box-shadow: none;
+            transition: 0.2s ease;
+        }
+
+        .form-control:focus {
+            border-color: rgba(152, 27, 46, 0.45);
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(152, 27, 46, 0.08);
+        }
+
+        .form-control[readonly] {
+            background: #eef2f8;
+            color: #475569;
+            cursor: not-allowed;
+        }
+
+        .helper-text {
+            margin-top: 8px;
+            color: var(--text-muted);
+            font-size: 0.84rem;
+            line-height: 1.55;
+        }
+
+        .email-action-row {
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 14px;
+        }
+
+        .email-action-row.show {
+            display: flex;
+        }
+
+        .mini-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: var(--success-bg);
+            border: 1px solid var(--success-border);
+            color: var(--success-text);
+            font-size: 0.84rem;
+            font-weight: 700;
+        }
+
+        .btn-link-action {
+            background: transparent;
+            border: none;
+            color: var(--primary-red);
+            font-weight: 700;
+            font-size: 0.92rem;
+            padding: 0;
+            text-decoration: none;
+        }
+
+        .btn-link-action:hover {
+            color: var(--primary-red-dark);
+            text-decoration: underline;
+        }
+
+        .btn-main,
+        .btn-outline-main,
+        .btn-soft-main {
+            min-height: 54px;
+            border-radius: 16px;
+            font-weight: 700;
+            font-size: 0.97rem;
+            width: 100%;
+            border: 1px solid transparent;
+            transition: 0.2s ease;
+        }
+
+        .btn-main {
+            background: var(--primary-red);
+            color: #fff;
+            box-shadow: 0 10px 20px rgba(152, 27, 46, 0.18);
+        }
+
+        .btn-main:hover,
+        .btn-main:focus {
+            background: var(--primary-red-dark);
+            color: #fff;
+            transform: translateY(-1px);
+        }
+
+        .btn-main:disabled,
+        .btn-outline-main:disabled,
+        .btn-soft-main:disabled {
+            opacity: 1;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-outline-main {
+            background: #fff;
+            color: #0f172a;
+            border-color: #cfd7e3;
+        }
+
+        .btn-outline-main:hover,
+        .btn-outline-main:focus {
+            border-color: var(--primary-red);
+            color: var(--primary-red-dark);
+            background: #fff;
+        }
+
+        .btn-soft-main {
+            background: var(--primary-red-light);
+            color: var(--primary-red-dark);
+            border-color: #efd5db;
+        }
+
+        .btn-soft-main:hover,
+        .btn-soft-main:focus {
+            background: #f3dfe4;
+            color: var(--primary-red-dark);
+        }
+
+        .otp-requested-btn,
+        .otp-requested-btn:hover,
+        .otp-requested-btn:focus {
+            background: #f8f7f8;
+            color: #6b7280;
+            border-color: #ece7ea;
+        }
+
+        .otp-wrapper {
+            display: none;
+            margin-top: 20px;
+            background: linear-gradient(180deg, #fff, #fcfcfd);
+            border: 1px solid #eceef2;
+            border-radius: 20px;
+            padding: 20px 18px 18px;
+            overflow: hidden;
+            min-width: 0;
+        }
+
+        .otp-wrapper.show {
+            display: block;
+            animation: fadeSlide 0.28s ease;
+        }
+
+        @keyframes fadeSlide {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .otp-top {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            align-items: flex-start;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+
+        .otp-title {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 800;
+            color: var(--text-dark);
+        }
+
+        .otp-subtitle {
+            margin: 4px 0 0;
+            color: var(--text-muted);
+            font-size: 0.88rem;
+            line-height: 1.55;
+        }
+
+        .otp-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: var(--primary-red-light);
+            color: var(--primary-red-dark);
+            font-size: 0.82rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .otp-inputs {
+            display: grid;
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+            gap: 10px;
+            margin-top: 16px;
+            width: 100%;
+            min-width: 0;
+        }
+
+        .otp-input {
+            width: 100%;
+            min-width: 0;
+            height: 58px;
+            border-radius: 16px;
+            border: 1px solid var(--border-soft);
+            background: var(--input-bg);
+            text-align: center;
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--text-dark);
+            outline: none;
+            transition: 0.2s ease;
+            padding: 0;
+        }
+
+        .otp-input:focus {
+            border-color: rgba(152, 27, 46, 0.45);
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(152, 27, 46, 0.08);
+        }
+
+        .otp-note {
+            margin-top: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            color: var(--text-muted);
+            font-size: 0.84rem;
+            line-height: 1.55;
+        }
+
+        .divider-text {
+            margin: 14px 0;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.84rem;
+        }
+
+        .otp-actions {
+            display: none;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 18px;
+        }
+
+        .otp-actions.show {
+            display: grid;
+            animation: fadeSlide 0.28s ease;
+        }
+
+        .footer-note {
+            margin-top: 24px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            color: var(--text-muted);
+            font-size: 0.88rem;
+            line-height: 1.65;
+        }
+
+        .footer-note i {
+            color: var(--primary-red);
+            margin-top: 1px;
+            flex-shrink: 0;
+        }
+
+        .modal-content {
+            border: none;
+            border-radius: 22px;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(17, 24, 39, 0.18);
+        }
+
+        .modal-header.custom-modal-header {
+            border-bottom: none;
+            padding: 20px 22px 8px;
+        }
+
+        .modal-body.custom-modal-body {
+            padding: 8px 22px 22px;
+        }
+
+        .modal-footer.custom-modal-footer {
+            border-top: none;
+            padding: 0 22px 22px;
+        }
+
+        .modal-icon-wrap {
+            width: 58px;
+            height: 58px;
+            border-radius: 18px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            margin-bottom: 14px;
+        }
+
+        .modal-icon-wrap.success {
+            background: var(--success-bg);
+            color: var(--success-text);
+            border: 1px solid var(--success-border);
+        }
+
+        .modal-icon-wrap.warning {
+            background: var(--warning-bg);
+            color: var(--warning-text);
+            border: 1px solid var(--warning-border);
+        }
+
+        .modal-icon-wrap.danger {
+            background: var(--danger-bg);
+            color: var(--danger-text);
+            border: 1px solid var(--danger-border);
+        }
+
+        .custom-modal-title {
+            font-size: 1.28rem;
+            font-weight: 800;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+        }
+
+        .custom-modal-text {
+            color: var(--text-muted);
+            font-size: 0.94rem;
+            line-height: 1.7;
+            margin-bottom: 0;
+        }
+
+        .modal-close-btn {
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            color: #475569;
+            border-radius: 12px;
+            width: 38px;
+            height: 38px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s ease;
+        }
+
+        .modal-close-btn:hover {
+            background: #eef2f7;
+            color: #0f172a;
+        }
+
+        button,
+        input,
+        textarea,
+        select {
+            font: inherit;
+        }
+
+        button:focus-visible,
+        input:focus-visible {
+            outline: none;
+        }
+
+        @media (max-width: 991.98px) {
+            .page-wrap {
+                padding: 22px 14px;
+            }
+
+            .login-shell {
+                grid-template-columns: 1fr;
+            }
+
+            .login-brand {
+                min-height: auto;
+                padding: 38px 28px;
+            }
+
+            .login-panel {
+                padding: 30px 24px 34px;
+            }
+
+            .brand-title {
+                font-size: 2.3rem;
+                max-width: none;
+            }
+
+            .brand-subtitle {
+                max-width: none;
+            }
+
+            .brand-points {
+                margin-top: 24px;
+            }
+
+            .login-card {
+                max-width: 100%;
+            }
+        }
+
+        @media (max-width: 575.98px) {
+            .page-wrap {
+                padding: 14px;
+            }
+
+            .login-shell {
+                border-radius: 22px;
+            }
+
+            .login-brand {
+                padding: 28px 20px;
+            }
+
+            .login-panel {
+                padding: 22px 16px 26px;
+            }
+
+            .login-card {
+                max-width: 100%;
+            }
+
+            .login-header h2 {
+                font-size: 1.65rem;
+            }
+
+            .brand-title {
+                font-size: 1.8rem;
+            }
+
+            .brand-subtitle,
+            .brand-footer-note,
+            .login-header p,
+            .info-box .desc,
+            .otp-subtitle,
+            .otp-note,
+            .footer-note {
+                font-size: 0.88rem;
+            }
+
+            .info-box,
+            .otp-wrapper {
+                border-radius: 16px;
+            }
+
+            .email-action-row {
+                align-items: stretch;
+            }
+
+            .btn-link-action {
+                width: 100%;
+                text-align: right;
+            }
+
+            .otp-inputs {
+                gap: 6px;
+            }
+
+            .otp-input {
+                height: 48px;
+                border-radius: 12px;
+                font-size: 1rem;
+            }
+
+            .otp-actions {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .otp-inputs {
+                gap: 5px;
+            }
+
+            .otp-input {
+                height: 44px;
+                font-size: 0.95rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-wrap">
+        <div class="login-shell">
+
+            <section class="login-brand">
+                <div class="brand-top">
+                    <div class="brand-badge">
+                        <i class="bi bi-shield-lock-fill"></i>
+                        Secure OTP Access
+                    </div>
+
+                    <h1 class="brand-title">Faculty Evaluation System</h1>
+                    <p class="brand-subtitle">
+                        Access the evaluation portal securely using your email and a one-time password.
+                        This helps ensure that only authorized users can proceed to the evaluation form.
+                    </p>
+
+                    <ul class="brand-points">
+                        <li>
+                            <i class="bi bi-envelope-check-fill"></i>
+                            <div>
+                                <strong>Email-based verification</strong>
+                                <span>Your login code is sent directly to your registered email address.</span>
+                            </div>
+                        </li>
+                        <li>
+                            <i class="bi bi-clock-history"></i>
+                            <div>
+                                <strong>Time-limited OTP</strong>
+                                <span>Each code is valid only for a short period for better account protection.</span>
+                            </div>
+                        </li>
+                        <li>
+                            <i class="bi bi-ui-checks-grid"></i>
+                            <div>
+                                <strong>Simple and user-friendly access</strong>
+                                <span>No account creation needed. Just verify and continue to the evaluation page.</span>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="brand-bottom">
+                    <p class="brand-footer-note">
+                        Please use the same email address assigned for your evaluation access. After successful OTP verification,
+                        you will be redirected to the evaluation form.
+                    </p>
+                </div>
+            </section>
+
+            <section class="login-panel">
+                <div class="login-card">
+                    <div class="login-header">
+                        <h2>Login to Continue</h2>
+                        <p>
+                            Enter your email address, request an OTP, then type the 6-digit code to access the evaluation form.
+                        </p>
+                    </div>
+
+                    <div class="info-box">
+                        <i class="bi bi-info-circle-fill"></i>
+                        <div>
+                            <span class="title">Important Reminder</span>
+                            <div class="desc">
+                                Make sure your email address is correct before requesting the OTP. The verification code will be sent there.
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <form method="POST" id="otpLoginForm" novalidate>
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email Address</label>
+                            <div class="email-group">
+                                <i class="bi bi-envelope input-icon"></i>
+                                <input
+                                    type="email"
+                                    class="form-control"
+                                    id="email"
+                                    name="email"
+                                    placeholder="Enter your email address"
+                                    value=""
+                                    required
+                                >
+                            </div>
+
+                            <div class="helper-text">
+                                Example: yourname@email.com
+                            </div>
+
+                            <div class="email-action-row" id="emailActionRow">
+                                <div class="mini-status">
+                                    <i class="bi bi-check-circle-fill"></i>
+                                    OTP section is now ready
+                                </div>
+                                <button type="button" class="btn-link-action" id="changeEmailBtn">
+                                    Change Email
+                                </button>
+                            </div>
+                        </div>
+
+                        <button type="button" id="sendOtpBtn" class="btn btn-main">
+                            <i class="bi bi-send-fill me-2"></i>Send OTP
+                        </button>
+
+                        <div class="otp-wrapper" id="otpWrapper">
+                            <div class="otp-top">
+                                <div>
+                                    <h5 class="otp-title">One-Time Password</h5>
+                                    <p class="otp-subtitle">
+                                        Enter the 6-digit code sent to your email.
+                                    </p>
+                                </div>
+
+                                <div class="otp-status">
+                                    <i class="bi bi-shield-check"></i>
+                                    Verification Required
+                                </div>
+                            </div>
+
+                            <div class="otp-inputs">
+                                <input type="text" class="otp-input" name="otp_1" maxlength="1" inputmode="numeric" autocomplete="one-time-code">
+                                <input type="text" class="otp-input" name="otp_2" maxlength="1" inputmode="numeric">
+                                <input type="text" class="otp-input" name="otp_3" maxlength="1" inputmode="numeric">
+                                <input type="text" class="otp-input" name="otp_4" maxlength="1" inputmode="numeric">
+                                <input type="text" class="otp-input" name="otp_5" maxlength="1" inputmode="numeric">
+                                <input type="text" class="otp-input" name="otp_6" maxlength="1" inputmode="numeric">
+                            </div>
+
+                            <div class="otp-note">
+                                <span><strong>Note:</strong> Request the OTP first before clicking verify.</span>
+                                <span>Please check your inbox and spam folder.</span>
+                            </div>
+                        </div>
+
+                        <div class="divider-text" id="dividerText" style="display:none;">
+                            after receiving the code
+                        </div>
+
+                        <div class="otp-actions" id="otpActions">
+                            <button type="button" id="resendOtpBtn" class="btn btn-soft-main">
+                                <i class="bi bi-arrow-repeat me-2"></i>Resend OTP
+                            </button>
+
+                            <button type="submit" name="action" value="verify_otp" id="verifyOtpBtn" class="btn btn-outline-main">
+                                <i class="bi bi-box-arrow-in-right me-2"></i>Verify OTP & Login
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="footer-note">
+                        <i class="bi bi-lock-fill"></i>
+                        Your verification code is used only for secure access to the evaluation system.
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Reusable Bootstrap Modal -->
+    <div class="modal fade" id="systemModal" tabindex="-1" aria-labelledby="systemModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header custom-modal-header">
+                    <button type="button" class="modal-close-btn ms-auto" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <div class="modal-body custom-modal-body text-center">
+                    <div id="modalIconWrap" class="modal-icon-wrap warning mx-auto">
+                        <i id="modalIcon" class="bi bi-info-circle-fill"></i>
+                    </div>
+                    <div class="custom-modal-title" id="systemModalLabel">Notice</div>
+                    <p class="custom-modal-text" id="systemModalText">
+                        Message goes here.
+                    </p>
+                </div>
+
+                <div class="modal-footer custom-modal-footer">
+                    <button type="button" class="btn btn-main" data-bs-dismiss="modal" id="modalOkBtn">
+                        Okay
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        const form = document.getElementById('otpLoginForm');
+        const emailInput = document.getElementById('email');
+        const sendOtpBtn = document.getElementById('sendOtpBtn');
+        const resendOtpBtn = document.getElementById('resendOtpBtn');
+        const verifyOtpBtn = document.getElementById('verifyOtpBtn');
+        const changeEmailBtn = document.getElementById('changeEmailBtn');
+        const otpWrapper = document.getElementById('otpWrapper');
+        const otpActions = document.getElementById('otpActions');
+        const dividerText = document.getElementById('dividerText');
+        const emailActionRow = document.getElementById('emailActionRow');
+        const otpInputs = document.querySelectorAll('.otp-input');
+
+        const modalElement = document.getElementById('systemModal');
+        const modalTitle = document.getElementById('systemModalLabel');
+        const modalText = document.getElementById('systemModalText');
+        const modalIconWrap = document.getElementById('modalIconWrap');
+        const modalIcon = document.getElementById('modalIcon');
+        const systemModal = new bootstrap.Modal(modalElement);
+
+        let otpShown = false;
+
+        function isValidEmail(email) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+        }
+
+        function showSystemModal(title, message, type = 'warning') {
+            modalTitle.textContent = title;
+            modalText.textContent = message;
+
+            modalIconWrap.className = 'modal-icon-wrap mx-auto';
+            modalIcon.className = '';
+
+            if (type === 'success') {
+                modalIconWrap.classList.add('success');
+                modalIcon.classList.add('bi', 'bi-check-circle-fill');
+            } else if (type === 'danger') {
+                modalIconWrap.classList.add('danger');
+                modalIcon.classList.add('bi', 'bi-exclamation-octagon-fill');
+            } else {
+                modalIconWrap.classList.add('warning');
+                modalIcon.classList.add('bi', 'bi-info-circle-fill');
+            }
+
+            systemModal.show();
+        }
+
+        function showOtpSection() {
+            otpShown = true;
+            otpWrapper.classList.add('show');
+            otpActions.classList.add('show');
+            dividerText.style.display = 'block';
+            emailActionRow.classList.add('show');
+            emailInput.setAttribute('readonly', true);
+            sendOtpBtn.innerHTML = '<i class="bi bi-check2-circle me-2"></i>OTP Requested';
+            sendOtpBtn.disabled = true;
+            sendOtpBtn.classList.add('otp-requested-btn');
+
+            if (otpInputs.length) {
+                otpInputs[0].focus();
+            }
+        }
+
+        function resetOtpSection() {
+            otpShown = false;
+            otpWrapper.classList.remove('show');
+            otpActions.classList.remove('show');
+            dividerText.style.display = 'none';
+            emailActionRow.classList.remove('show');
+            emailInput.removeAttribute('readonly');
+            sendOtpBtn.innerHTML = '<i class="bi bi-send-fill me-2"></i>Send OTP';
+            sendOtpBtn.disabled = false;
+            sendOtpBtn.classList.remove('otp-requested-btn');
+
+            otpInputs.forEach(input => {
+                input.value = '';
+            });
+
+            emailInput.focus();
+        }
+
+        sendOtpBtn.addEventListener('click', function () {
+            const emailValue = emailInput.value.trim();
+
+            if (!emailValue) {
+                emailInput.focus();
+                showSystemModal(
+                    'Email Required',
+                    'Please enter your email address first before requesting the OTP.',
+                    'warning'
+                );
+                return;
+            }
+
+            if (!isValidEmail(emailValue)) {
+                emailInput.focus();
+                showSystemModal(
+                    'Invalid Email Address',
+                    'Please enter a valid email address before requesting the OTP.',
+                    'danger'
+                );
+                return;
+            }
+
+            showOtpSection();
+
+            showSystemModal(
+                'OTP Requested',
+                'The OTP section is now ready. In backend integration, the verification code will be sent to your email.',
+                'success'
+            );
+        });
+
+        resendOtpBtn.addEventListener('click', function () {
+            if (!otpShown) return;
+
+            otpInputs.forEach(input => {
+                input.value = '';
+            });
+
+            otpInputs[0].focus();
+
+            showSystemModal(
+                'OTP Resent',
+                'Frontend demo only: the resend OTP action has been triggered.',
+                'success'
+            );
+        });
+
+        changeEmailBtn.addEventListener('click', function () {
+            resetOtpSection();
+
+            showSystemModal(
+                'Email Updated',
+                'You can now enter a different email address and request a new OTP.',
+                'warning'
+            );
+        });
+
+        otpInputs.forEach((input, index) => {
+            input.addEventListener('input', function () {
+                this.value = this.value.replace(/[^0-9]/g, '');
+
+                if (this.value && index < otpInputs.length - 1) {
+                    otpInputs[index + 1].focus();
+                }
+            });
+
+            input.addEventListener('keydown', function (e) {
+                if (e.key === 'Backspace' && !this.value && index > 0) {
+                    otpInputs[index - 1].focus();
+                }
+
+                if (e.key === 'ArrowLeft' && index > 0) {
+                    otpInputs[index - 1].focus();
+                }
+
+                if (e.key === 'ArrowRight' && index < otpInputs.length - 1) {
+                    otpInputs[index + 1].focus();
+                }
+            });
+
+            input.addEventListener('paste', function (e) {
+                e.preventDefault();
+                const pasted = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 6);
+
+                if (!pasted) return;
+
+                pasted.split('').forEach((char, i) => {
+                    if (otpInputs[i]) {
+                        otpInputs[i].value = char;
+                    }
+                });
+
+                const nextIndex = Math.min(pasted.length, otpInputs.length - 1);
+                otpInputs[nextIndex].focus();
+            });
+        });
+
+        form.addEventListener('submit', function (e) {
+            if (!otpShown) {
+                e.preventDefault();
+                showSystemModal(
+                    'OTP Required',
+                    'Please request the OTP first before trying to verify and log in.',
+                    'warning'
+                );
+                return;
+            }
+
+            const otpValue = Array.from(otpInputs).map(input => input.value).join('');
+
+            if (otpValue.length !== 6) {
+                e.preventDefault();
+                showSystemModal(
+                    'Incomplete OTP',
+                    'Please complete the 6-digit OTP before continuing.',
+                    'danger'
+                );
+                return;
+            }
+
+            e.preventDefault();
+            showSystemModal(
+                'Verification Ready',
+                'Frontend demo only: the OTP verification UI is now ready for backend integration.',
+                'success'
+            );
+        });
+    </script>
+</body>
+</html>
