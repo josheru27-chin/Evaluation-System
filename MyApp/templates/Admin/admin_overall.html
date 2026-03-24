@@ -1,0 +1,590 @@
+{% extends "admin/admin_base.html" %}
+{% load static %}
+
+{% block title %}Results and Summary | Admin{% endblock %}
+{% block page_title %}Faculty Evaluation Results{% endblock %}
+{% block page_subtitle %}Search faculty members, review their total average grade, and view the detailed evaluator breakdown per sector.{% endblock %}
+
+{% block topbar_actions %}
+<button class="btn btn-soft">
+    <i class="bi bi-printer me-1"></i> Print
+</button>
+<button class="btn btn-red">
+    <i class="bi bi-file-earmark-arrow-down me-1"></i> Export Results
+</button>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .results-hero {
+        background: linear-gradient(135deg, #fff, #fcf3f5);
+        border: 1px solid #f2dde2;
+        border-radius: 22px;
+        padding: 22px;
+        margin-bottom: 24px;
+    }
+
+    .results-hero h5 {
+        margin: 0 0 8px;
+        font-weight: 800;
+        color: var(--text-dark);
+    }
+
+    .results-hero p {
+        margin: 0;
+        color: var(--text-muted);
+        line-height: 1.7;
+    }
+
+    .faculty-search-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 14px;
+        flex-wrap: wrap;
+        margin-bottom: 18px;
+    }
+
+    .search-wrap {
+        position: relative;
+        min-width: 320px;
+    }
+
+    .search-wrap i {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+    }
+
+    .search-wrap input {
+        padding-left: 42px !important;
+    }
+
+    .mini-stat {
+        border: 1px solid var(--border-soft);
+        background: #fff;
+        border-radius: 18px;
+        padding: 18px;
+        height: 100%;
+    }
+
+    .mini-stat h6 {
+        margin: 0 0 8px;
+        color: var(--text-muted);
+        font-size: 0.92rem;
+        font-weight: 700;
+    }
+
+    .mini-stat h3 {
+        margin: 0;
+        font-weight: 800;
+        color: var(--text-dark);
+    }
+
+    .mini-stat small {
+        display: block;
+        margin-top: 6px;
+        color: var(--text-muted);
+    }
+
+    .faculty-name-box {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .faculty-name-box strong {
+        color: var(--text-dark);
+    }
+
+    .faculty-name-box small {
+        color: var(--text-muted);
+    }
+
+    .grade-pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 68px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        font-size: 0.84rem;
+        font-weight: 700;
+        border: 1px solid #efd3d9;
+        background: var(--primary-red-light);
+        color: var(--primary-red);
+    }
+
+    .overall-pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 78px;
+        padding: 9px 14px;
+        border-radius: 999px;
+        font-size: 0.88rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
+        color: #fff;
+    }
+
+    .btn-view-more {
+        border: 1px solid #efd3d9;
+        background: var(--primary-red-light);
+        color: var(--primary-red);
+        border-radius: 12px;
+        padding: 8px 12px;
+        font-weight: 700;
+        font-size: 0.88rem;
+    }
+
+    .btn-view-more:hover {
+        background: #f2dfe4;
+        color: var(--primary-red-dark);
+    }
+
+    .sector-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+        margin-bottom: 18px;
+    }
+
+    .sector-card {
+        border: 1px solid var(--border-soft);
+        background: #fff;
+        border-radius: 18px;
+        padding: 16px;
+    }
+
+    .sector-card h6 {
+        margin: 0 0 8px;
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: var(--text-muted);
+    }
+
+    .sector-card h4 {
+        margin: 0;
+        font-weight: 800;
+        color: var(--text-dark);
+    }
+
+    .modal-content {
+        border: none;
+        border-radius: 24px;
+        overflow: hidden;
+        box-shadow: 0 24px 60px rgba(15, 23, 42, 0.16);
+    }
+
+    .modal-header {
+        border-bottom: 1px solid var(--border-soft);
+        background: linear-gradient(135deg, #fff, #fcf3f5);
+        padding: 18px 22px;
+    }
+
+    .modal-title {
+        font-weight: 800;
+        color: var(--text-dark);
+    }
+
+    .modal-body {
+        padding: 22px;
+    }
+
+    .modal-footer {
+        border-top: 1px solid var(--border-soft);
+        padding: 16px 22px;
+    }
+
+    .faculty-summary-box {
+        background: #fcfcfd;
+        border: 1px solid var(--border-soft);
+        border-radius: 18px;
+        padding: 16px;
+        margin-bottom: 18px;
+    }
+
+    .faculty-summary-box h6 {
+        margin: 0 0 10px;
+        font-weight: 800;
+        color: var(--text-dark);
+    }
+
+    .faculty-summary-box p {
+        margin: 0;
+        color: var(--text-muted);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 32px 16px;
+        color: var(--text-muted);
+    }
+
+    @media (max-width: 991px) {
+        .sector-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 767px) {
+        .search-wrap {
+            min-width: 100%;
+        }
+
+        .sector-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="results-hero">
+    <h5><i class="bi bi-bar-chart-line me-2"></i>Faculty Performance Results</h5>
+    <p>
+        This page shows the list of faculty members together with their total average rating grade and
+        their average grades in the four required sectors: Commitment, Knowledge of Subject,
+        Teaching for Independent Learning, and Management of Learning.
+    </p>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="mini-stat">
+            <h6>Total Faculty Members</h6>
+            <h3 id="totalFacultyCount">8</h3>
+            <small>Faculty members with recorded evaluation results</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="mini-stat">
+            <h6>Highest Average Grade</h6>
+            <h3 id="highestAverageGrade">4.82</h3>
+            <small>Top faculty overall average grade</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="mini-stat">
+            <h6>Lowest Average Grade</h6>
+            <h3 id="lowestAverageGrade">4.08</h3>
+            <small>Lowest faculty overall average grade</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="mini-stat">
+            <h6>Average of All Faculty</h6>
+            <h3 id="overallFacultyAverage">4.46</h3>
+            <small>Institution-wide computed average</small>
+        </div>
+    </div>
+</div>
+
+<div class="content-card">
+    <div class="faculty-search-bar">
+        <div>
+            <h5 class="section-title mb-0">Faculty Member Results List</h5>
+            <p class="text-muted mb-0 mt-1">Search a faculty member and view their complete evaluator breakdown.</p>
+        </div>
+
+        <div class="search-wrap">
+            <i class="bi bi-search"></i>
+            <input type="text" id="facultySearchInput" class="form-control" placeholder="Search faculty member name...">
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table align-middle" id="facultyResultsTable">
+            <thead>
+                <tr>
+                    <th style="min-width: 220px;">Faculty Member</th>
+                    <th style="min-width: 120px;">Total Average</th>
+                    <th style="min-width: 140px;">Commitment</th>
+                    <th style="min-width: 170px;">Knowledge of Subject</th>
+                    <th style="min-width: 210px;">Teaching for Independent Learning</th>
+                    <th style="min-width: 170px;">Management of Learning</th>
+                    <th class="text-end" style="min-width: 140px;">Action</th>
+                </tr>
+            </thead>
+            <tbody id="facultyResultsBody">
+                <!-- Injected by JavaScript -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal fade" id="viewMoreModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-person-lines-fill me-2"></i>Faculty Evaluation Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+                <div class="faculty-summary-box">
+                    <h6 id="modalFacultyName">Faculty Name</h6>
+                    <p id="modalFacultySubtitle">Detailed evaluator breakdown and average grades.</p>
+                </div>
+
+                <div class="sector-grid">
+                    <div class="sector-card">
+                        <h6>Commitment</h6>
+                        <h4 id="modalCommitmentAvg">0.00</h4>
+                    </div>
+                    <div class="sector-card">
+                        <h6>Knowledge of Subject</h6>
+                        <h4 id="modalKnowledgeAvg">0.00</h4>
+                    </div>
+                    <div class="sector-card">
+                        <h6>Teaching for Independent Learning</h6>
+                        <h4 id="modalTeachingAvg">0.00</h4>
+                    </div>
+                    <div class="sector-card">
+                        <h6>Management of Learning</h6>
+                        <h4 id="modalManagementAvg">0.00</h4>
+                    </div>
+                </div>
+
+                <div class="content-card" style="box-shadow:none; padding:0; border:none;">
+                    <h5 class="section-title mb-3">Faculty Members Who Evaluated This Faculty</h5>
+
+                    <div class="table-responsive">
+                        <table class="table align-middle">
+                            <thead>
+                                <tr>
+                                    <th style="min-width: 220px;">Evaluator Name</th>
+                                    <th style="min-width: 130px;">Commitment</th>
+                                    <th style="min-width: 170px;">Knowledge of Subject</th>
+                                    <th style="min-width: 210px;">Teaching for Independent Learning</th>
+                                    <th style="min-width: 170px;">Management of Learning</th>
+                                    <th style="min-width: 140px;">Total Average Grade</th>
+                                </tr>
+                            </thead>
+                            <tbody id="modalEvaluatorTableBody">
+                                <!-- Injected by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-soft" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const facultyResults = [
+        {
+            id: 1,
+            name: "Dr. Maria Santos",
+            department: "College of Information Technology",
+            evaluators: [
+                { name: "Prof. Roberto Cruz", commitment: 4.9, knowledge: 4.8, teaching: 4.7, management: 4.8 },
+                { name: "Ms. Elena Ramos", commitment: 4.8, knowledge: 4.9, teaching: 4.8, management: 4.7 },
+                { name: "Mr. Jonas Dela Cruz", commitment: 4.9, knowledge: 4.8, teaching: 4.9, management: 4.8 }
+            ]
+        },
+        {
+            id: 2,
+            name: "Prof. Roberto Cruz",
+            department: "College of Engineering",
+            evaluators: [
+                { name: "Dr. Maria Santos", commitment: 4.7, knowledge: 4.8, teaching: 4.6, management: 4.7 },
+                { name: "Ms. Elena Ramos", commitment: 4.6, knowledge: 4.7, teaching: 4.8, management: 4.6 },
+                { name: "Mr. Jonas Dela Cruz", commitment: 4.7, knowledge: 4.8, teaching: 4.7, management: 4.7 }
+            ]
+        },
+        {
+            id: 3,
+            name: "Ms. Elena Ramos",
+            department: "College of Education",
+            evaluators: [
+                { name: "Dr. Maria Santos", commitment: 4.5, knowledge: 4.4, teaching: 4.6, management: 4.5 },
+                { name: "Prof. Roberto Cruz", commitment: 4.4, knowledge: 4.5, teaching: 4.5, management: 4.4 },
+                { name: "Mr. Jonas Dela Cruz", commitment: 4.6, knowledge: 4.5, teaching: 4.6, management: 4.5 }
+            ]
+        },
+        {
+            id: 4,
+            name: "Mr. Jonas Dela Cruz",
+            department: "College of Arts and Sciences",
+            evaluators: [
+                { name: "Dr. Maria Santos", commitment: 4.2, knowledge: 4.3, teaching: 4.1, management: 4.2 },
+                { name: "Prof. Roberto Cruz", commitment: 4.1, knowledge: 4.0, teaching: 4.2, management: 4.1 },
+                { name: "Ms. Elena Ramos", commitment: 4.3, knowledge: 4.2, teaching: 4.2, management: 4.1 }
+            ]
+        },
+        {
+            id: 5,
+            name: "Anne Lopez",
+            department: "College of Information Technology",
+            evaluators: [
+                { name: "Dr. Maria Santos", commitment: 4.8, knowledge: 4.7, teaching: 4.8, management: 4.7 },
+                { name: "Prof. Roberto Cruz", commitment: 4.7, knowledge: 4.6, teaching: 4.7, management: 4.7 },
+                { name: "Ms. Elena Ramos", commitment: 4.8, knowledge: 4.7, teaching: 4.8, management: 4.8 }
+            ]
+        },
+        {
+            id: 6,
+            name: "Miguel Santos",
+            department: "College of Engineering",
+            evaluators: [
+                { name: "Prof. Roberto Cruz", commitment: 4.3, knowledge: 4.4, teaching: 4.3, management: 4.2 },
+                { name: "Dr. Maria Santos", commitment: 4.4, knowledge: 4.5, teaching: 4.3, management: 4.4 },
+                { name: "Ms. Elena Ramos", commitment: 4.3, knowledge: 4.4, teaching: 4.2, management: 4.3 }
+            ]
+        },
+        {
+            id: 7,
+            name: "Lina Santos",
+            department: "College of Education",
+            evaluators: [
+                { name: "Ms. Elena Ramos", commitment: 4.6, knowledge: 4.5, teaching: 4.7, management: 4.5 },
+                { name: "Dr. Maria Santos", commitment: 4.5, knowledge: 4.6, teaching: 4.6, management: 4.5 },
+                { name: "Prof. Roberto Cruz", commitment: 4.6, knowledge: 4.5, teaching: 4.6, management: 4.6 }
+            ]
+        },
+        {
+            id: 8,
+            name: "Philip Gomez",
+            department: "College of Arts and Sciences",
+            evaluators: [
+                { name: "Mr. Jonas Dela Cruz", commitment: 4.1, knowledge: 4.2, teaching: 4.0, management: 4.1 },
+                { name: "Dr. Maria Santos", commitment: 4.0, knowledge: 4.1, teaching: 4.2, management: 4.1 },
+                { name: "Ms. Elena Ramos", commitment: 4.1, knowledge: 4.0, teaching: 4.1, management: 4.0 }
+            ]
+        }
+    ];
+
+    const facultyResultsBody = document.getElementById('facultyResultsBody');
+    const facultySearchInput = document.getElementById('facultySearchInput');
+
+    function computeFacultyAverages(faculty) {
+        const total = faculty.evaluators.length;
+
+        const commitment = faculty.evaluators.reduce((sum, item) => sum + item.commitment, 0) / total;
+        const knowledge = faculty.evaluators.reduce((sum, item) => sum + item.knowledge, 0) / total;
+        const teaching = faculty.evaluators.reduce((sum, item) => sum + item.teaching, 0) / total;
+        const management = faculty.evaluators.reduce((sum, item) => sum + item.management, 0) / total;
+        const overall = (commitment + knowledge + teaching + management) / 4;
+
+        return {
+            commitment,
+            knowledge,
+            teaching,
+            management,
+            overall
+        };
+    }
+
+    function toFixedGrade(value) {
+        return Number(value).toFixed(2);
+    }
+
+    function renderStats() {
+        const computed = facultyResults.map(item => computeFacultyAverages(item));
+        const overallValues = computed.map(item => item.overall);
+        const institutionAverage = overallValues.reduce((sum, value) => sum + value, 0) / overallValues.length;
+
+        document.getElementById('totalFacultyCount').textContent = facultyResults.length;
+        document.getElementById('highestAverageGrade').textContent = toFixedGrade(Math.max(...overallValues));
+        document.getElementById('lowestAverageGrade').textContent = toFixedGrade(Math.min(...overallValues));
+        document.getElementById('overallFacultyAverage').textContent = toFixedGrade(institutionAverage);
+    }
+
+    function renderFacultyTable() {
+        const keyword = facultySearchInput.value.trim().toLowerCase();
+
+        const filtered = facultyResults.filter(item =>
+            item.name.toLowerCase().includes(keyword)
+        );
+
+        if (!filtered.length) {
+            facultyResultsBody.innerHTML = `
+                <tr>
+                    <td colspan="7">
+                        <div class="empty-state">
+                            <i class="bi bi-search fs-3 d-block mb-2"></i>
+                            No faculty member matched your search.
+                        </div>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        facultyResultsBody.innerHTML = filtered.map(item => {
+            const avg = computeFacultyAverages(item);
+
+            return `
+                <tr>
+                    <td>
+                        <div class="faculty-name-box">
+                            <strong>${item.name}</strong>
+                            <small>${item.department}</small>
+                        </div>
+                    </td>
+                    <td><span class="overall-pill">${toFixedGrade(avg.overall)}</span></td>
+                    <td><span class="grade-pill">${toFixedGrade(avg.commitment)}</span></td>
+                    <td><span class="grade-pill">${toFixedGrade(avg.knowledge)}</span></td>
+                    <td><span class="grade-pill">${toFixedGrade(avg.teaching)}</span></td>
+                    <td><span class="grade-pill">${toFixedGrade(avg.management)}</span></td>
+                    <td class="text-end">
+                        <button type="button" class="btn-view-more" onclick="openViewMore(${item.id})">
+                            <i class="bi bi-eye me-1"></i> View More
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function openViewMore(id) {
+        const faculty = facultyResults.find(item => item.id === id);
+        if (!faculty) return;
+
+        const avg = computeFacultyAverages(faculty);
+
+        document.getElementById('modalFacultyName').textContent = faculty.name;
+        document.getElementById('modalFacultySubtitle').textContent =
+            `${faculty.department} • ${faculty.evaluators.length} evaluator(s)`;
+
+        document.getElementById('modalCommitmentAvg').textContent = toFixedGrade(avg.commitment);
+        document.getElementById('modalKnowledgeAvg').textContent = toFixedGrade(avg.knowledge);
+        document.getElementById('modalTeachingAvg').textContent = toFixedGrade(avg.teaching);
+        document.getElementById('modalManagementAvg').textContent = toFixedGrade(avg.management);
+
+        const modalEvaluatorTableBody = document.getElementById('modalEvaluatorTableBody');
+        modalEvaluatorTableBody.innerHTML = faculty.evaluators.map(evaluator => {
+            const evaluatorOverall = (evaluator.commitment + evaluator.knowledge + evaluator.teaching + evaluator.management) / 4;
+
+            return `
+                <tr>
+                    <td><strong>${evaluator.name}</strong></td>
+                    <td>${toFixedGrade(evaluator.commitment)}</td>
+                    <td>${toFixedGrade(evaluator.knowledge)}</td>
+                    <td>${toFixedGrade(evaluator.teaching)}</td>
+                    <td>${toFixedGrade(evaluator.management)}</td>
+                    <td><span class="overall-pill">${toFixedGrade(evaluatorOverall)}</span></td>
+                </tr>
+            `;
+        }).join('');
+
+        new bootstrap.Modal(document.getElementById('viewMoreModal')).show();
+    }
+
+    facultySearchInput.addEventListener('input', renderFacultyTable);
+
+    renderStats();
+    renderFacultyTable();
+</script>
+{% endblock %}
