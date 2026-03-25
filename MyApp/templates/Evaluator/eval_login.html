@@ -41,8 +41,7 @@
             box-sizing: border-box;
         }
 
-        html,
-        body {
+        html, body {
             margin: 0;
             padding: 0;
             min-height: 100%;
@@ -260,6 +259,26 @@
             line-height: 1.6;
         }
 
+        .schedule-box {
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 18px;
+            padding: 16px;
+            margin-bottom: 18px;
+        }
+
+        .schedule-box h6 {
+            margin: 0 0 8px;
+            font-weight: 800;
+        }
+
+        .schedule-box p {
+            margin: 0;
+            color: var(--text-muted);
+            line-height: 1.7;
+            font-size: 0.92rem;
+        }
+
         .alert {
             border-radius: 16px;
             font-size: 0.92rem;
@@ -311,6 +330,11 @@
         .form-control[readonly] {
             background: #eef2f8;
             color: #475569;
+            cursor: not-allowed;
+        }
+
+        .form-control[disabled] {
+            background: #eef2f8;
             cursor: not-allowed;
         }
 
@@ -781,7 +805,6 @@
 <body>
     <div class="page-wrap">
         <div class="login-shell">
-
             <section class="login-brand">
                 <div class="brand-top">
                     <div class="brand-badge">
@@ -837,6 +860,16 @@
                         </p>
                     </div>
 
+                    {% if open_schedule %}
+                    <div class="schedule-box">
+                        <h6><i class="bi bi-calendar2-check me-2"></i>Evaluation Schedule is Active</h6>
+                        <p>
+                            <strong>{{ open_schedule.title }}</strong><br>
+                            Open until {{ open_schedule.end_datetime|date:"M d, Y h:i A" }}
+                        </p>
+                    </div>
+                    {% endif %}
+
                     <div class="info-box">
                         <i class="bi bi-info-circle-fill"></i>
                         <div>
@@ -870,6 +903,7 @@
                                     placeholder="Enter your email address"
                                     value=""
                                     required
+                                    {% if portal_closed %}disabled{% endif %}
                                 >
                             </div>
 
@@ -888,7 +922,7 @@
                             </div>
                         </div>
 
-                        <button type="button" id="sendOtpBtn" class="btn btn-main">
+                        <button type="button" id="sendOtpBtn" class="btn btn-main" {% if portal_closed %}disabled{% endif %}>
                             <i class="bi bi-send-fill me-2"></i>Send OTP
                         </button>
 
@@ -908,12 +942,12 @@
                             </div>
 
                             <div class="otp-inputs">
-                                <input type="text" class="otp-input" name="otp_1" maxlength="1" inputmode="numeric" autocomplete="one-time-code">
-                                <input type="text" class="otp-input" name="otp_2" maxlength="1" inputmode="numeric">
-                                <input type="text" class="otp-input" name="otp_3" maxlength="1" inputmode="numeric">
-                                <input type="text" class="otp-input" name="otp_4" maxlength="1" inputmode="numeric">
-                                <input type="text" class="otp-input" name="otp_5" maxlength="1" inputmode="numeric">
-                                <input type="text" class="otp-input" name="otp_6" maxlength="1" inputmode="numeric">
+                                <input type="text" class="otp-input" name="otp_1" maxlength="1" inputmode="numeric" autocomplete="one-time-code" {% if portal_closed %}disabled{% endif %}>
+                                <input type="text" class="otp-input" name="otp_2" maxlength="1" inputmode="numeric" {% if portal_closed %}disabled{% endif %}>
+                                <input type="text" class="otp-input" name="otp_3" maxlength="1" inputmode="numeric" {% if portal_closed %}disabled{% endif %}>
+                                <input type="text" class="otp-input" name="otp_4" maxlength="1" inputmode="numeric" {% if portal_closed %}disabled{% endif %}>
+                                <input type="text" class="otp-input" name="otp_5" maxlength="1" inputmode="numeric" {% if portal_closed %}disabled{% endif %}>
+                                <input type="text" class="otp-input" name="otp_6" maxlength="1" inputmode="numeric" {% if portal_closed %}disabled{% endif %}>
                             </div>
 
                             <div class="otp-note">
@@ -927,11 +961,11 @@
                         </div>
 
                         <div class="otp-actions" id="otpActions">
-                            <button type="button" id="resendOtpBtn" class="btn btn-soft-main">
+                            <button type="button" id="resendOtpBtn" class="btn btn-soft-main" {% if portal_closed %}disabled{% endif %}>
                                 <i class="bi bi-arrow-repeat me-2"></i>Resend OTP
                             </button>
 
-                            <button type="submit" name="action" value="verify_otp" id="verifyOtpBtn" class="btn btn-outline-main">
+                            <button type="submit" name="action" value="verify_otp" id="verifyOtpBtn" class="btn btn-outline-main" {% if portal_closed %}disabled{% endif %}>
                                 <i class="bi bi-box-arrow-in-right me-2"></i>Verify OTP & Login
                             </button>
                         </div>
@@ -946,7 +980,6 @@
         </div>
     </div>
 
-    <!-- Reusable Bootstrap Modal -->
     <div class="modal fade" id="systemModal" tabindex="-1" aria-labelledby="systemModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-sm modal-dialog-scrollable">
             <div class="modal-content">
@@ -978,6 +1011,8 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
+        const portalClosed = {{ portal_closed|yesno:"true,false" }};
+
         const form = document.getElementById('otpLoginForm');
         const emailInput = document.getElementById('email');
         const sendOtpBtn = document.getElementById('sendOtpBtn');
@@ -1059,6 +1094,15 @@
         }
 
         sendOtpBtn.addEventListener('click', function () {
+            if (portalClosed) {
+                showSystemModal(
+                    'Portal Closed',
+                    'This portal is currently closed. Please wait for the announcement of faculty evaluation.',
+                    'warning'
+                );
+                return;
+            }
+
             const emailValue = emailInput.value.trim();
 
             if (!emailValue) {
@@ -1091,6 +1135,15 @@
         });
 
         resendOtpBtn.addEventListener('click', function () {
+            if (portalClosed) {
+                showSystemModal(
+                    'Portal Closed',
+                    'This portal is currently closed. Please wait for the announcement of faculty evaluation.',
+                    'warning'
+                );
+                return;
+            }
+
             if (!otpShown) return;
 
             otpInputs.forEach(input => {
@@ -1106,15 +1159,17 @@
             );
         });
 
-        changeEmailBtn.addEventListener('click', function () {
-            resetOtpSection();
+        if (changeEmailBtn) {
+            changeEmailBtn.addEventListener('click', function () {
+                resetOtpSection();
 
-            showSystemModal(
-                'Email Updated',
-                'You can now enter a different email address and request a new OTP.',
-                'warning'
-            );
-        });
+                showSystemModal(
+                    'Email Updated',
+                    'You can now enter a different email address and request a new OTP.',
+                    'warning'
+                );
+            });
+        }
 
         otpInputs.forEach((input, index) => {
             input.addEventListener('input', function () {
@@ -1157,6 +1212,16 @@
         });
 
         form.addEventListener('submit', function (e) {
+            if (portalClosed) {
+                e.preventDefault();
+                showSystemModal(
+                    'Portal Closed',
+                    'This portal is currently closed. Please wait for the announcement of faculty evaluation.',
+                    'warning'
+                );
+                return;
+            }
+
             if (!otpShown) {
                 e.preventDefault();
                 showSystemModal(
@@ -1185,6 +1250,16 @@
                 'Frontend demo only: the OTP verification UI is now ready for backend integration.',
                 'success'
             );
+        });
+
+        window.addEventListener('load', function () {
+            if (portalClosed) {
+                showSystemModal(
+                    'Portal Closed',
+                    'This portal is currently closed. Please wait for the announcement of faculty evaluation.',
+                    'warning'
+                );
+            }
         });
     </script>
 </body>

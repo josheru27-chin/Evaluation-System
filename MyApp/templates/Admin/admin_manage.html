@@ -145,18 +145,6 @@
         color: var(--danger-text);
     }
 
-    .period-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        background: var(--primary-red-light);
-        color: var(--primary-red);
-        border-radius: 999px;
-        padding: 8px 12px;
-        font-size: 0.82rem;
-        font-weight: 700;
-    }
-
     .filter-row {
         display: flex;
         gap: 12px;
@@ -214,6 +202,27 @@
         color: var(--text-muted);
     }
 
+    .badge-soft-success,
+    .badge-soft-danger {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 7px 12px;
+        border-radius: 999px;
+        font-size: 0.82rem;
+        font-weight: 700;
+    }
+
+    .badge-soft-success {
+        background: #eaf7ee;
+        color: #22613a;
+    }
+
+    .badge-soft-danger {
+        background: #fff1f2;
+        color: #a22735;
+    }
+
     @media (max-width: 767px) {
         .search-wrap {
             min-width: 100%;
@@ -227,33 +236,39 @@
     <div class="col-md-4">
         <div class="mini-card">
             <h6>Total Evaluation Periods</h6>
-            <h3 id="totalPeriodsCount">3</h3>
+            <h3>{{ total_periods }}</h3>
             <small>All created faculty evaluation schedules</small>
         </div>
     </div>
     <div class="col-md-4">
         <div class="mini-card">
             <h6>Currently Open</h6>
-            <h3 id="openPeriodsCount">1</h3>
+            <h3>{{ open_periods }}</h3>
             <small>Evaluation periods currently accepting responses</small>
         </div>
     </div>
     <div class="col-md-4">
         <div class="mini-card">
-            <h6>Upcoming Schedule</h6>
-            <h3 id="upcomingPeriodsCount">1</h3>
-            <small>Evaluation periods that are already scheduled</small>
+            <h6>Currently Closed</h6>
+            <h3>{{ closed_periods }}</h3>
+            <small>Schedules outside the active date and time</small>
         </div>
     </div>
 </div>
 
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} mb-3">{{ message }}</div>
+    {% endfor %}
+{% endif %}
+
 <div class="schedule-form-card">
     <h5 class="section-title">Set Faculty Evaluation Period</h5>
 
-    <form id="evaluationScheduleForm" method="post">
+    <form method="post" id="evaluationScheduleForm">
         {% csrf_token %}
-
-        <input type="hidden" id="editScheduleId">
+        <input type="hidden" name="action" value="save_schedule">
+        <input type="hidden" id="schedule_id" name="schedule_id">
 
         <div class="row g-3">
             <div class="col-md-6">
@@ -278,27 +293,6 @@
                     <option>1st Semester</option>
                     <option>2nd Semester</option>
                     <option>Summer</option>
-                </select>
-            </div>
-
-            <div class="col-md-6">
-                <label class="form-label">Evaluation Scope</label>
-                <select id="evaluationScope" name="scope" class="form-select" required>
-                    <option value="">Select Scope</option>
-                    <option>All Faculty</option>
-                    <option>Regular Faculty Only</option>
-                    <option>Part-Time Faculty Only</option>
-                    <option>Selected Department Only</option>
-                </select>
-            </div>
-
-            <div class="col-md-6">
-                <label class="form-label">Status</label>
-                <select id="evaluationStatus" name="status" class="form-select" required>
-                    <option>Scheduled</option>
-                    <option>Open</option>
-                    <option>Closed</option>
-                    <option>Draft</option>
                 </select>
             </div>
 
@@ -332,7 +326,7 @@
                     <button type="submit" class="btn btn-red">
                         <i class="bi bi-save me-1"></i> Save Evaluation Period
                     </button>
-                    <button type="reset" class="btn btn-soft" id="resetScheduleForm">
+                    <button type="button" class="btn btn-soft" id="resetScheduleForm">
                         <i class="bi bi-arrow-counterclockwise me-1"></i> Reset
                     </button>
                 </div>
@@ -351,15 +345,13 @@
         <div class="filter-row">
             <div class="search-wrap">
                 <i class="bi bi-search"></i>
-                <input type="text" id="scheduleSearch" class="form-control" placeholder="Search title, scope, or academic year...">
+                <input type="text" id="scheduleSearch" class="form-control" placeholder="Search title, academic year, or semester...">
             </div>
 
             <select class="form-select" id="statusFilter" style="min-width: 180px;">
                 <option value="">All Status</option>
-                <option value="Scheduled">Scheduled</option>
                 <option value="Open">Open</option>
                 <option value="Closed">Closed</option>
-                <option value="Draft">Draft</option>
             </select>
         </div>
     </div>
@@ -371,15 +363,72 @@
                     <th style="min-width: 220px;">Evaluation Title</th>
                     <th style="min-width: 140px;">Academic Year</th>
                     <th style="min-width: 140px;">Semester</th>
-                    <th style="min-width: 170px;">Scope</th>
                     <th style="min-width: 170px;">Opening</th>
                     <th style="min-width: 170px;">Closing</th>
-                    <th style="min-width: 130px;">Duration</th>
-                    <th style="min-width: 120px;">Status</th>
+                    <th style="min-width: 130px;">Status</th>
                     <th class="text-end" style="min-width: 140px;">Actions</th>
                 </tr>
             </thead>
-            <tbody id="scheduleTableBody"></tbody>
+            <tbody id="scheduleTableBody">
+                {% for item in schedules %}
+                <tr data-status="{{ item.computed_status }}" data-search="{{ item.title|lower }} {{ item.academic_year|lower }} {{ item.semester|lower }}">
+                    <td>
+                        <div class="d-flex flex-column gap-1">
+                            <strong>{{ item.title }}</strong>
+                            <small class="text-muted">{{ item.notes|default:"No notes provided." }}</small>
+                        </div>
+                    </td>
+                    <td>{{ item.academic_year }}</td>
+                    <td>{{ item.semester }}</td>
+                    <td>{{ item.start_datetime|date:"M d, Y h:i A" }}</td>
+                    <td>{{ item.end_datetime|date:"M d, Y h:i A" }}</td>
+                    <td>
+                        {% if item.computed_status == "Open" %}
+                            <span class="badge-soft-success">Open</span>
+                        {% else %}
+                            <span class="badge-soft-danger">Closed</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        <div class="action-group">
+                            <button
+                                type="button"
+                                class="btn-icon-soft editScheduleBtn"
+                                title="Edit Schedule"
+                                data-id="{{ item.id }}"
+                                data-title="{{ item.title }}"
+                                data-academic_year="{{ item.academic_year }}"
+                                data-semester="{{ item.semester }}"
+                                data-start="{{ item.start_datetime|date:'Y-m-d\\TH:i' }}"
+                                data-end="{{ item.end_datetime|date:'Y-m-d\\TH:i' }}"
+                                data-notes="{{ item.notes }}"
+                            >
+                                <i class="bi bi-pencil-square"></i>
+                            </button>
+
+                            <button
+                                type="button"
+                                class="btn-icon-danger deleteScheduleBtn"
+                                title="Delete Schedule"
+                                data-id="{{ item.id }}"
+                                data-title="{{ item.title }}"
+                            >
+                                <i class="bi bi-trash3"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr id="emptyRow">
+                    <td colspan="7">
+                        <div class="text-center py-4 text-muted">
+                            <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                            No faculty evaluation schedules found.
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
         </table>
     </div>
 </div>
@@ -398,12 +447,17 @@
                     <h6 id="deleteScheduleTitle">Evaluation Title</h6>
                     <p>This will remove the selected evaluation period from the current schedule list.</p>
                 </div>
-                <input type="hidden" id="deleteScheduleId">
+
+                <form method="post" id="deleteScheduleForm" class="mt-3">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="delete_schedule">
+                    <input type="hidden" name="schedule_id" id="deleteScheduleId">
+                </form>
             </div>
 
             <div class="modal-footer">
                 <button type="button" class="btn btn-soft" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-red" id="confirmDeleteSchedule">
+                <button type="submit" form="deleteScheduleForm" class="btn btn-red">
                     <i class="bi bi-trash3 me-1"></i> Delete
                 </button>
             </div>
@@ -414,70 +468,12 @@
 
 {% block extra_js %}
 <script>
-    let schedules = [
-        {
-            id: 1,
-            title: "Faculty Performance Evaluation 2025",
-            academic_year: "2024 - 2025",
-            semester: "2nd Semester",
-            scope: "All Faculty",
-            start: "2025-03-10T08:00",
-            end: "2025-03-24T17:00",
-            status: "Closed",
-            notes: "Completed evaluation period."
-        },
-        {
-            id: 2,
-            title: "Midyear Faculty Evaluation 2025",
-            academic_year: "2024 - 2025",
-            semester: "Summer",
-            scope: "Part-Time Faculty Only",
-            start: "2025-06-01T08:00",
-            end: "2025-06-10T17:00",
-            status: "Closed",
-            notes: "Summer faculty evaluation."
-        },
-        {
-            id: 3,
-            title: "Faculty Performance Evaluation 2026",
-            academic_year: "2025 - 2026",
-            semester: "2nd Semester",
-            scope: "All Faculty",
-            start: "2026-04-01T08:00",
-            end: "2026-04-15T17:00",
-            status: "Scheduled",
-            notes: "Upcoming evaluation schedule."
-        }
-    ];
-
-    let nextScheduleId = 4;
-
-    const form = document.getElementById('evaluationScheduleForm');
-    const scheduleTableBody = document.getElementById('scheduleTableBody');
     const searchInput = document.getElementById('scheduleSearch');
     const statusFilter = document.getElementById('statusFilter');
     const startInput = document.getElementById('start_datetime');
     const endInput = document.getElementById('end_datetime');
     const durationText = document.getElementById('durationText');
     const resetBtn = document.getElementById('resetScheduleForm');
-
-    function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
-
-    function formatDateTime(value) {
-        if (!value) return '-';
-        const date = new Date(value);
-        return date.toLocaleString([], {
-            year: 'numeric',
-            month: 'short',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    }
 
     function getDurationText(startValue, endValue) {
         if (!startValue || !endValue) {
@@ -505,83 +501,15 @@
         return parts.length ? parts.join(', ') : 'Less than 1 minute';
     }
 
-    function getStatusBadge(status) {
-        if (status === 'Open') return '<span class="badge-soft-success">Open</span>';
-        if (status === 'Closed') return '<span class="badge-soft-danger">Closed</span>';
-        if (status === 'Scheduled') return '<span class="badge-soft-warning">Scheduled</span>';
-        return '<span class="badge-soft-red">Draft</span>';
-    }
-
-    function renderStats() {
-        document.getElementById('totalPeriodsCount').textContent = schedules.length;
-        document.getElementById('openPeriodsCount').textContent = schedules.filter(item => item.status === 'Open').length;
-        document.getElementById('upcomingPeriodsCount').textContent = schedules.filter(item => item.status === 'Scheduled').length;
-    }
-
-    function renderTable() {
-        const keyword = searchInput.value.trim().toLowerCase();
-        const selectedStatus = statusFilter.value;
-
-        const filtered = schedules.filter(item => {
-            const combinedText = `${item.title} ${item.scope} ${item.academic_year} ${item.semester}`.toLowerCase();
-            const keywordMatch = !keyword || combinedText.includes(keyword);
-            const statusMatch = !selectedStatus || item.status === selectedStatus;
-            return keywordMatch && statusMatch;
-        });
-
-        if (!filtered.length) {
-            scheduleTableBody.innerHTML = `
-                <tr>
-                    <td colspan="9">
-                        <div class="text-center py-4 text-muted">
-                            <i class="bi bi-inbox fs-3 d-block mb-2"></i>
-                            No faculty evaluation schedules matched your search.
-                        </div>
-                    </td>
-                </tr>
-            `;
-            renderStats();
-            return;
-        }
-
-        scheduleTableBody.innerHTML = filtered.map(item => `
-            <tr>
-                <td>
-                    <div class="d-flex flex-column gap-1">
-                        <strong>${escapeHtml(item.title)}</strong>
-                        <small class="text-muted">${escapeHtml(item.notes || 'No notes provided.')}</small>
-                    </div>
-                </td>
-                <td>${escapeHtml(item.academic_year)}</td>
-                <td>${escapeHtml(item.semester)}</td>
-                <td><span class="period-badge"><i class="bi bi-people"></i>${escapeHtml(item.scope)}</span></td>
-                <td>${formatDateTime(item.start)}</td>
-                <td>${formatDateTime(item.end)}</td>
-                <td>${getDurationText(item.start, item.end)}</td>
-                <td>${getStatusBadge(item.status)}</td>
-                <td class="text-end">
-                    <div class="action-group">
-                        <button type="button" class="btn-icon-soft" onclick="editSchedule(${item.id})" title="Edit Schedule">
-                            <i class="bi bi-pencil-square"></i>
-                        </button>
-                        <button type="button" class="btn-icon-danger" onclick="openDeleteSchedule(${item.id})" title="Delete Schedule">
-                            <i class="bi bi-trash3"></i>
-                        </button>
-                    </div>
-                </td>
-            </tr>
-        `).join('');
-
-        renderStats();
-    }
-
     function updateDurationPreview() {
         durationText.textContent = getDurationText(startInput.value, endInput.value);
     }
 
     function resetFormState() {
-        document.getElementById('editScheduleId').value = '';
+        document.getElementById('schedule_id').value = '';
+        document.getElementById('evaluationScheduleForm').reset();
         durationText.textContent = 'Select an opening and closing schedule to calculate the duration period.';
+        endInput.min = '';
     }
 
     startInput.addEventListener('change', function () {
@@ -590,104 +518,53 @@
     });
 
     endInput.addEventListener('change', updateDurationPreview);
-    searchInput.addEventListener('input', renderTable);
-    statusFilter.addEventListener('change', renderTable);
 
-    form.addEventListener('submit', function (e) {
-        e.preventDefault();
-
-        const id = document.getElementById('editScheduleId').value;
-        const title = document.getElementById('evaluationTitle').value.trim();
-        const academicYear = document.getElementById('academicYear').value;
-        const semester = document.getElementById('semester').value;
-        const scope = document.getElementById('evaluationScope').value;
-        const status = document.getElementById('evaluationStatus').value;
-        const start = document.getElementById('start_datetime').value;
-        const end = document.getElementById('end_datetime').value;
-        const notes = document.getElementById('evaluationNotes').value.trim();
-
-        if (!title || !academicYear || !semester || !scope || !status || !start || !end) return;
-
-        if (new Date(end) <= new Date(start)) {
-            durationText.textContent = 'Closing date and time must be later than the opening date and time.';
-            return;
-        }
-
-        if (id) {
-            const existing = schedules.find(item => item.id === parseInt(id, 10));
-            if (existing) {
-                existing.title = title;
-                existing.academic_year = academicYear;
-                existing.semester = semester;
-                existing.scope = scope;
-                existing.status = status;
-                existing.start = start;
-                existing.end = end;
-                existing.notes = notes;
-            }
-        } else {
-            schedules.push({
-                id: nextScheduleId++,
-                title: title,
-                academic_year: academicYear,
-                semester: semester,
-                scope: scope,
-                status: status,
-                start: start,
-                end: end,
-                notes: notes
-            });
-        }
-
-        renderTable();
-        form.reset();
+    resetBtn.addEventListener('click', function () {
         resetFormState();
     });
 
-    resetBtn.addEventListener('click', function () {
-        setTimeout(() => {
-            resetFormState();
-        }, 0);
+    document.querySelectorAll('.editScheduleBtn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            document.getElementById('schedule_id').value = this.dataset.id;
+            document.getElementById('evaluationTitle').value = this.dataset.title;
+            document.getElementById('academicYear').value = this.dataset.academic_year;
+            document.getElementById('semester').value = this.dataset.semester;
+            document.getElementById('start_datetime').value = this.dataset.start;
+            document.getElementById('end_datetime').value = this.dataset.end;
+            document.getElementById('evaluationNotes').value = this.dataset.notes || '';
+
+            endInput.min = this.dataset.start;
+            updateDurationPreview();
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
     });
 
-    function editSchedule(id) {
-        const item = schedules.find(schedule => schedule.id === id);
-        if (!item) return;
-
-        document.getElementById('editScheduleId').value = item.id;
-        document.getElementById('evaluationTitle').value = item.title;
-        document.getElementById('academicYear').value = item.academic_year;
-        document.getElementById('semester').value = item.semester;
-        document.getElementById('evaluationScope').value = item.scope;
-        document.getElementById('evaluationStatus').value = item.status;
-        document.getElementById('start_datetime').value = item.start;
-        document.getElementById('end_datetime').value = item.end;
-        document.getElementById('evaluationNotes').value = item.notes || '';
-        endInput.min = item.start;
-        updateDurationPreview();
-
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    function openDeleteSchedule(id) {
-        const item = schedules.find(schedule => schedule.id === id);
-        if (!item) return;
-
-        document.getElementById('deleteScheduleId').value = item.id;
-        document.getElementById('deleteScheduleTitle').textContent = item.title;
-        new bootstrap.Modal(document.getElementById('deleteScheduleModal')).show();
-    }
-
-    document.getElementById('confirmDeleteSchedule').addEventListener('click', function () {
-        const id = parseInt(document.getElementById('deleteScheduleId').value, 10);
-        schedules = schedules.filter(item => item.id !== id);
-        renderTable();
-
-        const modal = bootstrap.Modal.getInstance(document.getElementById('deleteScheduleModal'));
-        modal.hide();
+    document.querySelectorAll('.deleteScheduleBtn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            document.getElementById('deleteScheduleId').value = this.dataset.id;
+            document.getElementById('deleteScheduleTitle').textContent = this.dataset.title;
+            new bootstrap.Modal(document.getElementById('deleteScheduleModal')).show();
+        });
     });
 
-    renderTable();
-    resetFormState();
+    function filterTable() {
+        const keyword = searchInput.value.trim().toLowerCase();
+        const status = statusFilter.value;
+        const rows = document.querySelectorAll('#scheduleTableBody tr[data-search]');
+
+        rows.forEach(row => {
+            const text = row.dataset.search || '';
+            const rowStatus = row.dataset.status || '';
+
+            const keywordMatch = !keyword || text.includes(keyword);
+            const statusMatch = !status || rowStatus === status;
+
+            row.style.display = (keywordMatch && statusMatch) ? '' : 'none';
+        });
+    }
+
+    searchInput.addEventListener('input', filterTable);
+    statusFilter.addEventListener('change', filterTable);
 </script>
 {% endblock %}
