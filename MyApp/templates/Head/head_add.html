@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Add Faculty | Head Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+<style>
+  :root{
+    --primary:#981b2e;
+    --primary-dark:#7d1626;
+    --primary-soft:#f7e9ec;
+    --bg:#f4f6f9;
+    --card:#ffffff;
+    --text:#1f2937;
+    --muted:#6b7280;
+    --border:#e5e7eb;
+    --input-bg:#f7f9fc;
+    --success-bg:#eaf7ee;
+    --success-border:#c9e7d2;
+    --success-text:#22613a;
+    --danger-bg:#fff1f2;
+    --danger-border:#f3c5cb;
+    --danger-text:#a22735;
+    --warning-bg:#fff8e8;
+    --warning-border:#f4d58d;
+    --warning-text:#8a5a00;
+    --shadow:0 10px 28px rgba(31,41,55,0.08);
+    --sidebar-width:280px;
+  }
+
+  *{ box-sizing:border-box; }
+
+  body{
+    margin:0;
+    font-family:"Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background:linear-gradient(180deg, #ffffff 0%, var(--bg) 100%);
+    color:var(--text);
+    min-height:100vh;
+  }
+
+  /* ── Sidebar ─────────────────────────────────────── */
+  .sidebar{
+    position:fixed;
+    left:0; top:0;
+    width:var(--sidebar-width);
+    height:100vh;
+    background:linear-gradient(180deg, var(--primary-dark) 0%, var(--primary) 100%);
+    color:#fff;
+    display:flex;
+    flex-direction:column;
+    z-index:1000;
+    box-shadow:4px 0 24px rgba(0,0,0,0.1);
+  }
+
+  .sidebar-header{
+    padding:28px 24px;
+    border-bottom:1px solid rgba(255,255,255,0.1);
+  }
+
+  .sidebar-brand{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    font-size:1.25rem;
+    font-weight:800;
+  }
+
+  .sidebar-brand-icon{
+    width:44px; height:44px;
+    background:rgba(255,255,255,0.15);
+    border-radius:14px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:1.4rem;
+    backdrop-filter:blur(4px);
+  }
+
+  .sidebar-user{
+    padding:20px 24px;
+    background:rgba(0,0,0,0.15);
+    margin:16px;
+    border-radius:18px;
+    border:1px solid rgba(255,255,255,0.1);
+  }
+
+  .sidebar-user-label{
+    font-size:0.75rem;
+    text-transform:uppercase;
+    letter-spacing:0.5px;
+    opacity:0.7;
+    margin-bottom:4px;
+  }
+
+  .sidebar-user-name{ font-size:1rem; font-weight:700; }
+  .sidebar-user-role{ font-size:0.85rem; opacity:0.8; margin-top:2px; }
+
+  .sidebar-nav{
+    flex:1;
+    padding:16px 12px;
+    overflow-y:auto;
+  }
+
+  .sidebar-section{ margin-bottom:8px; }
+
+  .sidebar-section-title{
+    font-size:0.7rem;
+    text-transform:uppercase;
+    letter-spacing:1px;
+    opacity:0.6;
+    padding:0 16px;
+    margin-bottom:8px;
+    font-weight:700;
+  }
+
+  .sidebar-link{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    padding:14px 18px;
+    margin:4px 12px;
+    border-radius:14px;
+    color:rgba(255,255,255,0.9);
+    text-decoration:none;
+    font-weight:600;
+    font-size:0.95rem;
+    transition:all 0.2s ease;
+    position:relative;
+  }
+
+  .sidebar-link:hover{
+    background:rgba(255,255,255,0.1);
+    color:#fff;
+    transform:translateX(4px);
+  }
+
+  .sidebar-link.active{
+    background:rgba(255,255,255,0.2);
+    color:#fff;
+    box-shadow:0 4px 12px rgba(0,0,0,0.15);
+  }
+
+  .sidebar-link.active::before{
+    content:'';
+    position:absolute;
+    left:0; top:50%;
+    transform:translateY(-50%);
+    width:4px; height:24px;
+    background:#fff;
+    border-radius:0 4px 4px 0;
+  }
+
+  .sidebar-link i{
+    font-size:1.2rem;
+    width:24px;
+    text-align:center;
+  }
+
+  .sidebar-footer{
+    padding:20px 24px;
+    border-top:1px solid rgba(255,255,255,0.1);
+  }
+
+  .sidebar-logout{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    padding:14px;
+    background:rgba(255,255,255,0.1);
+    border:1px solid rgba(255,255,255,0.15);
+    border-radius:14px;
+    color:#fff;
+    text-decoration:none;
+    font-weight:600;
+    transition:all 0.2s ease;
+  }
+
+  .sidebar-logout:hover{
+    background:rgba(255,255,255,0.2);
+    color:#fff;
+  }
+
+  /* ── Main Content ─────────────────────────────────── */
+  .main-content{
+    margin-left:var(--sidebar-width);
+    min-height:100vh;
+    padding:28px 32px 40px;
+  }
+
+  /* ── Page Header ──────────────────────────────────── */
+  .page-header{ margin-bottom:8px; }
+
+  .page-title{
+    font-size:1.85rem;
+    font-weight:800;
+    color:var(--text);
+    margin:0 0 6px;
+  }
+
+  .head-name-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-bottom:28px;
+  }
+
+  .head-name-label{
+    font-size:0.95rem;
+    color:var(--muted);
+    font-weight:600;
+  }
+
+  .head-name-value{
+    font-size:0.95rem;
+    font-weight:700;
+    color:var(--text);
+  }
+
+  /* ── Content Card ─────────────────────────────────── */
+  .content-card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:24px;
+    overflow:hidden;
+    box-shadow:var(--shadow);
+  }
+
+  .card-header-custom{
+    background:linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color:#fff;
+    padding:24px 28px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:12px;
+  }
+
+  .card-header-custom h2{
+    font-size:1.25rem;
+    font-weight:700;
+    margin:0;
+  }
+
+  .card-header-custom p{
+    margin:5px 0 0;
+    opacity:0.88;
+    font-size:0.92rem;
+  }
+
+  .card-body-custom{ padding:28px; }
+
+  /* ── Upload Zone ──────────────────────────────────── */
+  .upload-zone{
+    border:2px dashed var(--danger-border);
+    background:var(--danger-bg);
+    border-radius:20px;
+    padding:36px 24px;
+    text-align:center;
+    cursor:pointer;
+    transition:all 0.2s ease;
+    position:relative;
+  }
+
+  .upload-zone:hover,
+  .upload-zone.drag-over{
+    border-color:var(--primary);
+    background:var(--primary-soft);
+  }
+
+  .upload-zone input[type="file"]{
+    position:absolute;
+    inset:0;
+    opacity:0;
+    cursor:pointer;
+    width:100%;
+    height:100%;
+  }
+
+  .upload-icon{
+    width:56px; height:56px;
+    border-radius:16px;
+    background:#fff;
+    color:var(--primary);
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    font-size:1.6rem;
+    margin-bottom:14px;
+    box-shadow:0 4px 12px rgba(152,27,46,0.12);
+  }
+
+  .upload-title{
+    font-size:1rem;
+    font-weight:700;
+    color:var(--text);
+    margin-bottom:4px;
+  }
+
+  .upload-sub{
+    font-size:0.87rem;
+    color:var(--muted);
+  }
+
+  .upload-sub span{
+    color:var(--primary);
+    font-weight:600;
+    cursor:pointer;
+  }
+
+  /* File pill shown after upload */
+  .file-pill{
+    display:none;
+    align-items:center;
+    gap:10px;
+    background:#fff;
+    border:1px solid var(--success-border);
+    border-radius:14px;
+    padding:10px 16px;
+    margin-top:16px;
+    font-size:0.9rem;
+    font-weight:600;
+    color:var(--success-text);
+  }
+
+  .file-pill i{ font-size:1.1rem; }
+
+  .file-pill .remove-file{
+    margin-left:auto;
+    background:none;
+    border:none;
+    color:var(--muted);
+    cursor:pointer;
+    padding:0;
+    font-size:1rem;
+    line-height:1;
+    transition:color 0.15s;
+  }
+
+  .file-pill .remove-file:hover{ color:var(--danger-text); }
+
+  /* ── Toolbar row (search + submit) ───────────────── */
+  .toolbar{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin-top:20px;
+    flex-wrap:wrap;
+  }
+
+  .search-wrap{
+    position:relative;
+    flex:1;
+    min-width:200px;
+  }
+
+  .search-wrap i{
+    position:absolute;
+    left:16px; top:50%;
+    transform:translateY(-50%);
+    color:#9aa3af;
+    font-size:1.05rem;
+    z-index:2;
+  }
+
+  .search-wrap input{
+    padding-left:46px;
+  }
+
+  .form-control{
+    min-height:48px;
+    border-radius:14px;
+    border:1px solid var(--border);
+    background:var(--input-bg);
+    padding:10px 16px;
+    color:var(--text);
+    font-size:0.95rem;
+    box-shadow:none;
+    transition:0.2s ease;
+    width:100%;
+  }
+
+  .form-control:focus{
+    border-color:rgba(152,27,46,0.45);
+    background:#fff;
+    box-shadow:0 0 0 4px rgba(152,27,46,0.08);
+    outline:none;
+  }
+
+  .btn-primary-custom{
+    background:var(--primary);
+    color:#fff;
+    border:none;
+    min-height:48px;
+    border-radius:14px;
+    font-weight:700;
+    padding:10px 24px;
+    font-size:0.95rem;
+    box-shadow:0 10px 20px rgba(152,27,46,0.18);
+    transition:all 0.2s ease;
+    cursor:pointer;
+    white-space:nowrap;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+  }
+
+  .btn-primary-custom:hover{
+    background:var(--primary-dark);
+    transform:translateY(-2px);
+    box-shadow:0 12px 24px rgba(152,27,46,0.25);
+  }
+
+  .btn-primary-custom:disabled{
+    opacity:0.5;
+    cursor:not-allowed;
+    transform:none;
+    box-shadow:none;
+  }
+
+  /* ── Preview Table ────────────────────────────────── */
+  .table-section{ margin-top:28px; }
+
+  .table-section-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:14px;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+
+  .table-section-title{
+    font-size:1rem;
+    font-weight:700;
+    color:var(--text);
+  }
+
+  .row-count{
+    font-size:0.85rem;
+    color:var(--muted);
+    font-weight:600;
+  }
+
+  .table-responsive{ border-radius:16px; overflow:hidden; border:1px solid var(--border); }
+
+  .preview-table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:0.92rem;
+  }
+
+  .preview-table thead{
+    background:linear-gradient(90deg, #fdf3f5, #fef9fa);
+  }
+
+  .preview-table thead th{
+    padding:13px 18px;
+    font-weight:700;
+    font-size:0.8rem;
+    text-transform:uppercase;
+    letter-spacing:0.5px;
+    color:var(--primary);
+    border-bottom:2px solid var(--danger-border);
+    white-space:nowrap;
+  }
+
+  .preview-table tbody tr{
+    border-bottom:1px solid #f1f3f6;
+    transition:background 0.15s ease;
+  }
+
+  .preview-table tbody tr:last-child{ border-bottom:none; }
+  .preview-table tbody tr:hover{ background:#fdf6f7; }
+
+  .preview-table tbody td{
+    padding:13px 18px;
+    vertical-align:middle;
+    color:var(--text);
+  }
+
+  /* Avatar initials */
+  .faculty-cell{ display:flex; align-items:center; gap:12px; }
+
+  .faculty-avatar{
+    width:38px; height:38px;
+    border-radius:11px;
+    background:var(--primary-soft);
+    color:var(--primary);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:0.85rem;
+    font-weight:700;
+    flex-shrink:0;
+  }
+
+  .faculty-name{ font-weight:700; font-size:0.93rem; }
+
+  /* Badge */
+  .badge-pill{
+    display:inline-block;
+    padding:5px 12px;
+    border-radius:999px;
+    font-size:0.78rem;
+    font-weight:700;
+  }
+
+  .badge-soft-red{
+    background:var(--primary-soft);
+    color:var(--primary);
+    border:1px solid #efd3d9;
+  }
+
+  /* Empty state */
+  .empty-state{
+    text-align:center;
+    padding:48px 20px;
+    color:var(--muted);
+  }
+
+  .empty-state i{
+    font-size:2.8rem;
+    display:block;
+    margin-bottom:14px;
+    color:#d1d5db;
+  }
+
+  .empty-state p{
+    margin:0;
+    font-size:0.95rem;
+    font-weight:500;
+  }
+
+  /* ── Mobile ───────────────────────────────────────── */
+  @media (max-width: 991px){
+    .sidebar{
+      transform:translateX(-100%);
+      transition:transform 0.3s ease;
+    }
+    .sidebar.show{ transform:translateX(0); }
+    .main-content{ margin-left:0; padding:20px; }
+    .mobile-toggle{
+      display:block !important;
+      position:fixed;
+      top:20px; left:20px;
+      z-index:1001;
+      background:var(--primary);
+      color:#fff;
+      border:none;
+      width:48px; height:48px;
+      border-radius:12px;
+      font-size:1.3rem;
+      box-shadow:0 4px 12px rgba(0,0,0,0.15);
+      cursor:pointer;
+    }
+  }
+
+  @media (min-width: 992px){
+    .mobile-toggle{ display:none !important; }
+  }
+
+  @media (max-width: 576px){
+    .main-content{ padding:16px; }
+    .page-title{ font-size:1.5rem; }
+    .card-header-custom{ padding:20px; }
+    .card-body-custom{ padding:20px; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- Mobile Toggle -->
+  <button class="mobile-toggle" onclick="toggleSidebar()">
+    <i class="bi bi-list"></i>
+  </button>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-brand">
+        <div class="sidebar-brand-icon">
+          <i class="bi bi-mortarboard-fill"></i>
+        </div>
+        <span>Faculty Eval</span>
+      </div>
+    </div>
+
+    <div class="sidebar-user">
+      <div class="sidebar-user-label">Logged in as</div>
+      <div class="sidebar-user-name">Department Head</div>
+      <div class="sidebar-user-role">Head of Department</div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Main Menu</div>
+
+        <a href="{% url 'head_monitor' %}" class="sidebar-link">
+          <i class="bi bi-graph-up-arrow"></i>
+          <span>Department Results</span>
+        </a>
+
+        <a href="{% url 'head_add' %}" class="sidebar-link active">
+          <i class="bi bi-person-plus-fill"></i>
+          <span>Add Faculty</span>
+        </a>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Evaluation</div>
+
+        <a href="{% url 'eval_forms' %}" class="sidebar-link">
+          <i class="bi bi-clipboard-check"></i>
+          <span>Evaluation Forms</span>
+        </a>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <a href="{% url 'eval_login' %}" class="sidebar-logout">
+        <i class="bi bi-box-arrow-left"></i>
+        <span>Logout</span>
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+
+    <!-- Page Header -->
+    <div class="page-header">
+      <h1 class="page-title">Add Faculty</h1>
+    </div>
+
+    <div class="head-name-row">
+      <span class="head-name-label">Name:</span>
+      <span class="head-name-value">Dr. Maria Santos</span>
+    </div>
+
+    <!-- Card -->
+    <div class="content-card">
+      <div class="card-header-custom">
+        <div>
+          <h2><i class="bi bi-file-earmark-arrow-up me-2"></i>Upload Faculty List</h2>
+          <p>Import faculty members via CSV file.</p>
+        </div>
+      </div>
+
+      <div class="card-body-custom">
+
+        <!-- Upload Zone -->
+        <div class="upload-zone" id="uploadZone">
+          <input type="file" accept=".csv" id="csvInput" onchange="handleFile(this)">
+          <div class="upload-icon">
+            <i class="bi bi-file-earmark-spreadsheet"></i>
+          </div>
+          <div class="upload-title">Drag & drop your CSV file here</div>
+          <div class="upload-sub">or <span>browse to upload</span> &nbsp;·&nbsp; Accepted format: <strong>.csv</strong></div>
+        </div>
+
+        <!-- File pill (shown after file selected) -->
+        <div class="file-pill" id="filePill">
+          <i class="bi bi-file-earmark-check-fill"></i>
+          <span id="fileName">faculty_list.csv</span>
+          <button class="remove-file" onclick="clearFile()" title="Remove file">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+
+        <!-- Toolbar: search + submit -->
+        <div class="toolbar">
+          <div class="search-wrap">
+            <i class="bi bi-search"></i>
+            <input type="text" class="form-control" id="searchInput" placeholder="Search faculty name, ID, or position…" oninput="filterTable(this.value)" disabled>
+          </div>
+          <button class="btn-primary-custom" id="submitBtn" onclick="submitFaculty()" disabled>
+            <i class="bi bi-check-lg"></i> Add Faculty
+          </button>
+        </div>
+
+        <!-- Preview Table -->
+        <div class="table-section">
+          <div class="table-section-header">
+            <span class="table-section-title">Preview</span>
+            <span class="row-count" id="rowCount"></span>
+          </div>
+
+          <div class="table-responsive">
+            <table class="preview-table" id="previewTable">
+              <thead id="tableHead" style="display:none;">
+                <tr>
+                  <th>#</th>
+                  <th>Faculty Member</th>
+                  <th>Employee ID</th>
+                  <th>Position</th>
+                  <th>Department</th>
+                  <th>Email</th>
+                  <th>Employment</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="tableBody">
+                <!-- Empty state -->
+                <tr id="emptyRow">
+                  <td colspan="8">
+                    <div class="empty-state">
+                      <i class="bi bi-table"></i>
+                      <p>No data yet. Upload a CSV file to preview faculty records here.</p>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div><!-- /card-body -->
+    </div><!-- /content-card -->
+
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    /* ── Sidebar toggle ── */
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('show');
+    }
+
+    document.addEventListener('click', function(e) {
+      const sidebar = document.getElementById('sidebar');
+      const toggle  = document.querySelector('.mobile-toggle');
+      if (window.innerWidth < 992) {
+        if (!sidebar.contains(e.target) && !toggle.contains(e.target)) {
+          sidebar.classList.remove('show');
+        }
+      }
+    });
+
+    /* ── Drag & Drop ── */
+    const zone = document.getElementById('uploadZone');
+
+    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+    zone.addEventListener('drop', e => {
+      e.preventDefault();
+      zone.classList.remove('drag-over');
+      const file = e.dataTransfer.files[0];
+      if (file && file.name.endsWith('.csv')) processCSV(file);
+    });
+
+    function handleFile(input) {
+      const file = input.files[0];
+      if (file) processCSV(file);
+    }
+
+    /*
+     * masterList  — all rows ever added (submitted batches)
+     * pendingRows — rows from the current CSV, not yet submitted
+     */
+    let masterList  = [];
+    let pendingRows = [];
+
+    function processCSV(file) {
+      document.getElementById('fileName').textContent = file.name;
+      document.getElementById('filePill').style.display = 'flex';
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const text  = e.target.result;
+        const lines = text.trim().split('\n').map(l => l.trim()).filter(Boolean);
+
+        if (lines.length < 2) {
+          resetUpload('CSV appears empty or has no data rows.');
+          return;
+        }
+
+        const dataRows = lines.slice(1);
+        pendingRows = dataRows.map(line => {
+          const cols = parseCSVLine(line);
+          return {
+            firstName:  cols[0] || '',
+            lastName:   cols[1] || '',
+            employeeId: cols[2] || '',
+            position:   cols[3] || '',
+            department: cols[4] || '',
+            email:      cols[5] || '',
+            empStatus:  cols[6] || '',
+            submitted:  false,
+          };
+        });
+
+    
+
+        document.getElementById('searchInput').disabled = false;
+        document.getElementById('submitBtn').disabled   = pendingRows.length === 0;
+        document.getElementById('tableHead').style.display = '';
+
+        refreshTable();
+      };
+      reader.readAsText(file);
+    }
+
+    /* ── Combine master + pending for display ── */
+    function getCombinedRows() {
+      return [
+        ...masterList.map(r  => ({ ...r, submitted: true  })),
+        ...pendingRows.map(r => ({ ...r, submitted: false })),
+      ].map((r, i) => ({ ...r, num: i + 1 }));
+    }
+
+    function refreshTable() {
+      const q = document.getElementById('searchInput').value.toLowerCase();
+      const combined = getCombinedRows();
+      const filtered = q
+        ? combined.filter(r =>
+            (r.firstName + ' ' + r.lastName).toLowerCase().includes(q) ||
+            r.employeeId.toLowerCase().includes(q) ||
+            r.position.toLowerCase().includes(q) ||
+            r.department.toLowerCase().includes(q) ||
+            r.email.toLowerCase().includes(q)
+          )
+        : combined;
+      renderTable(filtered, combined.length);
+    }
+
+    function renderTable(rows, totalCount) {
+      const tbody = document.getElementById('tableBody');
+      const count = document.getElementById('rowCount');
+
+      if (!rows.length && totalCount === 0) {
+        showEmpty('No data yet. Upload a CSV file to preview faculty records here.');
+        count.textContent = '';
+        return;
+      }
+
+      if (!rows.length) {
+        showEmpty('No matching records found.');
+        count.textContent = '';
+        return;
+      }
+
+      const total = totalCount !== undefined ? totalCount : rows.length;
+      count.textContent = total + ' record' + (total !== 1 ? 's' : '');
+
+      tbody.innerHTML = rows.map(r => `
+        <tr style="${r.submitted ? '' : 'background:#fffbf0;'}">
+          <td style="color:var(--muted);font-size:0.85rem;">${String(r.num).padStart(2,'0')}</td>
+          <td>
+            <div class="faculty-cell">
+              <div class="faculty-avatar">${initials(r.firstName, r.lastName)}</div>
+              <div class="faculty-name">${r.firstName} ${r.lastName}</div>
+            </div>
+          </td>
+          <td style="color:var(--muted);font-size:0.9rem;">${r.employeeId}</td>
+          <td><span class="badge-pill badge-soft-red">${r.position}</span></td>
+          <td style="font-size:0.9rem;">${r.department}</td>
+          <td style="color:var(--muted);font-size:0.88rem;">${r.email}</td>
+          <td style="font-size:0.9rem;">${r.empStatus}</td>
+          <td>
+            ${r.submitted
+              ? `<span style="font-size:0.8rem;font-weight:700;color:var(--success-text);"><i class="bi bi-check-circle-fill me-1"></i>Added</span>`
+              : `<span style="font-size:0.8rem;font-weight:700;color:var(--warning-text);"><i class="bi bi-clock me-1"></i>Pending</span>`
+            }
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function showEmpty(msg) {
+      document.getElementById('tableBody').innerHTML = `
+        <tr><td colspan="8">
+          <div class="empty-state">
+            <i class="bi bi-table"></i>
+            <p>${msg}</p>
+          </div>
+        </td></tr>`;
+      document.getElementById('rowCount').textContent = '';
+    }
+
+    function filterTable(query) {
+      refreshTable();
+    }
+
+    function clearFile() {
+      pendingRows = [];
+      document.getElementById('csvInput').value        = '';
+      document.getElementById('filePill').style.display = 'none';
+      document.getElementById('submitBtn').disabled    = true;
+      // keep search enabled if masterList has rows
+      if (!masterList.length) {
+        document.getElementById('searchInput').value    = '';
+        document.getElementById('searchInput').disabled = true;
+        document.getElementById('tableHead').style.display = 'none';
+      }
+      refreshTable();
+    }
+
+    function submitFaculty() {
+      if (!pendingRows.length) return;
+
+      const count = pendingRows.length;
+
+      // Move pending → master
+      masterList = [...masterList, ...pendingRows];
+      pendingRows = [];
+
+      // Reset upload UI
+      document.getElementById('csvInput').value         = '';
+      document.getElementById('filePill').style.display  = 'none';
+      document.getElementById('submitBtn').disabled      = true;
+
+      refreshTable();
+      showToast(`${count} faculty record${count !== 1 ? 's' : ''} added successfully.`, 'success');
+    }
+
+    /* ── Helpers ── */
+    function parseCSVLine(line) {
+      const result = [];
+      let cur = '', inQuote = false;
+      for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        if (ch === '"') { inQuote = !inQuote; }
+        else if (ch === ',' && !inQuote) { result.push(cur.trim()); cur = ''; }
+        else { cur += ch; }
+      }
+      result.push(cur.trim());
+      return result;
+    }
+
+    function initials(first, last) {
+      return ((first[0] || '') + (last[0] || '')).toUpperCase();
+    }
+
+    function resetUpload(msg) {
+      document.getElementById('csvInput').value         = '';
+      document.getElementById('filePill').style.display  = 'none';
+      document.getElementById('submitBtn').disabled      = true;
+      pendingRows = [];
+      if (!masterList.length) showEmpty(msg);
+    }
+
+    /* ── Toast notification ── */
+    function showToast(msg, type) {
+      let toast = document.getElementById('appToast');
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'appToast';
+        toast.style.cssText = `
+          position:fixed; bottom:28px; right:28px; z-index:9999;
+          padding:14px 20px; border-radius:16px; font-size:0.92rem;
+          font-weight:600; display:flex; align-items:center; gap:10px;
+          box-shadow:0 8px 24px rgba(0,0,0,0.12);
+          transition:opacity 0.3s ease; max-width:340px;
+        `;
+        document.body.appendChild(toast);
+      }
+
+      const styles = {
+        success: { bg:'var(--success-bg)', border:'var(--success-border)', color:'var(--success-text)', icon:'bi-check-circle-fill' },
+        warning: { bg:'var(--warning-bg)', border:'var(--warning-border)', color:'var(--warning-text)', icon:'bi-exclamation-triangle-fill' },
+      };
+      const s = styles[type] || styles.success;
+      toast.style.background   = s.bg;
+      toast.style.border       = `1px solid ${s.border}`;
+      toast.style.color        = s.color;
+      toast.style.opacity      = '1';
+      toast.innerHTML          = `<i class="bi ${s.icon}"></i> ${msg}`;
+
+      clearTimeout(toast._timer);
+      toast._timer = setTimeout(() => { toast.style.opacity = '0'; }, 3500);
+    }
+
+    /* ── Update table header colspan on load ── */
+    // thead already has 8 cols to match new Status column
+  </script>
+</body>
+</html>
