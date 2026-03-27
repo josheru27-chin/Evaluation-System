@@ -3,711 +3,800 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Faculty Evaluation Form</title>
+  <title>Head Evaluation Form - Left Rail Layout</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
-<style>
-  :root{
-  --primary:#981b2e;
-  --primary-dark:#7d1626;
-  --primary-soft:#f7e9ec;
-
-  --bg:#f4f6f9;
-  --card:#ffffff;
-  --text:#1f2937;
-  --muted:#6b7280;
-  --border:#e5e7eb;
-  --input-bg:#f7f9fc;
-
-  --success-bg:#eaf7ee;
-  --success-border:#c9e7d2;
-  --success-text:#22613a;
-
-  --danger-bg:#fff1f2;
-  --danger-border:#f3c5cb;
-  --danger-text:#a22735;
-
-  --progress-bg:#fff1f2;
-  --progress-text:#981b2e;
-  --not-bg:#f3f4f6;
-  --not-text:#6b7280;
-
-  --warning-bg:#fff8e8;
-  --warning-border:#f4d58d;
-  --warning-text:#8a5a00;
-
-  --shadow:0 10px 28px rgba(31, 41, 55, 0.08);
-}
-
-*{
-  box-sizing:border-box;
-}
-
-body{
-  margin:0;
-  font-family:"Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  background:linear-gradient(180deg, #ffffff 0%, var(--bg) 100%);
-  color:var(--text);
-}
-
-.app-shell{
-  max-width:1200px;
-  margin:28px auto;
-  padding:0 16px 40px;
-}
-
-.main-card{
-  background:var(--card);
-  border:1px solid var(--border);
-  border-radius:28px;
-  overflow:hidden;
-  box-shadow:var(--shadow);
-}
-
-.hero{
-  background:linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-  color:#fff;
-  padding:28px;
-}
-
-.hero h1{
-  font-size:1.65rem;
-  font-weight:700;
-  margin:0 0 8px;
-}
-
-.hero p{
-  margin:0;
-  opacity:.92;
-}
-
-.body-wrap{
-  padding:24px;
-}
-
-.status-pill{
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
-  padding:8px 14px;
-  border-radius:999px;
-  font-size:.92rem;
-  font-weight:700;
-  border:1px solid transparent;
-}
-
-.status-not-started{
-  background:var(--not-bg);
-  color:var(--not-text);
-  border-color:var(--border);
-}
-
-.status-progress{
-  background:var(--progress-bg);
-  color:var(--progress-text);
-  border-color:var(--danger-border);
-}
-
-.status-submitted{
-  background:var(--success-bg);
-  color:var(--success-text);
-  border-color:var(--success-border);
-}
-
-.top-card,
-.category-card,
-.toolbar-card,
-.instrument-card,
-.action-card,
-.question-card,
-.footer-card{
-  background:#fff;
-  border:1px solid var(--border);
-  border-radius:20px;
-}
-
-.top-card{
-  padding:18px;
-  height:100%;
-}
-
-.summary-count{
-  font-size:2rem;
-  font-weight:800;
-  color:var(--primary);
-  line-height:1;
-}
-
-.mini-progress{
-  display:flex;
-  flex-wrap:wrap;
-  gap:10px;
-}
-
-.mini-badge{
-  padding:8px 12px;
-  border-radius:999px;
-  border:1px solid var(--border);
-  background:#fff;
-  font-size:.88rem;
-  font-weight:600;
-  color:var(--text);
-}
-
-.category-card{
-  padding:22px;
-  height:100%;
-  transition:.2s ease;
-}
-
-.category-card:hover{
-  transform:translateY(-3px);
-  box-shadow:0 10px 26px rgba(31, 41, 55, 0.08);
-}
-
-.category-icon{
-  width:54px;
-  height:54px;
-  border-radius:16px;
-  background:var(--primary-soft);
-  color:var(--primary);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:800;
-  font-size:1.2rem;
-  margin-bottom:14px;
-}
-
-.category-title{
-  font-size:1.1rem;
-  font-weight:700;
-  margin-bottom:6px;
-}
-
-.category-desc{
-  color:var(--muted);
-  min-height:48px;
-  line-height:1.45;
-  font-size:.95rem;
-}
-
-.helper-box{
-  border:1px dashed var(--danger-border);
-  background:var(--danger-bg);
-  color:var(--danger-text);
-  border-radius:18px;
-  padding:14px 16px;
-  margin-bottom:20px;
-}
-
-.toolbar-card{
-  padding:16px;
-  margin-bottom:18px;
-}
-
-.instrument-card{
-  padding:18px;
-  background:#fcfcfd;
-  margin-bottom:18px;
-}
-
-.instrument-grid{
-  display:grid;
-  grid-template-columns:repeat(5, minmax(0,1fr));
-  gap:12px;
-  margin-top:14px;
-}
-
-.instrument-item{
-  background:#fff;
-  border:1px solid var(--border);
-  border-radius:16px;
-  padding:14px 12px;
-  line-height:1.35;
-  min-height:70px;
-}
-
-.instrument-item strong{
-  font-size:1.05rem;
-  color:var(--primary);
-}
-
-.action-card{
-  padding:16px 18px;
-  background:#fcfcfd;
-  margin-bottom:18px;
-}
-
-.copy-peers-wrap{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:16px;
-  flex-wrap:wrap;
-}
-
-.copy-peers-info{
-  flex:1 1 300px;
-  min-width:0;
-}
-
-.copy-peers-actions{
-  flex:0 0 auto;
-}
-
-.copy-peers-actions .btn{
-  min-width:220px;
-}
-
-.copy-peer-btn{
-  min-width:240px;
-  position:relative;
-  overflow:hidden;
-  transition:all .25s ease;
-}
-
-.copy-peer-btn .copy-btn-default,
-.copy-peer-btn .copy-btn-success{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  gap:8px;
-  transition:all .25s ease;
-}
-
-.copy-peer-btn .copy-btn-success{
-  display:none;
-}
-
-.copy-peer-btn.applied{
-  background:var(--success-text);
-  border-color:var(--success-text);
-  color:#fff;
-  box-shadow:0 8px 20px rgba(34, 97, 58, 0.18);
-}
-
-.copy-peer-btn.applied:hover{
-  background:#1b4f2f;
-  border-color:#1b4f2f;
-  color:#fff;
-}
-
-.copy-peer-btn.applied .copy-btn-default{
-  display:none;
-}
-
-.copy-peer-btn.applied .copy-btn-success{
-  display:inline-flex;
-}
-
-.check-anim{
-  width:22px;
-  height:22px;
-  border-radius:999px;
-  background:rgba(255,255,255,0.18);
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  transform:scale(.7);
-  animation:popCheck .35s ease forwards;
-}
-
-.check-icon{
-  width:14px;
-  height:14px;
-}
-
-.check-icon path{
-  stroke:#fff;
-  stroke-width:3;
-  stroke-linecap:round;
-  stroke-linejoin:round;
-  stroke-dasharray:1;
-  stroke-dashoffset:1;
-  animation:drawCheck .45s ease forwards .1s;
-}
-
-@keyframes popCheck{
-  0%{
-    transform:scale(.7);
-    opacity:.4;
-  }
-  60%{
-    transform:scale(1.15);
-    opacity:1;
-  }
-  100%{
-    transform:scale(1);
-    opacity:1;
-  }
-}
-
-@keyframes drawCheck{
-  to{
-    stroke-dashoffset:0;
-  }
-}
-
-.score-chip{
-  min-width:46px;
-  height:46px;
-  border-radius:999px;
-  border:2px solid #d8a7b0;
-  background:#fff;
-  color:var(--primary);
-  font-weight:800;
-  transition:.2s ease;
-}
-
-.score-chip:hover,
-.score-chip.active{
-  background:var(--primary);
-  border-color:var(--primary);
-  color:#fff;
-}
-
-.stepper{
-  display:flex;
-  flex-wrap:wrap;
-  gap:10px;
-}
-
-.step-chip{
-  border:1px solid var(--border);
-  background:#fff;
-  color:var(--muted);
-  border-radius:999px;
-  padding:9px 14px;
-  font-weight:700;
-  font-size:.92rem;
-  cursor:pointer;
-  transition:.18s ease;
-}
-
-.step-chip:hover{
-  border-color:#d4a1ab;
-  color:var(--primary);
-}
-
-.step-chip.active{
-  background:var(--primary);
-  color:#fff;
-  border-color:var(--primary);
-}
-
-.step-chip.done{
-  background:var(--success-bg);
-  color:var(--success-text);
-  border-color:var(--success-border);
-}
-
-.step-chip.locked{
-  background:#f9fafb;
-  color:#9ca3af;
-  border-color:#e5e7eb;
-  cursor:not-allowed;
-}
-
-.step-chip.locked:hover{
-  border-color:#e5e7eb;
-  color:#9ca3af;
-}
-
-.question-card{
-  padding:18px;
-  margin-bottom:16px;
-}
-
-.question-card.readonly{
-  opacity:.7;
-}
-
-.question-title{
-  font-weight:700;
-  font-size:1.03rem;
-  margin-bottom:6px;
-  line-height:1.45;
-  color:var(--text);
-}
-
-.question-sub{
-  color:var(--muted);
-  font-size:.94rem;
-  margin-bottom:14px;
-  line-height:1.5;
-}
-
-.rating-scale{
-  display:grid;
-  grid-template-columns:repeat(5, minmax(110px, 1fr));
-  gap:10px;
-}
-
-.rating-option{
-  position:relative;
-}
-
-.rating-option input{
-  display:none;
-}
-
-.rating-label{
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  text-align:center;
-  gap:4px;
-  min-height:84px;
-  border:1.5px solid var(--border);
-  border-radius:18px;
-  background:#fff;
-  padding:12px 10px;
-  cursor:pointer;
-  transition:.18s ease;
-}
-
-.rating-label:hover{
-  border-color:#c98d99;
-  background:var(--primary-soft);
-}
-
-.rating-number{
-  width:36px;
-  height:36px;
-  border-radius:999px;
-  border:2px solid #d6a1ab;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:800;
-  color:var(--primary);
-  background:#fff;
-}
-
-.rating-text{
-  font-size:.84rem;
-  line-height:1.2;
-  font-weight:600;
-  color:#4b5563;
-}
-
-.rating-option input:checked + .rating-label{
-  border-color:var(--primary);
-  background:var(--primary-soft);
-  box-shadow:0 0 0 3px rgba(152, 27, 46, 0.08);
-}
-
-.rating-option input:checked + .rating-label .rating-number{
-  background:var(--primary);
-  color:#fff;
-  border-color:var(--primary);
-}
-
-.rating-option.readonly .rating-label,
-.rating-option input:disabled + .rating-label{
-  cursor:not-allowed;
-  background:#f9fafb;
-  border-color:#e5e7eb;
-}
-
-.rating-option input:disabled + .rating-label:hover{
-  background:#f9fafb;
-  border-color:#e5e7eb;
-}
-
-.footer-card{
-  padding:18px;
-  margin-top:18px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:12px;
-  flex-wrap:wrap;
-}
-
-.muted-note{
-  color:var(--muted);
-  font-size:.92rem;
-  line-height:1.5;
-}
-
-.warning-note{
-  margin-top:14px;
-  border:1px dashed var(--warning-border);
-  background:var(--warning-bg);
-  color:var(--warning-text);
-  border-radius:16px;
-  padding:12px 14px;
-}
-
-.hidden{
-  display:none !important;
-}
-
-.small-text{
-  font-size:.92rem;
-}
-
-.section-header{
-  margin-bottom:14px;
-}
-
-.form-control,
-.form-select{
-  background:var(--input-bg);
-  border:1px solid var(--border);
-  color:var(--text);
-}
-
-.form-control:focus,
-.form-select:focus{
-  border-color:#c98d99;
-  box-shadow:0 0 0 0.2rem rgba(152, 27, 46, 0.12);
-}
-
-.btn-primary{
-  background:var(--primary);
-  border-color:var(--primary);
-}
-
-.btn-primary:hover,
-.btn-primary:focus{
-  background:var(--primary-dark);
-  border-color:var(--primary-dark);
-}
-
-.btn-outline-primary{
-  color:var(--primary);
-  border-color:var(--primary);
-}
-
-.btn-outline-primary:hover,
-.btn-outline-primary:focus{
-  background:var(--primary);
-  border-color:var(--primary);
-  color:#fff;
-}
-
-.btn-outline-secondary{
-  color:#4b5563;
-  border-color:#d1d5db;
-}
-
-.btn-outline-secondary:hover,
-.btn-outline-secondary:focus{
-  background:#f3f4f6;
-  border-color:#d1d5db;
-  color:#111827;
-}
-
-.btn:disabled,
-.btn.disabled{
-  opacity:.72;
-}
-
-.alert-light{
-  background:#f9fafb;
-  border-color:var(--border);
-  color:var(--muted);
-}
-
-.modal-content{
-  background:var(--card);
-}
-
-.modal-body{
-  color:var(--text);
-}
-
-.text-muted{
-  color:var(--muted) !important;
-}
-
-.bg-light{
-  background:var(--input-bg) !important;
-}
-
-@media (max-width: 991px){
-  .instrument-grid{
-    grid-template-columns:repeat(2, minmax(0,1fr));
-  }
-
-  .rating-scale{
-    grid-template-columns:repeat(2, minmax(0,1fr));
-  }
-}
-
-@media (max-width: 767px){
-  .copy-peers-wrap{
-    flex-direction:column;
-    align-items:stretch;
-  }
-
-  .copy-peers-actions{
-    width:100%;
-  }
-
-  .copy-peers-actions .btn{
-    width:100%;
-    min-width:0;
-  }
-
-  .footer-card{
-    flex-direction:column;
-    align-items:stretch;
-  }
-
-  .footer-card .btn-group-wrap{
-    width:100%;
-    display:flex;
-    flex-wrap:wrap;
-    gap:8px;
-  }
-
-  .footer-card .btn-group-wrap .btn{
-    flex:1 1 auto;
-  }
-}
-
-@media (max-width: 576px){
-  .body-wrap{
-    padding:16px;
-  }
-
-  .instrument-grid,
-  .rating-scale{
-    grid-template-columns:1fr;
-  }
-
-  .hero{
-    padding:22px 18px;
-  }
-
-  .hero h1{
-    font-size:1.35rem;
-  }
-}
-</style>
-
-
+  <style>
+    :root{
+      --primary:#981b2e;
+      --primary-dark:#7d1626;
+      --primary-soft:#f7e9ec;
+
+      --bg:#f4f6f9;
+      --card:#ffffff;
+      --text:#1f2937;
+      --muted:#6b7280;
+      --border:#e5e7eb;
+      --input-bg:#f7f9fc;
+
+      --success-bg:#eaf7ee;
+      --success-border:#c9e7d2;
+      --success-text:#22613a;
+
+      --danger-bg:#fff1f2;
+      --danger-border:#f3c5cb;
+      --danger-text:#a22735;
+
+      --progress-bg:#fff1f2;
+      --progress-text:#981b2e;
+      --not-bg:#f3f4f6;
+      --not-text:#6b7280;
+
+      --warning-bg:#fff8e8;
+      --warning-border:#f4d58d;
+      --warning-text:#8a5a00;
+
+      --shadow:0 10px 28px rgba(31, 41, 55, 0.08);
+    }
+
+    *{ box-sizing:border-box; }
+
+    html{
+      scroll-behavior:smooth;
+    }
+
+    body{
+      margin:0;
+      font-family:"Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background:linear-gradient(180deg, #ffffff 0%, var(--bg) 100%);
+      color:var(--text);
+    }
+
+    .app-shell{
+      width:100%;
+      max-width:none;
+      margin:0;
+      padding:0 10px 24px;
+    }
+
+    .main-card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:28px;
+      overflow:hidden;
+      box-shadow:var(--shadow);
+    }
+
+    .hero{
+      background:linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color:#fff;
+      padding:28px;
+    }
+
+    .hero h1{
+      font-size:1.7rem;
+      font-weight:700;
+      margin:0 0 8px;
+    }
+
+    .hero p{
+      margin:0;
+      opacity:.94;
+      line-height:1.55;
+    }
+
+    .body-wrap{ padding:24px; }
+
+    .status-pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 14px;
+      border-radius:999px;
+      font-size:.92rem;
+      font-weight:700;
+      border:1px solid transparent;
+    }
+
+    .status-not-started{
+      background:var(--not-bg);
+      color:var(--not-text);
+      border-color:var(--border);
+    }
+
+    .status-progress{
+      background:var(--progress-bg);
+      color:var(--progress-text);
+      border-color:var(--danger-border);
+    }
+
+    .status-submitted{
+      background:var(--success-bg);
+      color:var(--success-text);
+      border-color:var(--success-border);
+    }
+
+    .top-card,
+    .category-card,
+    .toolbar-card,
+    .instrument-card,
+    .action-card,
+    .question-card,
+    .footer-card,
+    .faculty-info-card,
+    .left-rail-card{
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius:20px;
+    }
+
+    .top-card,
+    .faculty-info-card{
+      padding:18px;
+      height:100%;
+    }
+
+    .summary-count{
+      font-size:2rem;
+      font-weight:800;
+      color:var(--primary);
+      line-height:1;
+    }
+
+    .mini-progress{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+    }
+
+    .mini-badge{
+      padding:8px 12px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background:#fff;
+      font-size:.88rem;
+      font-weight:600;
+      color:var(--text);
+    }
+
+    .category-card{
+      padding:22px;
+      height:100%;
+      transition:.2s ease;
+    }
+
+    .category-card:hover{
+      transform:translateY(-3px);
+      box-shadow:0 10px 26px rgba(31, 41, 55, 0.08);
+    }
+
+    .category-icon{
+      width:54px;
+      height:54px;
+      border-radius:16px;
+      background:var(--primary-soft);
+      color:var(--primary);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:800;
+      font-size:1.2rem;
+      margin-bottom:14px;
+    }
+
+    .category-title{
+      font-size:1.1rem;
+      font-weight:700;
+      margin-bottom:6px;
+    }
+
+    .category-desc{
+      color:var(--muted);
+      min-height:52px;
+      line-height:1.45;
+      font-size:.95rem;
+    }
+
+    .helper-box{
+      border:1px dashed var(--danger-border);
+      background:var(--danger-bg);
+      color:var(--danger-text);
+      border-radius:18px;
+      padding:14px 16px;
+      margin-bottom:20px;
+    }
+
+    .toolbar-card,
+    .instrument-card,
+    .action-card{
+      padding:16px 18px;
+      margin-bottom:18px;
+    }
+
+    .instrument-card{ background:#fcfcfd; }
+
+    .instrument-grid{
+      display:grid;
+      grid-template-columns:repeat(5, minmax(0,1fr));
+      gap:12px;
+      margin-top:14px;
+    }
+
+    .instrument-item{
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:14px 12px;
+      line-height:1.35;
+      min-height:104px;
+    }
+
+    .instrument-item strong{
+      font-size:1.05rem;
+      color:var(--primary);
+    }
+
+    .faculty-info-grid{
+      display:grid;
+      grid-template-columns:repeat(3, minmax(0,1fr));
+      gap:14px;
+      margin-top:14px;
+    }
+
+    .field-block label{
+      display:block;
+      font-weight:700;
+      font-size:.9rem;
+      margin-bottom:6px;
+      color:#374151;
+    }
+
+    .form-shell{
+      display:grid;
+      grid-template-columns:250px minmax(0,1fr);
+      gap:18px;
+      align-items:start;
+    }
+
+    .form-left-rail{
+      position:sticky;
+      top:18px;
+      display:flex;
+      flex-direction:column;
+      gap:16px;
+      align-self:start;
+    }
+
+    .left-rail-card{
+      padding:16px;
+    }
+
+    .left-rail-title{
+      font-size:.82rem;
+      font-weight:800;
+      color:var(--primary);
+      letter-spacing:.04em;
+      text-transform:uppercase;
+      margin-bottom:10px;
+    }
+
+    .left-rail-divider{
+      height:1px;
+      background:var(--border);
+      margin:14px 0;
+    }
+
+    .left-rail-sub{
+      color:var(--muted);
+      font-size:.9rem;
+      line-height:1.5;
+    }
+
+    .progress-panel{
+      border:1px solid var(--border);
+      background:var(--input-bg);
+      border-radius:16px;
+      padding:12px 14px;
+      margin-top:8px;
+    }
+
+    .progress-panel .progress-title{
+      font-size:.82rem;
+      font-weight:700;
+      color:#374151;
+      margin-bottom:4px;
+    }
+
+    .progress-panel .progress-value{
+      font-size:1.05rem;
+      font-weight:800;
+      color:var(--primary);
+    }
+
+    .status-panel{
+      border:1px dashed #d7c1c6;
+      background:#fcf7f8;
+      border-radius:16px;
+      padding:12px 14px;
+    }
+
+    .status-panel .status-label{
+      font-size:.8rem;
+      font-weight:800;
+      color:var(--primary);
+      text-transform:uppercase;
+      letter-spacing:.04em;
+      margin-bottom:4px;
+    }
+
+    .status-panel .status-value{
+      font-weight:800;
+      color:var(--text);
+    }
+
+    .copy-peers-wrap{
+      display:grid;
+      grid-template-columns:minmax(0,1.6fr) minmax(260px,360px);
+      gap:16px;
+      align-items:start;
+    }
+
+    .copy-peers-info{
+      min-width:0;
+    }
+
+    .copy-peers-actions{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      align-items:stretch;
+      justify-content:flex-start;
+    }
+
+    .copy-peers-actions .btn{
+      width:100%;
+      min-width:0;
+    }
+
+    .copy-peer-btn{
+      width:100%;
+      min-width:0;
+      position:relative;
+      overflow:hidden;
+      transition:all .25s ease;
+    }
+
+    .copy-peer-btn .copy-btn-default,
+    .copy-peer-btn .copy-btn-success{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      transition:all .25s ease;
+    }
+
+    .copy-peer-btn .copy-btn-success{ display:none; }
+
+    .copy-peer-btn.applied{
+      background:var(--success-text);
+      border-color:var(--success-text);
+      color:#fff;
+      box-shadow:0 8px 20px rgba(34, 97, 58, 0.18);
+    }
+
+    .copy-peer-btn.applied:hover{
+      background:#1b4f2f;
+      border-color:#1b4f2f;
+      color:#fff;
+    }
+
+    .copy-peer-btn.applied .copy-btn-default{ display:none; }
+    .copy-peer-btn.applied .copy-btn-success{ display:inline-flex; }
+
+    .check-anim{
+      width:22px;
+      height:22px;
+      border-radius:999px;
+      background:rgba(255,255,255,0.18);
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      transform:scale(.7);
+      animation:popCheck .35s ease forwards;
+    }
+
+    .check-icon{
+      width:14px;
+      height:14px;
+    }
+
+    .check-icon path{
+      stroke:#fff;
+      stroke-width:3;
+      stroke-linecap:round;
+      stroke-linejoin:round;
+      stroke-dasharray:1;
+      stroke-dashoffset:1;
+      animation:drawCheck .45s ease forwards .1s;
+    }
+
+    @keyframes popCheck{
+      0%{ transform:scale(.7); opacity:.4; }
+      60%{ transform:scale(1.15); opacity:1; }
+      100%{ transform:scale(1); opacity:1; }
+    }
+
+    @keyframes drawCheck{
+      to{ stroke-dashoffset:0; }
+    }
+
+    .score-chip{
+      min-width:46px;
+      height:46px;
+      border-radius:999px;
+      border:2px solid #d8a7b0;
+      background:#fff;
+      color:var(--primary);
+      font-weight:800;
+      transition:.2s ease;
+    }
+
+    .score-chip:hover,
+    .score-chip.active{
+      background:var(--primary);
+      border-color:var(--primary);
+      color:#fff;
+    }
+
+    .stepper{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+    }
+
+    .step-chip{
+      border:1px solid var(--border);
+      background:#fff;
+      color:var(--muted);
+      border-radius:999px;
+      padding:9px 14px;
+      font-weight:700;
+      font-size:.92rem;
+      cursor:pointer;
+      transition:.18s ease;
+    }
+
+    .step-chip:hover{
+      border-color:#d4a1ab;
+      color:var(--primary);
+    }
+
+    .step-chip.active{
+      background:var(--primary);
+      color:#fff;
+      border-color:var(--primary);
+    }
+
+    .step-chip.done{
+      background:var(--success-bg);
+      color:var(--success-text);
+      border-color:var(--success-border);
+    }
+
+    .step-chip.locked{
+      background:#f9fafb;
+      color:#9ca3af;
+      border-color:#e5e7eb;
+      cursor:not-allowed;
+    }
+
+    .step-chip.locked:hover{
+      border-color:#e5e7eb;
+      color:#9ca3af;
+    }
+
+    .question-card{
+      padding:18px;
+      margin-bottom:16px;
+    }
+
+    .question-card.readonly{ opacity:.7; }
+
+    .question-title{
+      font-weight:700;
+      font-size:1.03rem;
+      margin-bottom:6px;
+      line-height:1.45;
+      color:var(--text);
+    }
+
+    .question-sub{
+      color:var(--muted);
+      font-size:.94rem;
+      margin-bottom:14px;
+      line-height:1.5;
+    }
+
+    .verification-box{
+      margin-bottom:14px;
+      padding:12px 14px;
+      border:1px dashed #d7c1c6;
+      border-radius:14px;
+      background:#fcf7f8;
+    }
+
+    .verification-title{
+      font-size:.85rem;
+      font-weight:700;
+      color:var(--primary);
+      margin-bottom:6px;
+    }
+
+    .verification-list{
+      margin:0;
+      padding-left:18px;
+      color:#4b5563;
+      font-size:.9rem;
+      line-height:1.5;
+    }
+
+    .rating-scale{
+      display:grid;
+      grid-template-columns:repeat(5, minmax(120px, 1fr));
+      gap:10px;
+    }
+
+    .rating-option{ position:relative; }
+    .rating-option input{ display:none; }
+
+    .rating-label{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      gap:4px;
+      min-height:96px;
+      border:1.5px solid var(--border);
+      border-radius:18px;
+      background:#fff;
+      padding:12px 10px;
+      cursor:pointer;
+      transition:.18s ease;
+    }
+
+    .rating-label:hover{
+      border-color:#c98d99;
+      background:var(--primary-soft);
+    }
+
+    .rating-number{
+      width:36px;
+      height:36px;
+      border-radius:999px;
+      border:2px solid #d6a1ab;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:800;
+      color:var(--primary);
+      background:#fff;
+    }
+
+    .rating-text{
+      font-size:.82rem;
+      line-height:1.2;
+      font-weight:600;
+      color:#4b5563;
+    }
+
+    .rating-option input:checked + .rating-label{
+      border-color:var(--primary);
+      background:var(--primary-soft);
+      box-shadow:0 0 0 3px rgba(152, 27, 46, 0.08);
+    }
+
+    .rating-option input:checked + .rating-label .rating-number{
+      background:var(--primary);
+      color:#fff;
+      border-color:var(--primary);
+    }
+
+    .rating-option.readonly .rating-label,
+    .rating-option input:disabled + .rating-label{
+      cursor:not-allowed;
+      background:#f9fafb;
+      border-color:#e5e7eb;
+    }
+
+    .rating-option input:disabled + .rating-label:hover{
+      background:#f9fafb;
+      border-color:#e5e7eb;
+    }
+
+    .footer-card{
+      padding:18px;
+      margin-top:18px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+
+    .muted-note{
+      color:var(--muted);
+      font-size:.92rem;
+      line-height:1.5;
+    }
+
+    .warning-note{
+      margin-top:14px;
+      border:1px dashed var(--warning-border);
+      background:var(--warning-bg);
+      color:var(--warning-text);
+      border-radius:16px;
+      padding:12px 14px;
+    }
+
+    .hidden{ display:none !important; }
+    .small-text{ font-size:.92rem; }
+    .section-header{ margin-bottom:14px; }
+
+    .form-control,
+    .form-select{
+      background:var(--input-bg);
+      border:1px solid var(--border);
+      color:var(--text);
+    }
+
+    .form-control:focus,
+    .form-select:focus{
+      border-color:#c98d99;
+      box-shadow:0 0 0 0.2rem rgba(152, 27, 46, 0.12);
+    }
+
+    .btn-primary{
+      background:var(--primary);
+      border-color:var(--primary);
+    }
+
+    .btn-primary:hover,
+    .btn-primary:focus{
+      background:var(--primary-dark);
+      border-color:var(--primary-dark);
+    }
+
+    .btn-outline-primary{
+      color:var(--primary);
+      border-color:var(--primary);
+    }
+
+    .btn-outline-primary:hover,
+    .btn-outline-primary:focus{
+      background:var(--primary);
+      border-color:var(--primary);
+      color:#fff;
+    }
+
+    .btn-outline-secondary{
+      color:#4b5563;
+      border-color:#d1d5db;
+    }
+
+    .btn-outline-secondary:hover,
+    .btn-outline-secondary:focus{
+      background:#f3f4f6;
+      border-color:#d1d5db;
+      color:#111827;
+    }
+
+    .btn:disabled,
+    .btn.disabled{ opacity:.72; }
+
+    .alert-light{
+      background:#f9fafb;
+      border-color:var(--border);
+      color:var(--muted);
+    }
+
+    .modal-content{ background:var(--card); }
+    .modal-body{ color:var(--text); }
+    .text-muted{ color:var(--muted) !important; }
+    .bg-light{ background:var(--input-bg) !important; }
+
+    @media (max-width: 1199px){
+      .form-shell{
+        grid-template-columns:260px minmax(0,1fr);
+      }
+    }
+
+    @media (max-width: 991px){
+      .form-shell{
+        grid-template-columns:1fr;
+      }
+
+      .form-left-rail{
+        position:static;
+        top:auto;
+      }
+
+      .instrument-grid{
+        grid-template-columns:repeat(2, minmax(0,1fr));
+      }
+
+      .faculty-info-grid{
+        grid-template-columns:repeat(2, minmax(0,1fr));
+      }
+
+      .rating-scale{
+        grid-template-columns:repeat(2, minmax(0,1fr));
+      }
+    }
+
+    @media (max-width: 900px){
+      .copy-peers-wrap{
+        grid-template-columns:1fr;
+      }
+
+      .copy-peers-actions{
+        width:100%;
+      }
+    }
+
+    @media (max-width: 767px){
+      .footer-card{
+        flex-direction:column;
+        align-items:stretch;
+      }
+
+      .footer-card .btn-group-wrap{
+        width:100%;
+        display:flex;
+        flex-wrap:wrap;
+        gap:8px;
+      }
+
+      .footer-card .btn-group-wrap .btn{
+        flex:1 1 auto;
+      }
+    }
+
+    @media (max-width: 576px){
+      .body-wrap{
+        padding:16px;
+      }
+
+      .instrument-grid,
+      .rating-scale,
+      .faculty-info-grid{
+        grid-template-columns:1fr;
+      }
+
+      .hero{
+        padding:22px 18px;
+      }
+
+      .hero h1{
+        font-size:1.35rem;
+      }
+    }
+  </style>
 </head>
 <body>
   <div class="app-shell">
     <div class="main-card">
 
-      <!-- DASHBOARD -->
       <div id="dashboardView">
         <div class="hero">
           <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
             <div>
-              <h1>Faculty Evaluation Portal</h1>
-              <p>Select a category first, complete the evaluation, and track submission progress.</p>
+              <h1>Head Evaluation Portal</h1>
+              <p>Evaluate fellow heads and faculty members, complete each category, and track submission progress. Self-evaluation is not included in this version.</p>
             </div>
             <div class="text-md-end">
               <div class="small opacity-75">Current Role</div>
-              <div class="fw-bold fs-5" id="roleLabel">Faculty</div>
+              <div class="fw-bold fs-5" id="roleLabel">Head</div>
             </div>
           </div>
         </div>
@@ -741,7 +830,6 @@ body{
         </div>
       </div>
 
-      <!-- FORM VIEW -->
       <div id="formView" class="hidden">
         <div class="hero">
           <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
@@ -757,133 +845,220 @@ body{
         </div>
 
         <div class="body-wrap">
-          <div class="toolbar-card">
-            <div class="row g-3 align-items-end">
-              <div class="col-lg-5">
-                <label class="form-label fw-semibold">Evaluatee</label>
-                <select class="form-select" id="evaluateeSelect"></select>
+          <div class="form-shell">
+            <aside class="form-left-rail">
+              <div class="left-rail-card">
+                <div class="left-rail-title">Evaluation panel</div>
+
+                <div class="field-block">
+                  <label class="form-label fw-semibold">Evaluatee</label>
+                  <select class="form-select" id="evaluateeSelect"></select>
+                </div>
+
+                <div class="field-block mt-3">
+                  <label class="form-label fw-semibold">Category</label>
+                  <input type="text" class="form-control" id="categoryDisplay" readonly>
+                </div>
+
+                <div class="field-block mt-3">
+                  <label class="form-label fw-semibold">Current Section Progress</label>
+                  <div class="form-control bg-light" id="pageCompletionLabel">0 / 0 answered</div>
+                </div>
+
+                <div class="progress-panel">
+                  <div class="progress-title">Live section overview</div>
+                  <div class="progress-value" id="sideSectionName">Section</div>
+                  <div class="left-rail-sub mt-1">This stays on the left so the main evaluation area can use more width.</div>
+                </div>
+
+                <div class="left-rail-divider"></div>
+
+                <div class="status-panel">
+                  <div class="status-label">Current status</div>
+                  <div class="status-value" id="sideCategoryStatusText">In Progress</div>
+                </div>
               </div>
+            </aside>
 
-              <div class="col-lg-3">
-                <label class="form-label fw-semibold">Category</label>
-                <input type="text" class="form-control" id="categoryDisplay" readonly>
-              </div>
+            <div class="form-main-content">
+              <div class="faculty-info-card mb-3">
+                <div class="fw-bold fs-5 mb-2">A. Faculty Information</div>
+                <div class="small-text text-muted">To be accomplished by the designated office or pre-filled by the system.</div>
 
-              <div class="col-lg-4">
-                <label class="form-label fw-semibold">Current Section Progress</label>
-                <div class="form-control bg-light" id="pageCompletionLabel">0 / 0 answered</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="instrument-card">
-            <div class="fw-bold fs-5 mb-2">Evaluation Instrument</div>
-            <div class="small-text text-muted">
-              Instruction: Please evaluate the performance of the particular faculty member using the following scale.
-            </div>
-
-            <div class="instrument-grid">
-              <div class="instrument-item"><strong>5</strong> Outstanding<br><span class="text-muted">(namumukod)</span></div>
-              <div class="instrument-item"><strong>4</strong> Very Satisfactory<br><span class="text-muted">(lubos na kasiyasiya)</span></div>
-              <div class="instrument-item"><strong>3</strong> Satisfactory<br><span class="text-muted">(kasiyasiya)</span></div>
-              <div class="instrument-item"><strong>2</strong> Fair<br><span class="text-muted">(kainaman)</span></div>
-              <div class="instrument-item"><strong>1</strong> Needs Improvement<br><span class="text-muted">(kailangan paghusayin pa)</span></div>
-            </div>
-          </div>
-
-          <div id="copyPeersCard" class="action-card hidden">
-            <div class="copy-peers-wrap">
-              <div class="copy-peers-info">
-                <div class="fw-bold">Apply Current Answers to Other Peers</div>
-                <div class="muted-note">
-                  Only one peer can be the live source at a time. While live copy is on, other peer pages become view-only until you turn it off.
+                <div class="faculty-info-grid">
+                  <div class="field-block">
+                    <label>Name of Faculty Being Evaluated</label>
+                    <input type="text" class="form-control" id="infoFacultyName" readonly />
+                  </div>
+                  <div class="field-block">
+                    <label>Academic Rank</label>
+                    <input type="text" class="form-control" id="infoAcademicRank" readonly />
+                  </div>
+                  <div class="field-block">
+                    <label>College / Department</label>
+                    <input type="text" class="form-control" id="infoDepartment" readonly />
+                  </div>
+                  <div class="field-block">
+                    <label>Course Code / Title</label>
+                    <input type="text" class="form-control" id="infoCourse" readonly />
+                  </div>
+                  <div class="field-block">
+                    <label>Program Year</label>
+                    <input type="text" class="form-control" id="infoProgramYear" readonly />
+                  </div>
+                  <div class="field-block">
+                    <label>Semester / Academic Year</label>
+                    <input type="text" class="form-control" id="infoSemester" readonly />
+                  </div>
                 </div>
               </div>
 
-              <div class="copy-peers-actions d-flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  class="btn btn-outline-primary copy-peer-btn"
-                  id="copyPeersBtn"
-                  onclick="copyCurrentEvaluationToOtherPeers()"
-                >
-                  <span class="copy-btn-default">Set as Live Source</span>
-                  <span class="copy-btn-success">
-                    <span class="check-anim">
-                      <svg viewBox="0 0 24 24" fill="none" class="check-icon">
-                        <path d="M5 12.5L10 17L19 8" pathLength="1"></path>
-                      </svg>
-                    </span>
-                    Current Live Source
-                  </span>
-                </button>
+              <div class="instrument-card">
+                <div class="fw-bold fs-5 mb-2">B. Rating Scale</div>
+                <div class="small-text text-muted mb-3">
+                  Carefully read each benchmark statement and rate the faculty member using the scale below.
+                </div>
 
-                <button
-                  type="button"
-                  class="btn btn-outline-secondary d-none"
-                  id="disableCopyBtn"
-                  onclick="disableLivePeerCopy()"
-                >
-                  Turn Off Live Copy
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div class="toolbar-card">
-            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
-              <div>
-                <div class="fw-bold mb-2">Section Navigation</div>
-                <div class="stepper" id="sectionStepper"></div>
-              </div>
-              <div class="text-end">
-                <div class="small text-muted">Current section</div>
-                <div class="fw-bold" id="sectionFooterTitle">Section</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="action-card">
-            <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
-              <div>
-                <div class="fw-bold">Quick Apply to This Section</div>
-                <div class="muted-note">
-                  Choose one score to apply the same rating to all questions in the current section.
+                <div class="instrument-grid">
+                  <div class="instrument-item">
+                    <strong>5</strong> Always manifested<br>
+                    <span class="text-muted">Evident in nearly all relevant situations (91–100%).</span>
+                  </div>
+                  <div class="instrument-item">
+                    <strong>4</strong> Often manifested<br>
+                    <span class="text-muted">Evident most of the time, with occasional lapses (61–90%).</span>
+                  </div>
+                  <div class="instrument-item">
+                    <strong>3</strong> Sometimes manifested<br>
+                    <span class="text-muted">Evident about half the time (31–60%).</span>
+                  </div>
+                  <div class="instrument-item">
+                    <strong>2</strong> Seldom manifested<br>
+                    <span class="text-muted">Rarely evident in relevant situations (11–30%).</span>
+                  </div>
+                  <div class="instrument-item">
+                    <strong>1</strong> Never/Rarely manifested<br>
+                    <span class="text-muted">Almost never evident, with only isolated cases (0–10%).</span>
+                  </div>
                 </div>
               </div>
 
-              <div class="d-flex flex-wrap gap-2" id="quickApplyWrap">
-                <button type="button" class="score-chip" onclick="applyScoreToCurrentSection(5)">5</button>
-                <button type="button" class="score-chip" onclick="applyScoreToCurrentSection(4)">4</button>
-                <button type="button" class="score-chip" onclick="applyScoreToCurrentSection(3)">3</button>
-                <button type="button" class="score-chip" onclick="applyScoreToCurrentSection(2)">2</button>
-                <button type="button" class="score-chip" onclick="applyScoreToCurrentSection(1)">1</button>
-                <button type="button" class="btn btn-outline-secondary btn-sm" id="clearSectionBtn" onclick="clearCurrentSectionScores()">Clear</button>
+              <div class="instrument-card">
+                <div class="fw-bold fs-5 mb-2">C. Instruction</div>
+                <div class="small-text text-muted">
+                  Carefully read each benchmark statement and rate the faculty member by selecting the appropriate rating based on the scale above. The suggested means of verification may guide the supervisor in conducting an objective assessment.
+                </div>
               </div>
-            </div>
-          </div>
 
-          <div id="questionsContainer"></div>
+              <div id="copyPeersCard" class="action-card hidden">
+                <div class="copy-peers-wrap">
+                  <div class="copy-peers-info">
+                    <div class="fw-bold" id="copyPeersTitle">Apply Current Answers to Other Heads</div>
+                    <div class="muted-note" id="copyPeersNote">
+                      Only one head can be the live source at a time. While live copy is on, other head pages become view-only until you turn it off.
+                    </div>
+                  </div>
 
-          <div class="footer-card">
-            <div>
-              <div class="fw-bold" id="sectionFooterText">Answer all questions before proceeding.</div>
-              <div class="muted-note" id="sectionFooterSubtext">You may still go back and edit your answers before submitting.</div>
-            </div>
+                  <div class="copy-peers-actions">
+                    <button
+                      type="button"
+                      class="btn btn-outline-primary copy-peer-btn"
+                      id="copyPeersBtn"
+                      onclick="copyCurrentEvaluationToOtherPeers()"
+                    >
+                      <span class="copy-btn-default">Set as Live Source</span>
+                      <span class="copy-btn-success">
+                        <span class="check-anim">
+                          <svg viewBox="0 0 24 24" fill="none" class="check-icon">
+                            <path d="M5 12.5L10 17L19 8" pathLength="1"></path>
+                          </svg>
+                        </span>
+                        Current Live Source
+                      </span>
+                    </button>
 
-            <div class="btn-group-wrap">
-              <button class="btn btn-outline-secondary" id="prevBtn" onclick="prevSection()">Previous</button>
-              <button class="btn btn-outline-primary" id="nextBtn" onclick="nextSection()">Next</button>
-              <button class="btn btn-primary" id="submitCategoryBtn" onclick="submitCurrentCategory()">Submit Category</button>
+                    <button
+                      type="button"
+                      class="btn btn-outline-secondary d-none"
+                      id="disableCopyBtn"
+                      onclick="disableLivePeerCopy()"
+                    >
+                      Turn Off Live Copy
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="toolbar-card">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                  <div>
+                    <div class="fw-bold mb-2">Section Navigation</div>
+                    <div class="stepper" id="sectionStepper"></div>
+                  </div>
+                  <div class="text-end">
+                    <div class="small text-muted">Current section</div>
+                    <div class="fw-bold" id="sectionFooterTitle">Section</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="action-card">
+                <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+                  <div>
+                    <div class="fw-bold">Quick Apply to This Section</div>
+                    <div class="muted-note">
+                      Choose one score to apply the same rating to all questions in the current section.
+                    </div>
+                  </div>
+
+                  <div class="d-flex flex-wrap gap-2" id="quickApplyWrap">
+                    <button type="button" class="score-chip" onclick="applyScoreToCurrentSection(5)">5</button>
+                    <button type="button" class="score-chip" onclick="applyScoreToCurrentSection(4)">4</button>
+                    <button type="button" class="score-chip" onclick="applyScoreToCurrentSection(3)">3</button>
+                    <button type="button" class="score-chip" onclick="applyScoreToCurrentSection(2)">2</button>
+                    <button type="button" class="score-chip" onclick="applyScoreToCurrentSection(1)">1</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="clearSectionBtn" onclick="clearCurrentSectionScores()">Clear</button>
+                  </div>
+                </div>
+              </div>
+
+              <div id="questionsContainer"></div>
+
+              <div class="footer-card">
+                <div>
+                  <div class="fw-bold" id="sectionFooterText">Answer all questions before proceeding.</div>
+                  <div class="muted-note" id="sectionFooterSubtext">You may still go back and edit your answers before submitting.</div>
+                </div>
+
+                <div class="btn-group-wrap">
+                  <button class="btn btn-outline-secondary" id="prevBtn" onclick="prevSection()">Previous</button>
+                  <button class="btn btn-outline-primary" id="nextBtn" onclick="nextSection()">Next</button>
+                  <button
+                    class="btn btn-primary"
+                    id="submitCategoryBtn"
+                    onclick="submitCurrentCategory()"
+                    style="display:none;"
+                  >
+                    Submit Category
+                  </button>
+                </div>
+              </div>
+
+              <div class="faculty-info-card mt-3">
+                <div class="fw-bold fs-5 mb-2">Other Comments and Suggestions</div>
+                <textarea class="form-control" id="commentsBox" rows="5" placeholder="Enter additional comments and suggestions here."></textarea>
+              </div>
             </div>
           </div>
         </div>
       </div>
+    </div>
 
+    <div class="text-center text-muted small mt-3">
+      Updated layout: left evaluation rail + wider main content area
     </div>
   </div>
 
-  <!-- MODAL -->
   <div class="modal fade" id="appActionModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content border-0 shadow-lg" style="border-radius:18px; overflow:hidden;">
@@ -897,7 +1072,7 @@ body{
         </div>
 
         <div class="modal-footer border-0 pt-0">
-          <button type="button" class="btn btn-outline-secondary" id="appModalCancelBtn" data-bs-dismiss="modal">
+          <button type="button" class="btn btn-outline-secondary d-none" id="appModalCancelBtn" data-bs-dismiss="modal">
             Cancel
           </button>
           <button type="button" class="btn btn-primary" id="appModalConfirmBtn">
@@ -909,764 +1084,768 @@ body{
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  const CURRENT_USER = {
+    name: "Dr. Jose Head",
+    role: "head"
+  };
 
-  <script>
-    const CURRENT_USER = {
-      name: "Sample User",
-      role: "faculty" // change to "head" to test head flow
-    };
+  const evaluatees = [
+    { id: 1, name: "Dr. Ana Cruz", isHead: true, academicRank: "Associate Professor", department: "College of Education", course: "EDU 101 - Foundations of Teaching", programYear: "1st Year", semester: "1st Semester AY 2025-2026" },
+    { id: 2, name: "Mr. Carlo Mendoza", isHead: true, academicRank: "Assistant Professor", department: "College of Education", course: "EDU 205 - Curriculum Development", programYear: "2nd Year", semester: "1st Semester AY 2025-2026" },
+    { id: 3, name: "Prof. Maria Santos", isHead: false, academicRank: "Instructor I", department: "College of Education", course: "ENG 102 - Purposive Communication", programYear: "1st Year", semester: "1st Semester AY 2025-2026" },
+    { id: 4, name: "Prof. John Reyes", isHead: false, academicRank: "Instructor II", department: "College of Education", course: "MTH 101 - Mathematics in the Modern World", programYear: "1st Year", semester: "1st Semester AY 2025-2026" },
+    { id: 5, name: "Prof. Leo Garcia", isHead: false, academicRank: "Assistant Professor", department: "College of Education", course: "SCI 110 - General Science", programYear: "2nd Year", semester: "1st Semester AY 2025-2026" },
+    { id: 6, name: "Ms. Nina Lopez", isHead: false, academicRank: "Instructor I", department: "College of Education", course: "FIL 101 - Komunikasyon sa Akademikong Filipino", programYear: "1st Year", semester: "1st Semester AY 2025-2026" }
+  ];
 
-    const evaluatees = [
-      { id: 1, name: "Prof. Maria Santos", isHead: false },
-      { id: 2, name: "Prof. John Reyes", isHead: false },
-      { id: 3, name: "Dr. Ana Cruz", isHead: true },
-      { id: 4, name: "Prof. Leo Garcia", isHead: false },
-      { id: 5, name: "Ms. Nina Lopez", isHead: false }
-    ];
-
-    const sections = [
-      {
-        key: "commitment",
-        title: "I. Commitment",
-        subtitle: "Pananagutan",
-        questions: [
-          {
-            en: "Demonstrate sensitivity to students' ability to absorb content information.",
-            tl: "Naipadarama sa mga magaaral ang lubusang pagkatuto sa mga impormasyong nilalaman ng aralin."
-          },
-          {
-            en: "Integrates sensitively of his learning objectives with those of the students in collaborative process.",
-            tl: "Iniuugnay nya ang mga layunin sa pagtuturo sa pamamagitan ng pakikipagtulungan ng mga magaaral."
-          },
-          {
-            en: "Makes himself available to students beyond official teaching hours.",
-            tl: "Naglalaan ng panahon sa mga magaaral kahit na sa oras ng kanyang pagtuturo."
-          },
-          {
-            en: "Coordinates student needs with internal and external enabling groups.",
-            tl: "Nakapaguugnay ng mga pangangailangan sa loob at labas ng klase."
-          },
-          {
-            en: "Supplement available resources.",
-            tl: "Nakapagdaragdag ng iba pang mapagkukunan ng aralin."
-          }
-        ]
-      },
-      {
-        key: "knowledge",
-        title: "II. Knowledge of Subject",
-        subtitle: "Kaalaman sa Paksa",
-        questions: [
-          {
-            en: "Explain the subject matter without completely relying on the prescribed reading.",
-            tl: "Ipinaliliwanag ang paksangaralin na hindi lubusang umaasa sa itinakdang babasahin."
-          },
-          {
-            en: "Explain subject matter with depth.",
-            tl: "Ipinaliliwanag ang paksangaralin nang may lalim."
-          },
-          {
-            en: "Integrates topics discussed in the lesson and relates the topic being discussed to concept previously learned by the students in the same course.",
-            tl: "Iniuugnay ang mga paksang tinalakay sa mga paksang pinagaralan batay sa konseptong natutunan ng mga magaaral sa parehong kurso at/o aralin."
-          },
-          {
-            en: "Relates the subject matter to other pertinent topics.",
-            tl: "Iniuugnay ang paksangaralin sa iba pang makabuluhang paksa."
-          },
-          {
-            en: "Raises problems and issues relevant to the topic(s) of discussion.",
-            tl: "Nauunang magbigay ng mga huwarang problema at isyu na may kaugnayan sa paksang tinatalakay."
-          }
-        ]
-      },
-      {
-        key: "independent_learning",
-        title: "III. Teaching for Independent Learning",
-        subtitle: "Pamamahala sa Pagkatuto",
-        questions: [
-          {
-            en: "Creates teaching strategies that allow students to practice using concepts they need to understand (interactive discussion).",
-            tl: "Nakalilikha ng mga istratehiya sa pagtuturo upang masanay na gamitin ang mga konseptong kailangan matutunan (interaktibong pagtatalakayan)."
-          },
-          {
-            en: "Provides exercises which develop analytical thinking among the students.",
-            tl: "Nagbibigay ng mga pagsasanay na lumilinang sa mapanuring pagiisip ng mga magaaral."
-          },
-          {
-            en: "Enhances students' self-esteem through the proper recognition of their abilities.",
-            tl: "Naitataas ng guro ang pagtitiwala sa sarili ng mga magaaral sa pamamagitan ng pagkilala sa kanilang kakayahan."
-          },
-          {
-            en: "Allow students to create their own course with the use of well-defined objectives and realistic student professor rules.",
-            tl: "Nagpapahintulot na makapagisip ng aralin ang mga magaaral sa pamamagitan ng paggamit ng iniayos na layunin at makatotohanang tuntuning napagkasunduan ng guro at mga magaaral."
-          },
-          {
-            en: "Allows students to make their own decision and be accountable for their performance.",
-            tl: "Nagpapahintulot sa mga magaaral na makapagdesisyon at managot sa kanilang ginawa."
-          }
-        ]
-      },
-      {
-        key: "management_learning",
-        title: "IV. Management of Learning",
-        subtitle: "Pamamahala sa Pagkatuto",
-        questions: [
-          {
-            en: "Creates opportunities for extensive contribute of students (e.g. breaks class into dyads, triads of buzz/task groups).",
-            tl: "Nagbibigay ng pagkakataon upang ang mga magaaral ay lubusang makibahagi sa pagkatuto."
-          },
-          {
-            en: "Assumes roles facilitator, resource, coach, inquisitor, integrator, referee in drawing students to contribute to knowledge and understanding of the concept at hand.",
-            tl: "Ginagampanan nya ang papel bilang tagagabay, tagasanay, tagapagsiyasat, tagapagugnay at tagapamagitan."
-          },
-          {
-            en: "Design and implements learning condition and experience that promote healthy exchange and/or confrontations.",
-            tl: "Nagpaplano at nagsasagawa ng mga kalagayan at karanasan upang magkaroon ng mabuting pagpapalitan ng kuro."
-          },
-          {
-            en: "Structures students' desire and interest to learn more about the subject matter.",
-            tl: "Pinagsisigla ang kawilihan ng mga magaaral nang higit pang pagaralan ang paksangaralin."
-          },
-          {
-            en: "Stimulates students' desire and interest to learn more about the subject matter.",
-            tl: "Pinasisigla ang kawilihan ng mga magaaral nang higit pang pagaralan ang paksangaralin."
-          }
-        ]
-      }
-    ];
-
-    const categories = [
-      {
-        key: "self",
-        title: "Self Evaluation",
-        desc: "For personal evaluation. The faculty evaluates their own performance.",
-        allowed: true
-      },
-      {
-        key: "peer",
-        title: "Peer Evaluation",
-        desc: "Evaluate co-workers. Non-head evaluators cannot evaluate heads.",
-        allowed: true
-      },
-      {
-        key: "immediate",
-        title: "Immediate Head Evaluation",
-        desc: "For heads only. Heads may evaluate assigned faculty members.",
-        allowed: CURRENT_USER.role === "head"
-      }
-    ];
-
-    let currentCategory = null;
-    let currentSectionIndex = 0;
-    let lastSelectedEvaluateeId = null;
-
-    const ratings = {};
-    const submissionStatus = {
-      self: "not_started",
-      peer: "not_started",
-      immediate: "not_started"
-    };
-
-    let appModalInstance = null;
-    let appModalConfirmHandler = null;
-
-    let activePeerLiveSourceId = null;
-
-    function initModal() {
-      const modalEl = document.getElementById("appActionModal");
-      appModalInstance = new bootstrap.Modal(modalEl);
-
-      document.getElementById("appModalConfirmBtn").addEventListener("click", function () {
-        if (typeof appModalConfirmHandler === "function") {
-          const handler = appModalConfirmHandler;
-          appModalConfirmHandler = null;
-          appModalInstance.hide();
-          handler();
-        } else {
-          appModalInstance.hide();
-        }
-      });
-
-      modalEl.addEventListener("hidden.bs.modal", function () {
-        appModalConfirmHandler = null;
-      });
+  const sections = [
+    {
+      key: "management_teaching_learning",
+      title: "A. Management of Teaching and Learning",
+      subtitle: "Supervisor's Evaluation of Faculty",
+      questions: [
+        { en: "Comes to class on time.", tl: "Pumapasok sa klase sa tamang oras.", verification: ["Daily time record", "Faculty schedule and timetable", "Informal interview with students"] },
+        { en: "Submits updated syllabus, grade sheets, and other required reports on time.", tl: "Nagsusumite ng updated syllabus, grade sheets, at iba pang kinakailangang ulat sa tamang oras.", verification: ["Documents submission log", "Submission receipts or acknowledgment emails"] },
+        { en: "Maximizes the allocated time or learning hours effectively.", tl: "Mahusay na nagagamit ang inilaan na oras o learning hours.", verification: ["Class schedules and timetables", "LMS logs", "Informal interview with students"] },
+        { en: "Provides appropriate learning activities that facilitate students' critical thinking and creativity.", tl: "Nagbibigay ng angkop na learning activities na nagpapalago ng critical thinking at creativity ng mga mag-aaral.", verification: ["Course syllabus", "Learning plan", "Classroom observation"] },
+        { en: "Guides students to learn on their own, reflect on new ideas and experiences, and make decisions in accomplishing given tasks.", tl: "Ginagabayan ang mga mag-aaral upang matutong magsarili, magnilay sa mga bagong ideya at karanasan, at makapagpasya sa pagtupad ng mga gawain.", verification: ["Informal interview with students", "LMS logs", "Student work samples"] },
+        { en: "Communicates constructive feedback to students for their academic growth.", tl: "Nagbibigay ng makabuluhan at nakabubuting feedback sa mga mag-aaral para sa kanilang pag-unlad akademiko.", verification: ["Graded student work with feedback", "Faculty consultation log", "Official correspondence or LMS logs"] }
+      ]
+    },
+    {
+      key: "content_knowledge_pedagogy_technology",
+      title: "B. Content Knowledge, Pedagogy, and Technology",
+      subtitle: "Supervisor's Evaluation of Faculty",
+      questions: [
+        { en: "Demonstrates extensive and broad knowledge of the subject or course.", tl: "Nagpapakita ng malawak at malalim na kaalaman sa asignatura o kurso.", verification: ["Course syllabus", "Learning plan", "Instructional materials developed by faculty", "Informal interview with students"] },
+        { en: "Simplifies complex ideas in the lesson for ease of understanding.", tl: "Naipapaliwanag nang simple ang mahihirap na konsepto upang madaling maunawaan ng mga mag-aaral.", verification: ["Learning plan", "Course syllabus", "Classroom observation", "Lecture notes and presentations"] },
+        { en: "Integrates contemporary issues and developments in the discipline and/or daily life activities in the syllabus.", tl: "Naipapasok sa syllabus ang mga makabagong isyu at pag-unlad sa disiplina at/o sa pang-araw-araw na gawain.", verification: ["Course syllabus", "Learning plan", "Participation in conferences, webinars, and training", "LMS logs"] },
+        { en: "Promotes active learning and student engagement by using appropriate teaching and learning resources including ICT tools and platforms.", tl: "Itinataguyod ang active learning at pakikilahok ng mga mag-aaral sa pamamagitan ng angkop na resources, kabilang ang ICT tools at platforms.", verification: ["Multimedia lecture materials", "LMS logs", "Classroom observation", "Student work samples"] },
+        { en: "Uses appropriate assessments such as projects, exams, quizzes, and assignments aligned with the learning outcomes.", tl: "Gumagamit ng angkop na pagtataya tulad ng projects, exams, quizzes, at assignments na nakaayon sa learning outcomes.", verification: ["Assessment tools and rubrics", "Exam and quiz samples", "Graded student work samples", "Learning plan"] }
+      ]
+    },
+    {
+      key: "commitment_transparency",
+      title: "C. Commitment and Transparency",
+      subtitle: "Supervisor's Evaluation of Faculty",
+      questions: [
+        { en: "Recognizes and values the unique diversity and individual differences among students.", tl: "Kinikilala at pinahahalagahan ang pagkakaiba-iba at natatanging katangian ng bawat mag-aaral.", verification: ["Course syllabus", "Learning plan", "Instructional materials", "Classroom observation", "Informal interview with students"] },
+        { en: "Assists students with their learning challenges during consultation hours.", tl: "Tinutulungan ang mga mag-aaral sa kanilang learning challenges tuwing consultation hours.", verification: ["Faculty consultation log", "Advisory records", "LMS logs", "Official correspondence"] },
+        { en: "Provides immediate feedback on student outputs and performance.", tl: "Nagbibigay ng agarang feedback sa outputs at performance ng mga mag-aaral.", verification: ["Graded student work samples", "Assessment tools and rubrics", "LMS logs", "Emails or official correspondence"] },
+        { en: "Provides transparent and clear criteria in rating student performance.", tl: "Nagbibigay ng malinaw at transparent na pamantayan sa pagmamarka ng performance ng mga mag-aaral.", verification: ["Course syllabus", "Assessment tools and rubrics", "Informal interview with students", "Learning plan"] }
+      ]
     }
+  ];
 
-    function showInfoModal(title, message, confirmText = "OK") {
-      document.getElementById("appActionModalLabel").textContent = title;
-      document.getElementById("appActionModalMessage").innerHTML = message;
+  const categories = [
+    { key: "head_peer", title: "Head Evaluation", desc: "Evaluate fellow department heads only. Self-evaluation is not included.", allowed: CURRENT_USER.role === "head" },
+    { key: "faculty", title: "Faculty Evaluation", desc: "Evaluate faculty members under the department using the supervisor's evaluation instrument.", allowed: CURRENT_USER.role === "head" }
+  ];
 
-      const cancelBtn = document.getElementById("appModalCancelBtn");
-      const confirmBtn = document.getElementById("appModalConfirmBtn");
+  const ratings = { head_peer: {}, faculty: {} };
+  const commentsData = { head_peer: {}, faculty: {} };
 
-      cancelBtn.classList.add("d-none");
-      confirmBtn.textContent = confirmText;
-      confirmBtn.className = "btn btn-primary";
+  // Category-level dashboard status
+  const submissionStatus = { head_peer: "not_started", faculty: "not_started" };
 
-      appModalConfirmHandler = null;
-      appModalInstance.show();
+  // Per-evaluatee submission tracker
+  const evaluateeSubmissionStatus = { head_peer: {}, faculty: {} };
+
+  let currentCategory = null;
+  let currentSectionIndex = 0;
+  let lastSelectedEvaluateeId = null;
+  let appModalInstance = null;
+  let activeLiveSourceByCategory = { head_peer: null, faculty: null };
+
+  function initModal() {
+    const modalEl = document.getElementById("appActionModal");
+    appModalInstance = new bootstrap.Modal(modalEl);
+    document.getElementById("appModalConfirmBtn").addEventListener("click", () => appModalInstance.hide());
+  }
+
+  function showInfoModal(title, message) {
+    document.getElementById("appActionModalLabel").textContent = title;
+    document.getElementById("appActionModalMessage").innerHTML = message;
+    appModalInstance.show();
+  }
+
+  function scrollFormToTop() {
+    const formView = document.getElementById("formView");
+    if (formView) {
+      formView.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else {
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
+  }
 
-    function scrollFormToTop() {
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth"
-      });
+  function scrollToFooterArea() {
+    const footer = document.querySelector(".footer-card");
+    if (footer) {
+      footer.scrollIntoView({ behavior: "smooth", block: "start" });
     }
+  }
 
-    function getStatusClass(status) {
-      if (status === "submitted") return "status-submitted";
-      if (status === "in_progress") return "status-progress";
-      return "status-not-started";
-    }
+  function getStatusClass(status) {
+    if (status === "submitted") return "status-submitted";
+    if (status === "in_progress") return "status-progress";
+    return "status-not-started";
+  }
 
-    function getStatusLabel(status) {
-      if (status === "submitted") return "Submitted";
-      if (status === "in_progress") return "In Progress";
-      return "Not Started";
-    }
+  function getStatusLabel(status) {
+    if (status === "submitted") return "Submitted";
+    if (status === "in_progress") return "In Progress";
+    return "Not Started";
+  }
 
-    function getCurrentEvaluateeId() {
-      return String(document.getElementById("evaluateeSelect").value);
-    }
+  function getCurrentEvaluateeId() {
+    const select = document.getElementById("evaluateeSelect");
+    return select ? String(select.value) : "";
+  }
 
-    function getCategoryEvaluatees(categoryKey = currentCategory) {
-      if (categoryKey === "self") {
-        return [{ id: "self", name: CURRENT_USER.name + " (Self)" }];
-      }
-
-      if (categoryKey === "peer") {
-        return evaluatees.filter(e => CURRENT_USER.role === "head" ? true : !e.isHead);
-      }
-
-      if (categoryKey === "immediate") {
-        return [...evaluatees];
-      }
-
-      return [];
-    }
-
-    function getPeerNameById(peerId) {
-      const peer = getCategoryEvaluatees("peer").find(p => String(p.id) === String(peerId));
-      return peer ? peer.name : "selected peer";
-    }
-
-    function ensureCategoryEvaluateePath(categoryKey, evaluateeId) {
-      const evalId = String(evaluateeId);
-
-      if (!ratings[categoryKey]) ratings[categoryKey] = {};
-      if (!ratings[categoryKey][evalId]) ratings[categoryKey][evalId] = {};
-
-      sections.forEach(section => {
-        if (!ratings[categoryKey][evalId][section.key]) {
-          ratings[categoryKey][evalId][section.key] = {};
-        }
-      });
-    }
-
-    function ensureDataPath() {
-      ensureCategoryEvaluateePath(currentCategory, getCurrentEvaluateeId());
-    }
-
-    function isPeerLiveLockedForCurrentEvaluatee() {
-      return currentCategory === "peer" && activePeerLiveSourceId !== null && String(activePeerLiveSourceId) !== getCurrentEvaluateeId();
-    }
-
-    function isCurrentPeerLiveSource() {
-      return currentCategory === "peer" && activePeerLiveSourceId !== null && String(activePeerLiveSourceId) === getCurrentEvaluateeId();
-    }
-
-    function isSectionCompleteFor(categoryKey, evaluateeId, sectionIndex) {
-      ensureCategoryEvaluateePath(categoryKey, evaluateeId);
-      const section = sections[sectionIndex];
-      const answers = ratings[categoryKey][String(evaluateeId)][section.key] || {};
-      return Object.keys(answers).length === section.questions.length;
-    }
-
-    function isSectionComplete(sectionIndex) {
-      return isSectionCompleteFor(currentCategory, getCurrentEvaluateeId(), sectionIndex);
-    }
-
-    function isEvaluateeComplete(categoryKey, evaluateeId) {
-      return sections.every((section, index) => isSectionCompleteFor(categoryKey, evaluateeId, index));
-    }
-
-    function isCurrentEvaluateeComplete() {
-      return isEvaluateeComplete(currentCategory, getCurrentEvaluateeId());
-    }
-
-    function isEntireCategoryCompleteAllEvaluatees() {
-      const categoryEvaluatees = getCategoryEvaluatees(currentCategory);
-      return categoryEvaluatees.every(person => isEvaluateeComplete(currentCategory, person.id));
-    }
-
-    function getCurrentEvaluateeAnsweredCount(sectionIndex = currentSectionIndex) {
-      ensureDataPath();
-      const section = sections[sectionIndex];
-      const answers = ratings[currentCategory][getCurrentEvaluateeId()][section.key] || {};
-      return Object.keys(answers).length;
-    }
-
-    function getFirstIncompleteSectionIndexForEvaluatee(categoryKey, evaluateeId) {
-      return sections.findIndex((section, index) => !isSectionCompleteFor(categoryKey, evaluateeId, index));
-    }
-
-    function canAccessSection(index) {
-      if (index <= currentSectionIndex) return true;
-      for (let i = 0; i < index; i++) {
-        if (!isSectionComplete(i)) return false;
-      }
-      return true;
-    }
-
-    function syncPeerCopyAppliedUI() {
-      const btn = document.getElementById("copyPeersBtn");
-      const disableBtn = document.getElementById("disableCopyBtn");
-
-      if (!btn || !disableBtn) return;
-
-      if (currentCategory !== "peer") {
-        btn.classList.remove("applied");
-        btn.disabled = false;
-        btn.innerHTML = `<span class="copy-btn-default">Set as Live Source</span>`;
-        disableBtn.classList.add("d-none");
-        return;
-      }
-
-      if (activePeerLiveSourceId === null) {
-        btn.classList.remove("applied");
-        btn.disabled = false;
-        btn.innerHTML = `<span class="copy-btn-default">Set as Live Source</span>`;
-        disableBtn.classList.add("d-none");
-        return;
-      }
-
-      disableBtn.classList.remove("d-none");
-
-      if (isCurrentPeerLiveSource()) {
-        btn.classList.add("applied");
-        btn.disabled = true;
-        btn.innerHTML = `
-          <span class="copy-btn-success" style="display:inline-flex;">
-            <span class="check-anim">
-              <svg viewBox="0 0 24 24" fill="none" class="check-icon">
-                <path d="M5 12.5L10 17L19 8" pathLength="1"></path>
-              </svg>
-            </span>
-            Current Live Source
-          </span>
-        `;
-        return;
-      }
-
-      btn.classList.remove("applied");
-      btn.disabled = true;
-      btn.innerHTML = `<span class="copy-btn-default">Following ${getPeerNameById(activePeerLiveSourceId)}</span>`;
-    }
-
-    function activateLivePeerCopy(sourcePeerId) {
-      activePeerLiveSourceId = String(sourcePeerId);
-      ensureCategoryEvaluateePath("peer", activePeerLiveSourceId);
-      applyLivePeerCopy();
-      syncPeerCopyAppliedUI();
-    }
-
-    function disableLivePeerCopy() {
-      activePeerLiveSourceId = null;
-      syncPeerCopyAppliedUI();
-      renderSection();
-      showInfoModal(
-        "Live Copy Turned Off",
-        "Other peer pages can now be edited again."
+  function getCategoryEvaluatees(categoryKey = currentCategory) {
+    if (categoryKey === "head_peer") {
+      return evaluatees.filter(
+        e => e.isHead && e.name.trim().toLowerCase() !== CURRENT_USER.name.trim().toLowerCase()
       );
     }
+    if (categoryKey === "faculty") {
+      return evaluatees.filter(e => !e.isHead);
+    }
+    return [];
+  }
 
-    function applyLivePeerCopy() {
-      if (activePeerLiveSourceId === null || !ratings.peer || !ratings.peer[activePeerLiveSourceId]) return;
+  function getEvaluateeNameById(categoryKey, evaluateeId) {
+    const person = getCategoryEvaluatees(categoryKey).find(p => String(p.id) === String(evaluateeId));
+    return person ? person.name : "selected evaluatee";
+  }
 
-      const sourceKey = String(activePeerLiveSourceId);
-      const sourceData = ratings.peer[sourceKey];
-      const peers = getCategoryEvaluatees("peer");
+  function getCurrentEvaluateeObject() {
+    const id = getCurrentEvaluateeId();
+    return evaluatees.find(item => String(item.id) === String(id)) || null;
+  }
 
-      peers.forEach(peer => {
-        const targetId = String(peer.id);
-        if (targetId === sourceKey) return;
+  function ensureCategoryEvaluateePath(categoryKey, evaluateeId) {
+    const evalId = String(evaluateeId);
 
-        ensureCategoryEvaluateePath("peer", targetId);
+    if (!ratings[categoryKey]) ratings[categoryKey] = {};
+    if (!ratings[categoryKey][evalId]) ratings[categoryKey][evalId] = {};
 
-        sections.forEach(section => {
-          const sectionKey = section.key;
-          section.questions.forEach((q, questionIndex) => {
-            const sourceValue = sourceData[sectionKey]?.[questionIndex];
-            if (sourceValue !== undefined) {
-              ratings.peer[targetId][sectionKey][questionIndex] = sourceValue;
-            } else {
-              delete ratings.peer[targetId][sectionKey][questionIndex];
-            }
-          });
+    sections.forEach(section => {
+      if (!ratings[categoryKey][evalId][section.key]) {
+        ratings[categoryKey][evalId][section.key] = {};
+      }
+    });
+
+    if (!commentsData[categoryKey]) commentsData[categoryKey] = {};
+    if (!commentsData[categoryKey][evalId]) commentsData[categoryKey][evalId] = "";
+
+    if (!evaluateeSubmissionStatus[categoryKey]) evaluateeSubmissionStatus[categoryKey] = {};
+    if (!evaluateeSubmissionStatus[categoryKey][evalId]) {
+      evaluateeSubmissionStatus[categoryKey][evalId] = "not_started";
+    }
+  }
+
+  function ensureDataPath() {
+    ensureCategoryEvaluateePath(currentCategory, getCurrentEvaluateeId());
+  }
+
+  function populateFacultyInfo() {
+    const person = getCurrentEvaluateeObject();
+    document.getElementById("infoFacultyName").value = person ? person.name : "";
+    document.getElementById("infoAcademicRank").value = person ? person.academicRank : "";
+    document.getElementById("infoDepartment").value = person ? person.department : "";
+    document.getElementById("infoCourse").value = person ? person.course : "";
+    document.getElementById("infoProgramYear").value = person ? person.programYear : "";
+    document.getElementById("infoSemester").value = person ? person.semester : "";
+  }
+
+  function loadComments() {
+    const evaluateeId = getCurrentEvaluateeId();
+    document.getElementById("commentsBox").value = commentsData[currentCategory]?.[evaluateeId] || "";
+  }
+
+  function saveComments() {
+    if (!currentCategory || !getCurrentEvaluateeId()) return;
+    const evaluateeId = getCurrentEvaluateeId();
+    ensureCategoryEvaluateePath(currentCategory, evaluateeId);
+    commentsData[currentCategory][evaluateeId] = document.getElementById("commentsBox").value;
+  }
+
+  function getActiveLiveSourceId(categoryKey = currentCategory) {
+    return activeLiveSourceByCategory[categoryKey] || null;
+  }
+
+  function isLiveLockedForCurrentEvaluatee() {
+    const activeId = getActiveLiveSourceId();
+    return activeId !== null && String(activeId) !== getCurrentEvaluateeId();
+  }
+
+  function isCurrentEvaluateeLiveSource() {
+    const activeId = getActiveLiveSourceId();
+    return activeId !== null && String(activeId) === getCurrentEvaluateeId();
+  }
+
+  function isSectionCompleteFor(categoryKey, evaluateeId, sectionIndex) {
+    ensureCategoryEvaluateePath(categoryKey, evaluateeId);
+    const section = sections[sectionIndex];
+    const answers = ratings[categoryKey][String(evaluateeId)][section.key] || {};
+    return Object.keys(answers).length === section.questions.length;
+  }
+
+  function isSectionComplete(sectionIndex) {
+    return isSectionCompleteFor(currentCategory, getCurrentEvaluateeId(), sectionIndex);
+  }
+
+  function isEvaluateeComplete(categoryKey, evaluateeId) {
+    return sections.every((section, index) => isSectionCompleteFor(categoryKey, evaluateeId, index));
+  }
+
+  function isCurrentEvaluateeComplete() {
+    return isEvaluateeComplete(currentCategory, getCurrentEvaluateeId());
+  }
+
+  function isEntireCategoryCompleteAllEvaluatees() {
+    const list = getCategoryEvaluatees(currentCategory);
+    return list.length > 0 && list.every(person => isEvaluateeComplete(currentCategory, person.id));
+  }
+
+  function refreshCategoryStatus(categoryKey) {
+    const list = getCategoryEvaluatees(categoryKey);
+    if (!list.length) {
+      submissionStatus[categoryKey] = "not_started";
+      return;
+    }
+
+    const allSubmitted = list.every(person =>
+      evaluateeSubmissionStatus[categoryKey] &&
+      evaluateeSubmissionStatus[categoryKey][String(person.id)] === "submitted"
+    );
+
+    const anyProgress = list.some(person => {
+      const personId = String(person.id);
+      return (
+        isEvaluateeComplete(categoryKey, personId) ||
+        Object.values(ratings[categoryKey]?.[personId] || {}).some(sectionObj => Object.keys(sectionObj).length > 0) ||
+        (commentsData[categoryKey]?.[personId] || "").trim() !== ""
+      );
+    });
+
+    if (allSubmitted) {
+      submissionStatus[categoryKey] = "submitted";
+    } else if (anyProgress) {
+      submissionStatus[categoryKey] = "in_progress";
+    } else {
+      submissionStatus[categoryKey] = "not_started";
+    }
+  }
+
+  function canAccessSection(index) {
+    if (index <= currentSectionIndex) return true;
+    for (let i = 0; i < index; i++) {
+      if (!isSectionComplete(i)) return false;
+    }
+    return true;
+  }
+
+  function syncPeerCopyAppliedUI() {
+    const btn = document.getElementById("copyPeersBtn");
+    const disableBtn = document.getElementById("disableCopyBtn");
+    if (!btn || !disableBtn) return;
+
+    const activeId = getActiveLiveSourceId();
+
+    if (activeId === null) {
+      btn.classList.remove("applied");
+      btn.disabled = false;
+      btn.innerHTML = `<span class="copy-btn-default">Set as Live Source</span>`;
+      disableBtn.classList.add("d-none");
+      return;
+    }
+
+    disableBtn.classList.remove("d-none");
+
+    if (isCurrentEvaluateeLiveSource()) {
+      btn.classList.add("applied");
+      btn.disabled = true;
+      btn.innerHTML = `
+        <span class="copy-btn-success" style="display:inline-flex;">
+          <span class="check-anim">
+            <svg viewBox="0 0 24 24" fill="none" class="check-icon">
+              <path d="M5 12.5L10 17L19 8" pathLength="1"></path>
+            </svg>
+          </span>
+          Current Live Source
+        </span>
+      `;
+      return;
+    }
+
+    btn.classList.remove("applied");
+    btn.disabled = true;
+    btn.innerHTML = `<span class="copy-btn-default">Following ${getEvaluateeNameById(currentCategory, activeId)}</span>`;
+  }
+
+  function activateLiveCopy(categoryKey, sourceEvaluateeId) {
+    activeLiveSourceByCategory[categoryKey] = String(sourceEvaluateeId);
+    ensureCategoryEvaluateePath(categoryKey, sourceEvaluateeId);
+    applyLiveCopy(categoryKey);
+    syncPeerCopyAppliedUI();
+  }
+
+  function disableLivePeerCopy() {
+    activeLiveSourceByCategory[currentCategory] = null;
+    syncPeerCopyAppliedUI();
+    renderSection();
+    showInfoModal(
+      "Live Copy Turned Off",
+      `Other ${currentCategory === "head_peer" ? "head" : "faculty"} pages can now be edited again.`
+    );
+  }
+
+  function applyLiveCopy(categoryKey = currentCategory) {
+    const activeId = activeLiveSourceByCategory[categoryKey];
+    if (activeId === null || !ratings[categoryKey] || !ratings[categoryKey][String(activeId)]) return;
+
+    const sourceKey = String(activeId);
+    const sourceData = ratings[categoryKey][sourceKey];
+    const evaluateeList = getCategoryEvaluatees(categoryKey);
+
+    evaluateeList.forEach(person => {
+      const targetId = String(person.id);
+      if (targetId === sourceKey) return;
+
+      ensureCategoryEvaluateePath(categoryKey, targetId);
+
+      sections.forEach(section => {
+        const sectionKey = section.key;
+        section.questions.forEach((q, questionIndex) => {
+          const sourceValue = sourceData[sectionKey]?.[questionIndex];
+          if (sourceValue !== undefined) {
+            ratings[categoryKey][targetId][sectionKey][questionIndex] = sourceValue;
+          } else {
+            delete ratings[categoryKey][targetId][sectionKey][questionIndex];
+          }
         });
       });
+
+      commentsData[categoryKey][targetId] = commentsData[categoryKey][sourceKey] || "";
+    });
+  }
+
+  function getLockedEvaluateeMessage() {
+    const activeId = getActiveLiveSourceId();
+    return `Please finish <strong>${getEvaluateeNameById(currentCategory, activeId)}</strong> or turn off live copy first.`;
+  }
+
+  function updateFormInteractivity() {
+    const isReadOnly = isLiveLockedForCurrentEvaluatee();
+    const labelType = currentCategory === "head_peer" ? "head" : "faculty";
+    const activeId = getActiveLiveSourceId();
+
+    document.querySelectorAll("#questionsContainer input[type='radio']").forEach(input => {
+      input.disabled = isReadOnly;
+    });
+
+    document.querySelectorAll("#questionsContainer .question-card").forEach(card => {
+      card.classList.toggle("readonly", isReadOnly);
+    });
+
+    document.querySelectorAll("#quickApplyWrap .score-chip, #quickApplyWrap .btn").forEach(btn => {
+      btn.disabled = isReadOnly;
+    });
+
+    document.getElementById("commentsBox").disabled = isReadOnly;
+
+    const existingWarning = document.getElementById("liveCopyReadonlyNote");
+    if (existingWarning) existingWarning.remove();
+
+    if (isReadOnly) {
+      const note = document.createElement("div");
+      note.id = "liveCopyReadonlyNote";
+      note.className = "warning-note";
+      note.innerHTML = `Live copy is on. This page is view-only because <strong>${getEvaluateeNameById(currentCategory, activeId)}</strong> is the active source. Turn off live copy to edit this ${labelType}.`;
+      document.getElementById("questionsContainer").prepend(note);
     }
+  }
 
-    function getLockedEvaluateeMessage() {
-      return `Please finish <strong>${getPeerNameById(activePeerLiveSourceId)}</strong> or turn off live copy first.`;
-    }
+  function renderDashboard() {
+    const container = document.getElementById("categoryCardsContainer");
+    const mini = document.getElementById("categoryMiniProgress");
+    const visibleCategories = categories.filter(c => c.allowed);
 
-    function updateFormInteractivity() {
-      const isReadOnly = isPeerLiveLockedForCurrentEvaluatee();
+    visibleCategories.forEach(cat => refreshCategoryStatus(cat.key));
 
-      document.querySelectorAll("#questionsContainer input[type='radio']").forEach(input => {
-        input.disabled = isReadOnly;
-      });
+    let submitted = 0;
+    document.getElementById("requiredCount").textContent = visibleCategories.length;
+    container.innerHTML = "";
+    mini.innerHTML = "";
 
-      document.querySelectorAll("#questionsContainer .question-card").forEach(card => {
-        card.classList.toggle("readonly", isReadOnly);
-      });
+    visibleCategories.forEach(cat => {
+      const status = submissionStatus[cat.key];
+      if (status === "submitted") submitted++;
+      mini.innerHTML += `<span class="mini-badge">${cat.title}: <strong>${getStatusLabel(status)}</strong></span>`;
+    });
 
-      document.querySelectorAll("#quickApplyWrap .score-chip, #quickApplyWrap .btn").forEach(btn => {
-        btn.disabled = isReadOnly;
-      });
+    categories.forEach(cat => {
+      const status = submissionStatus[cat.key];
+      const openBtn = cat.allowed
+        ? `<button class="btn btn-primary mt-3" onclick="openCategory('${cat.key}')">Open Form</button>`
+        : `<div class="alert alert-light border mt-3 mb-0 small">This category is available for heads only.</div>`;
 
-      const existingWarning = document.getElementById("liveCopyReadonlyNote");
-      if (existingWarning) existingWarning.remove();
-
-      if (isReadOnly) {
-        const note = document.createElement("div");
-        note.id = "liveCopyReadonlyNote";
-        note.className = "warning-note";
-        note.innerHTML = `Live copy is on. This page is view-only because <strong>${getPeerNameById(activePeerLiveSourceId)}</strong> is the active source. Turn off live copy to edit this faculty.`;
-        document.getElementById("questionsContainer").prepend(note);
-      }
-    }
-
-    function renderDashboard() {
-      const container = document.getElementById("categoryCardsContainer");
-      const mini = document.getElementById("categoryMiniProgress");
-      const visibleCategories = categories.filter(c => c.allowed);
-      let submitted = 0;
-
-      document.getElementById("requiredCount").textContent = visibleCategories.length;
-      container.innerHTML = "";
-      mini.innerHTML = "";
-
-      visibleCategories.forEach(cat => {
-        const status = submissionStatus[cat.key];
-        if (status === "submitted") submitted++;
-
-        mini.innerHTML += `
-          <span class="mini-badge">${cat.title}: <strong>${getStatusLabel(status)}</strong></span>
-        `;
-      });
-
-      categories.forEach(cat => {
-        const status = submissionStatus[cat.key];
-        const openBtn = cat.allowed
-          ? `<button class="btn btn-primary mt-3" onclick="openCategory('${cat.key}')">Open Form</button>`
-          : `<div class="alert alert-light border mt-3 mb-0 small">This category is available for heads only.</div>`;
-
-        container.innerHTML += `
-          <div class="col-md-6 col-xl-4">
-            <div class="category-card">
-              <div class="category-icon">${cat.title.charAt(0)}</div>
-              <div class="category-title">${cat.title}</div>
-              <div class="category-desc">${cat.desc}</div>
-              <div class="mt-3">
-                <span class="status-pill ${getStatusClass(status)}">${getStatusLabel(status)}</span>
-              </div>
-              ${openBtn}
+      container.innerHTML += `
+        <div class="col-md-6 col-xl-4">
+          <div class="category-card">
+            <div class="category-icon">${cat.title.charAt(0)}</div>
+            <div class="category-title">${cat.title}</div>
+            <div class="category-desc">${cat.desc}</div>
+            <div class="mt-3">
+              <span class="status-pill ${getStatusClass(status)}">${getStatusLabel(status)}</span>
             </div>
+            ${openBtn}
           </div>
-        `;
-      });
+        </div>
+      `;
+    });
 
-      document.getElementById("submittedCount").textContent = submitted;
+    document.getElementById("submittedCount").textContent = submitted;
 
-      const allDone = visibleCategories.every(cat => submissionStatus[cat.key] === "submitted");
-      const badge = document.getElementById("allDoneBadge");
+    const allDone = visibleCategories.every(cat => submissionStatus[cat.key] === "submitted");
+    const badge = document.getElementById("allDoneBadge");
+    badge.className = "status-pill " + (allDone ? "status-submitted" : "status-not-started");
+    badge.textContent = allDone ? "All required evaluations completed" : "Not yet complete";
+  }
 
-      if (allDone) {
-        badge.className = "status-pill status-submitted";
-        badge.textContent = "All required evaluations completed";
-      } else {
-        badge.className = "status-pill status-not-started";
-        badge.textContent = "Not yet complete";
-      }
+  function openCategory(categoryKey) {
+    currentCategory = categoryKey;
+    currentSectionIndex = 0;
+
+    if (submissionStatus[currentCategory] === "not_started") {
+      submissionStatus[currentCategory] = "in_progress";
     }
 
-    function openCategory(categoryKey) {
-      currentCategory = categoryKey;
+    document.getElementById("dashboardView").classList.add("hidden");
+    document.getElementById("formView").classList.remove("hidden");
+
+    const categoryObj = categories.find(c => c.key === categoryKey);
+    document.getElementById("formTitle").textContent = categoryObj.title;
+    document.getElementById("formSubtitle").textContent = "Please answer each benchmark carefully and objectively.";
+    document.getElementById("categoryDisplay").value = categoryObj.title;
+
+    const statusEl = document.getElementById("currentCategoryStatus");
+    statusEl.className = "status-pill " + getStatusClass(submissionStatus[currentCategory]);
+    statusEl.textContent = getStatusLabel(submissionStatus[currentCategory]);
+    document.getElementById("sideCategoryStatusText").textContent = getStatusLabel(submissionStatus[currentCategory]);
+
+    populateEvaluatees();
+    togglePeerCopyCard();
+    renderSectionStepper();
+    renderSection();
+    renderDashboard();
+    scrollFormToTop();
+  }
+
+  function togglePeerCopyCard() {
+    const card = document.getElementById("copyPeersCard");
+    const titleEl = document.getElementById("copyPeersTitle");
+    const noteEl = document.getElementById("copyPeersNote");
+
+    if (currentCategory === "head_peer" || currentCategory === "faculty") {
+      card.classList.remove("hidden");
+
+      if (currentCategory === "head_peer") {
+        titleEl.textContent = "Apply Current Answers to Other Heads";
+        noteEl.textContent = "Only one head can be the live source at a time. While live copy is on, other head pages become view-only until you turn it off.";
+      } else {
+        titleEl.textContent = "Apply Current Answers to Other Faculty";
+        noteEl.textContent = "Only one faculty member can be the live source at a time. While live copy is on, other faculty pages become view-only until you turn it off.";
+      }
+
+      setTimeout(syncPeerCopyAppliedUI, 0);
+    } else {
+      card.classList.add("hidden");
+    }
+  }
+
+  function populateEvaluatees() {
+    const select = document.getElementById("evaluateeSelect");
+    const available = getCategoryEvaluatees(currentCategory);
+
+    select.innerHTML = available.map(person =>
+      `<option value="${person.id}">${person.name}${person.isHead ? " - Head" : ""}</option>`
+    ).join("");
+
+    if (!available.length) {
+      lastSelectedEvaluateeId = null;
+      populateFacultyInfo();
+      return;
+    }
+
+    lastSelectedEvaluateeId = String(available[0].id);
+    select.value = lastSelectedEvaluateeId;
+
+    ensureCategoryEvaluateePath(currentCategory, lastSelectedEvaluateeId);
+    populateFacultyInfo();
+    loadComments();
+
+    select.onchange = () => {
+      saveComments();
+
+      const nextId = String(select.value);
+      const previousId = String(lastSelectedEvaluateeId);
+
+      if (nextId === previousId) return;
+
+      if (!isEvaluateeComplete(currentCategory, previousId)) {
+        select.value = previousId;
+        showInfoModal(
+          "Finish Current Evaluation First",
+          "You cannot move to another evaluatee yet. Please complete all sections of the current evaluation first."
+        );
+        return;
+      }
+
+      lastSelectedEvaluateeId = nextId;
       currentSectionIndex = 0;
-
-      if (submissionStatus[currentCategory] === "not_started") {
-        submissionStatus[currentCategory] = "in_progress";
-      }
-
-      document.getElementById("dashboardView").classList.add("hidden");
-      document.getElementById("formView").classList.remove("hidden");
-
-      const categoryObj = categories.find(c => c.key === categoryKey);
-
-      document.getElementById("formTitle").textContent = categoryObj.title;
-      document.getElementById("formSubtitle").textContent = "Please answer each criterion clearly and accurately.";
-      document.getElementById("categoryDisplay").value = categoryObj.title;
-
-      const statusEl = document.getElementById("currentCategoryStatus");
-      statusEl.className = "status-pill " + getStatusClass(submissionStatus[currentCategory]);
-      statusEl.textContent = getStatusLabel(submissionStatus[currentCategory]);
-
-      populateEvaluatees();
-      togglePeerCopyCard();
-      renderSectionStepper();
-      renderSection();
-      renderDashboard();
-      scrollFormToTop();
-    }
-
-    function togglePeerCopyCard() {
-      const card = document.getElementById("copyPeersCard");
-
-      if (currentCategory === "peer") {
-        card.classList.remove("hidden");
-        setTimeout(syncPeerCopyAppliedUI, 0);
-      } else {
-        card.classList.add("hidden");
-      }
-    }
-
-    function populateEvaluatees() {
-      const select = document.getElementById("evaluateeSelect");
-      const available = getCategoryEvaluatees(currentCategory);
-
-      select.innerHTML = available.map(person =>
-        `<option value="${person.id}">${person.name}${person.isHead ? " - Head" : ""}</option>`
-      ).join("");
-
-      lastSelectedEvaluateeId = available.length ? String(available[0].id) : null;
-      if (lastSelectedEvaluateeId !== null) {
-        select.value = lastSelectedEvaluateeId;
-      }
-
-      select.onchange = () => {
-        const nextId = String(select.value);
-        const previousId = String(lastSelectedEvaluateeId);
-
-        if (nextId === previousId) return;
-
-        if (!isEvaluateeComplete(currentCategory, previousId)) {
-          select.value = previousId;
-          showInfoModal(
-            "Finish Current Evaluation First",
-            "You cannot move to another faculty yet. Please complete all sections of the current faculty evaluation first."
-          );
-          return;
-        }
-
-        lastSelectedEvaluateeId = nextId;
-        currentSectionIndex = 0;
-        renderSectionStepper();
-        renderSection();
-        scrollFormToTop();
-      };
-    }
-
-    function renderSectionStepper() {
-      const stepper = document.getElementById("sectionStepper");
-      stepper.innerHTML = "";
-
-      sections.forEach((section, index) => {
-        let extraClass = "";
-        if (index === currentSectionIndex) extraClass = "active";
-        else if (isSectionComplete(index)) extraClass = "done";
-        else if (!canAccessSection(index)) extraClass = "locked";
-
-        const disabledAttr = canAccessSection(index) ? "" : "disabled";
-
-        stepper.innerHTML += `
-          <button class="step-chip ${extraClass}" onclick="goToSection(${index})" ${disabledAttr}>
-            ${section.title}
-          </button>
-        `;
-      });
-    }
-
-    function goToSection(index) {
-      if (!canAccessSection(index)) {
-        showInfoModal(
-          "Complete This Section First",
-          "You cannot move to the next section until the current page is fully answered."
-        );
-        return;
-      }
-
-      currentSectionIndex = index;
+      ensureCategoryEvaluateePath(currentCategory, nextId);
+      populateFacultyInfo();
+      loadComments();
       renderSectionStepper();
       renderSection();
       scrollFormToTop();
-    }
+    };
+  }
 
-    function renderSection() {
-      ensureDataPath();
+  function renderSectionStepper() {
+    const stepper = document.getElementById("sectionStepper");
+    stepper.innerHTML = "";
 
-      const evaluateeId = getCurrentEvaluateeId();
-      const section = sections[currentSectionIndex];
-      const answers = ratings[currentCategory][evaluateeId][section.key] || {};
-      const container = document.getElementById("questionsContainer");
-      const isReadOnly = isPeerLiveLockedForCurrentEvaluatee();
+    sections.forEach((section, index) => {
+      let extraClass = "";
+      if (index === currentSectionIndex) extraClass = "active";
+      else if (isSectionComplete(index)) extraClass = "done";
+      else if (!canAccessSection(index)) extraClass = "locked";
 
-      container.innerHTML = `
-        <div class="section-header">
-          <h3 class="fw-bold mb-1">${section.title}</h3>
-          <div class="text-muted">${section.subtitle}</div>
-        </div>
+      const disabledAttr = canAccessSection(index) ? "" : "disabled";
+
+      stepper.innerHTML += `
+        <button class="step-chip ${extraClass}" onclick="goToSection(${index})" ${disabledAttr}>
+          ${section.title}
+        </button>
       `;
+    });
+  }
 
-      section.questions.forEach((q, idx) => {
-        const selected = answers[idx] || "";
+  function goToSection(index) {
+    saveComments();
 
-        container.innerHTML += `
-          <div class="question-card ${isReadOnly ? 'readonly' : ''}">
-            <div class="question-title">${idx + 1}. ${q.en} <span class="text-danger">*</span></div>
-            <div class="question-sub">${q.tl}</div>
+    if (!canAccessSection(index)) {
+      showInfoModal(
+        "Complete This Section First",
+        "You cannot move to the next section until the current page is fully answered."
+      );
+      return;
+    }
 
-            <div class="rating-scale">
-              ${renderRatingOption(section.key, idx, 5, "Outstanding", selected, isReadOnly)}
-              ${renderRatingOption(section.key, idx, 4, "Very Satisfactory", selected, isReadOnly)}
-              ${renderRatingOption(section.key, idx, 3, "Satisfactory", selected, isReadOnly)}
-              ${renderRatingOption(section.key, idx, 2, "Fair", selected, isReadOnly)}
-              ${renderRatingOption(section.key, idx, 1, "Needs Improvement", selected, isReadOnly)}
-            </div>
+    currentSectionIndex = index;
+    renderSectionStepper();
+    renderSection();
+    scrollFormToTop();
+  }
+
+  function renderSection() {
+    ensureDataPath();
+
+    const evaluateeId = getCurrentEvaluateeId();
+    const section = sections[currentSectionIndex];
+    const answers = ratings[currentCategory][evaluateeId][section.key] || {};
+    const container = document.getElementById("questionsContainer");
+    const isReadOnly = isLiveLockedForCurrentEvaluatee();
+
+    container.innerHTML = `
+      <div class="section-header">
+        <h3 class="fw-bold mb-1">${section.title}</h3>
+        <div class="text-muted">${section.subtitle}</div>
+      </div>
+    `;
+
+    section.questions.forEach((q, idx) => {
+      const selected = answers[idx] || "";
+      const verificationHtml = Array.isArray(q.verification) && q.verification.length
+        ? `
+          <div class="verification-box">
+            <div class="verification-title">Suggested Means of Verification</div>
+            <ul class="verification-list">
+              ${q.verification.map(item => `<li>${item}</li>`).join("")}
+            </ul>
           </div>
-        `;
-      });
+        `
+        : "";
 
-      const answered = Object.keys(answers).length;
-      document.getElementById("pageCompletionLabel").textContent = `${answered} / ${section.questions.length} answered`;
-      document.getElementById("sectionFooterTitle").textContent = section.title;
-      document.getElementById("sectionFooterText").textContent = section.title;
-      document.getElementById("sectionFooterSubtext").textContent = "You may go back to previous sections to review or change answers, but you cannot proceed forward while there are blanks.";
+      container.innerHTML += `
+        <div class="question-card ${isReadOnly ? 'readonly' : ''}">
+          <div class="question-title">${idx + 1}. ${q.en} <span class="text-danger">*</span></div>
+          <div class="question-sub">${q.tl}</div>
+          ${verificationHtml}
 
-      const prevBtn = document.getElementById("prevBtn");
-      const nextBtn = document.getElementById("nextBtn");
-      const submitBtn = document.getElementById("submitCategoryBtn");
-
-      prevBtn.style.display = currentSectionIndex === 0 ? "none" : "inline-block";
-      nextBtn.style.display = currentSectionIndex === sections.length - 1 ? "none" : "inline-block";
-      submitBtn.style.display = currentSectionIndex === sections.length - 1 ? "inline-block" : "none";
-
-      togglePeerCopyCard();
-      syncPeerCopyAppliedUI();
-      updateFormInteractivity();
-      updateSubmitButtonState();
-    }
-
-    function renderRatingOption(sectionKey, questionIndex, value, labelText, selected, isReadOnly) {
-      const evaluateeId = getCurrentEvaluateeId();
-      const id = `${currentCategory}_${evaluateeId}_${sectionKey}_${questionIndex}_${value}`;
-
-      return `
-        <div class="rating-option ${isReadOnly ? 'readonly' : ''}">
-          <input
-            type="radio"
-            id="${id}"
-            name="${currentCategory}_${evaluateeId}_${sectionKey}_${questionIndex}"
-            value="${value}"
-            ${String(selected) === String(value) ? "checked" : ""}
-            ${isReadOnly ? "disabled" : ""}
-            onchange="setRating('${sectionKey}', ${questionIndex}, ${value})"
-          />
-          <label for="${id}" class="rating-label">
-            <div class="rating-number">${value}</div>
-            <div class="rating-text">${labelText}</div>
-          </label>
+          <div class="rating-scale">
+            ${renderRatingOption(section.key, idx, 5, "Always Manifested", selected, isReadOnly)}
+            ${renderRatingOption(section.key, idx, 4, "Often Manifested", selected, isReadOnly)}
+            ${renderRatingOption(section.key, idx, 3, "Sometimes Manifested", selected, isReadOnly)}
+            ${renderRatingOption(section.key, idx, 2, "Seldom Manifested", selected, isReadOnly)}
+            ${renderRatingOption(section.key, idx, 1, "Never/Rarely Manifested", selected, isReadOnly)}
+          </div>
         </div>
       `;
+    });
+
+    const answered = Object.keys(answers).length;
+    document.getElementById("pageCompletionLabel").textContent = `${answered} / ${section.questions.length} answered`;
+    document.getElementById("sectionFooterTitle").textContent = section.title;
+    document.getElementById("sectionFooterText").textContent = section.title;
+    document.getElementById("sectionFooterSubtext").textContent = "You may go back to previous sections to review or change answers, but you cannot proceed forward while there are blanks.";
+    document.getElementById("sideSectionName").textContent = section.title;
+
+    const currentEvalSubmitStatus =
+      evaluateeSubmissionStatus[currentCategory]?.[evaluateeId] || "not_started";
+    document.getElementById("sideCategoryStatusText").textContent = getStatusLabel(currentEvalSubmitStatus);
+
+    const prevBtn = document.getElementById("prevBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const submitBtn = document.getElementById("submitCategoryBtn");
+
+    prevBtn.style.display = currentSectionIndex === 0 ? "none" : "inline-flex";
+    nextBtn.style.display = currentSectionIndex === sections.length - 1 ? "none" : "inline-flex";
+    submitBtn.style.display = currentSectionIndex === sections.length - 1 ? "inline-flex" : "none";
+
+    togglePeerCopyCard();
+    syncPeerCopyAppliedUI();
+    loadComments();
+    updateFormInteractivity();
+    updateSubmitButtonState();
+    populateFacultyInfo();
+  }
+
+  function renderRatingOption(sectionKey, questionIndex, value, labelText, selected, isReadOnly) {
+    const evaluateeId = getCurrentEvaluateeId();
+    const id = `${currentCategory}_${evaluateeId}_${sectionKey}_${questionIndex}_${value}`;
+
+    return `
+      <div class="rating-option ${isReadOnly ? 'readonly' : ''}">
+        <input
+          type="radio"
+          id="${id}"
+          name="${currentCategory}_${evaluateeId}_${sectionKey}_${questionIndex}"
+          value="${value}"
+          ${String(selected) === String(value) ? "checked" : ""}
+          ${isReadOnly ? "disabled" : ""}
+          onchange="setRating('${sectionKey}', ${questionIndex}, ${value})"
+        />
+        <label for="${id}" class="rating-label">
+          <div class="rating-number">${value}</div>
+          <div class="rating-text">${labelText}</div>
+        </label>
+      </div>
+    `;
+  }
+
+  function setRating(sectionKey, questionIndex, value) {
+    if (isLiveLockedForCurrentEvaluatee()) {
+      showInfoModal("Live Copy Is On", getLockedEvaluateeMessage());
+      return;
     }
 
-    function setRating(sectionKey, questionIndex, value) {
-      if (isPeerLiveLockedForCurrentEvaluatee()) {
-        showInfoModal(
-          "Live Copy Is On",
-          getLockedEvaluateeMessage()
-        );
-        return;
-      }
+    ensureDataPath();
+    const evaluateeId = getCurrentEvaluateeId();
+    ratings[currentCategory][evaluateeId][sectionKey][questionIndex] = value;
 
-      ensureDataPath();
-      const evaluateeId = getCurrentEvaluateeId();
-      ratings[currentCategory][evaluateeId][sectionKey][questionIndex] = value;
+    if (submissionStatus[currentCategory] === "not_started") {
+      submissionStatus[currentCategory] = "in_progress";
+    }
 
-      if (submissionStatus[currentCategory] === "not_started") {
-        submissionStatus[currentCategory] = "in_progress";
-      }
+    if (isCurrentEvaluateeLiveSource()) {
+      applyLiveCopy(currentCategory);
+    }
 
-      if (currentCategory === "peer" && isCurrentPeerLiveSource()) {
-        applyLivePeerCopy();
-      }
+    renderSectionStepper();
+    renderSection();
+  }
 
+  function applyScoreToCurrentSection(score) {
+    if (isLiveLockedForCurrentEvaluatee()) {
+      showInfoModal("Live Copy Is On", getLockedEvaluateeMessage());
+      return;
+    }
+
+    ensureDataPath();
+    const evaluateeId = getCurrentEvaluateeId();
+    const section = sections[currentSectionIndex];
+
+    section.questions.forEach((q, idx) => {
+      ratings[currentCategory][evaluateeId][section.key][idx] = Number(score);
+    });
+
+    if (submissionStatus[currentCategory] === "not_started") {
+      submissionStatus[currentCategory] = "in_progress";
+    }
+
+    if (isCurrentEvaluateeLiveSource()) {
+      applyLiveCopy(currentCategory);
+    }
+
+    renderSectionStepper();
+    renderSection();
+
+    setTimeout(() => {
+      scrollToFooterArea();
+    }, 80);
+  }
+
+  function clearCurrentSectionScores() {
+    if (isLiveLockedForCurrentEvaluatee()) {
+      showInfoModal("Live Copy Is On", getLockedEvaluateeMessage());
+      return;
+    }
+
+    ensureDataPath();
+    const evaluateeId = getCurrentEvaluateeId();
+    const section = sections[currentSectionIndex];
+
+    section.questions.forEach((q, idx) => {
+      delete ratings[currentCategory][evaluateeId][section.key][idx];
+    });
+
+    if (isCurrentEvaluateeLiveSource()) {
+      applyLiveCopy(currentCategory);
+    }
+
+    renderSectionStepper();
+    renderSection();
+
+    setTimeout(() => {
+      scrollToFooterArea();
+    }, 80);
+  }
+
+  function prevSection() {
+    saveComments();
+
+    if (currentSectionIndex > 0) {
+      currentSectionIndex--;
       renderSectionStepper();
       renderSection();
+
+      setTimeout(() => {
+        scrollFormToTop();
+      }, 50);
     }
-
-    function applyScoreToCurrentSection(score) {
-      if (isPeerLiveLockedForCurrentEvaluatee()) {
-        showInfoModal(
-          "Live Copy Is On",
-          getLockedEvaluateeMessage()
-        );
-        return;
-      }
-
-      ensureDataPath();
-      const evaluateeId = getCurrentEvaluateeId();
-      const section = sections[currentSectionIndex];
-
-      section.questions.forEach((q, idx) => {
-        ratings[currentCategory][evaluateeId][section.key][idx] = Number(score);
-      });
-
-      if (submissionStatus[currentCategory] === "not_started") {
-        submissionStatus[currentCategory] = "in_progress";
-      }
-
-      if (currentCategory === "peer" && isCurrentPeerLiveSource()) {
-        applyLivePeerCopy();
-      }
-
-      renderSectionStepper();
-      renderSection();
-    }
-
-    function clearCurrentSectionScores() {
-      if (isPeerLiveLockedForCurrentEvaluatee()) {
-        showInfoModal(
-          "Live Copy Is On",
-          getLockedEvaluateeMessage()
-        );
-        return;
-      }
-
-      ensureDataPath();
-      const evaluateeId = getCurrentEvaluateeId();
-      const section = sections[currentSectionIndex];
-
-      section.questions.forEach((q, idx) => {
-        delete ratings[currentCategory][evaluateeId][section.key][idx];
-      });
-
-      if (currentCategory === "peer" && isCurrentPeerLiveSource()) {
-        applyLivePeerCopy();
-      }
-
-      renderSectionStepper();
-      renderSection();
-    }
+  }
 
     function nextSection() {
+      saveComments();
+
       if (!isSectionComplete(currentSectionIndex)) {
-        showInfoModal(
-          "Incomplete Section",
-          "Please answer all questions in this section before proceeding to the next one."
-        );
+        showInfoModal("Incomplete Section", "Please answer all questions in the current section before proceeding.");
         return;
       }
 
@@ -1674,95 +1853,94 @@ body{
         currentSectionIndex++;
         renderSectionStepper();
         renderSection();
-        scrollFormToTop();
+
+        setTimeout(() => {
+          const quickApply = document.getElementById("quickApplyWrap");
+          if (quickApply) {
+            const y = quickApply.getBoundingClientRect().top + window.pageYOffset - (window.innerHeight * 0.35);
+            window.scrollTo({ top: y, behavior: "smooth" });
+          }
+        }, 80);
       }
     }
 
-    function prevSection() {
-      if (currentSectionIndex > 0) {
-        currentSectionIndex--;
-        renderSectionStepper();
-        renderSection();
-        scrollFormToTop();
-      }
+  function updateSubmitButtonState() {
+    const submitBtn = document.getElementById("submitCategoryBtn");
+    if (!submitBtn) return;
+
+    const onLastSection = currentSectionIndex === sections.length - 1;
+    if (!onLastSection) {
+      submitBtn.disabled = true;
+      return;
     }
 
-    function updateSubmitButtonState() {
-      const submitBtn = document.getElementById("submitCategoryBtn");
-      if (!submitBtn) return;
+    submitBtn.disabled = !isCurrentEvaluateeComplete();
+  }
 
-      const onLastSection = currentSectionIndex === sections.length - 1;
-      if (!onLastSection) return;
+  function submitCurrentCategory() {
+    saveComments();
 
-      submitBtn.disabled = !isEntireCategoryCompleteAllEvaluatees();
-    }
-
-    function submitCurrentCategory() {
-      if (!isCurrentEvaluateeComplete()) {
-        showInfoModal(
-          "Incomplete Evaluation",
-          "Please complete all sections of this faculty evaluation before submitting the category."
-        );
-        return;
-      }
-
-      if (!isEntireCategoryCompleteAllEvaluatees()) {
-        const pending = getCategoryEvaluatees(currentCategory).filter(person => !isEvaluateeComplete(currentCategory, person.id));
-        const names = pending.map(person => person.name).join(", ");
-
-        showInfoModal(
-          "Category Not Yet Complete",
-          `You cannot submit this category yet. Please finish all remaining evaluations first: <strong>${names}</strong>.`
-        );
-        return;
-      }
-
-      submissionStatus[currentCategory] = "submitted";
-
-      const statusEl = document.getElementById("currentCategoryStatus");
-      statusEl.className = "status-pill status-submitted";
-      statusEl.textContent = "Submitted";
-
+    if (!isCurrentEvaluateeComplete()) {
       showInfoModal(
-        "Submission Successful",
-        "Category submitted successfully.",
-        "Done"
+        "Incomplete Evaluation",
+        "Please complete all sections of this evaluation before submitting."
       );
-
-      setTimeout(() => {
-        goBackToDashboard();
-      }, 300);
+      return;
     }
 
-    function copyCurrentEvaluationToOtherPeers() {
-      if (currentCategory !== "peer") return;
+    const evaluateeId = getCurrentEvaluateeId();
+    ensureCategoryEvaluateePath(currentCategory, evaluateeId);
 
-      const sourcePeerId = getCurrentEvaluateeId();
-      ensureCategoryEvaluateePath("peer", sourcePeerId);
-      activateLivePeerCopy(sourcePeerId);
+    evaluateeSubmissionStatus[currentCategory][evaluateeId] = "submitted";
+    refreshCategoryStatus(currentCategory);
 
-      showInfoModal(
-        "Live Copy Enabled",
-        "This peer is now the only live source. While live copy is on, you can view other peer pages but you will not be able to change their answers until live copy is turned off."
-      );
+    const statusEl = document.getElementById("currentCategoryStatus");
+    statusEl.className = "status-pill " + getStatusClass(submissionStatus[currentCategory]);
+    statusEl.textContent = getStatusLabel(submissionStatus[currentCategory]);
 
-      renderSection();
-    }
+    document.getElementById("sideCategoryStatusText").textContent = "Submitted";
 
-    function goBackToDashboard() {
-      document.getElementById("formView").classList.add("hidden");
-      document.getElementById("dashboardView").classList.remove("hidden");
-      renderDashboard();
-      scrollFormToTop();
-    }
+    showInfoModal("Submission Successful", "Evaluation submitted successfully.");
 
-    function init() {
-      document.getElementById("roleLabel").textContent = CURRENT_USER.role === "head" ? "Head" : "Faculty";
-      initModal();
-      renderDashboard();
-    }
+    renderDashboard();
+    renderSection();
+  }
 
-    init();
-  </script>
+  function copyCurrentEvaluationToOtherPeers() {
+    const sourceId = getCurrentEvaluateeId();
+    ensureCategoryEvaluateePath(currentCategory, sourceId);
+    activateLiveCopy(currentCategory, sourceId);
+
+    showInfoModal(
+      "Live Copy Enabled",
+      `This ${currentCategory === "head_peer" ? "head" : "faculty"} is now the live source. While live copy is on, the other ${currentCategory === "head_peer" ? "head" : "faculty"} pages will be view-only until live copy is turned off.`
+    );
+
+    renderSection();
+  }
+
+  function goBackToDashboard() {
+    saveComments();
+    refreshCategoryStatus(currentCategory);
+    document.getElementById("formView").classList.add("hidden");
+    document.getElementById("dashboardView").classList.remove("hidden");
+    renderDashboard();
+    scrollFormToTop();
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("commentsBox").addEventListener("input", () => {
+      if (!currentCategory || !getCurrentEvaluateeId()) return;
+      saveComments();
+      if (isCurrentEvaluateeLiveSource()) {
+        applyLiveCopy(currentCategory);
+      }
+    });
+
+    document.getElementById("roleLabel").textContent = CURRENT_USER.role === "head" ? "Head" : "Faculty";
+    initModal();
+    renderDashboard();
+  });
+</script>
 </body>
 </html>

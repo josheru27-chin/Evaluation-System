@@ -16,4 +16,9 @@ urlpatterns = [
     path('dashboard/department/add/', views.add_department, name='add_department'),
     path('dashboard/department/update/<int:dept_id>/', views.update_department, name='update_department'),
     path('dashboard/department/delete/<int:dept_id>/', views.delete_department, name='delete_department'),
+    
+    # Head 
+    path('head/add/', views.head_add, name='head_add'),
+    path('head/monitor/', views.head_monitor, name='head_monitor'),
+    
 ]
