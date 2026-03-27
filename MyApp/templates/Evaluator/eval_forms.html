@@ -793,10 +793,14 @@
             <div>
               <h1>Head Evaluation Portal</h1>
               <p>Evaluate fellow heads and faculty members, complete each category, and track submission progress. Self-evaluation is not included in this version.</p>
-            </div>
+            </div>  
             <div class="text-md-end">
-              <div class="small opacity-75">Current Role</div>
-              <div class="fw-bold fs-5" id="roleLabel">Head</div>
+              <div class="small opacity-75">Welcome</div>
+              <div class="fw-bold fs-5" id="welcomeHeadName">{{ logged_in_head.name }}</div>
+              <div class="small mt-1 opacity-75">Department</div>
+              <div class="fw-semibold" id="welcomeDepartment">{{ logged_in_head.department.name }}</div>
+              <div class="small mt-2 opacity-75 d-none">Current Role</div>
+              <div class="fw-bold d-none" id="roleLabel">Head</div>
             </div>
           </div>
         </div>
@@ -850,9 +854,28 @@
               <div class="left-rail-card">
                 <div class="left-rail-title">Evaluation panel</div>
 
+                  <div class="field-block">
+                    <label>Department</label>
+                    <input type="text" class="form-control" id="infoDepartment" readonly />
+                  </div>
+
                 <div class="field-block">
-                  <label class="form-label fw-semibold">Evaluatee</label>
-                  <select class="form-select" id="evaluateeSelect"></select>
+                  <label class="form-label fw-semibold"> Choose Faculty</label>
+                  <select class="form-select" id="evaluateeSelect">
+                      <option value="">Select faculty member</option>
+                      {% for faculty in department_faculty_members %}
+                          <option
+                              value="{{ faculty.id }}"
+                              data-name="{{ faculty.name }}"
+                              data-department="{{ faculty.department.name }}"
+                              data-email="{{ faculty.email }}"
+                          >
+                              {{ faculty.name }}
+                          </option>
+                      {% empty %}
+                          <option value="">No faculty members found</option>
+                      {% endfor %}
+                  </select>
                 </div>
 
                 <div class="field-block mt-3">
@@ -889,26 +912,6 @@
                   <div class="field-block">
                     <label>Name of Faculty Being Evaluated</label>
                     <input type="text" class="form-control" id="infoFacultyName" readonly />
-                  </div>
-                  <div class="field-block">
-                    <label>Academic Rank</label>
-                    <input type="text" class="form-control" id="infoAcademicRank" readonly />
-                  </div>
-                  <div class="field-block">
-                    <label>College / Department</label>
-                    <input type="text" class="form-control" id="infoDepartment" readonly />
-                  </div>
-                  <div class="field-block">
-                    <label>Course Code / Title</label>
-                    <input type="text" class="form-control" id="infoCourse" readonly />
-                  </div>
-                  <div class="field-block">
-                    <label>Program Year</label>
-                    <input type="text" class="form-control" id="infoProgramYear" readonly />
-                  </div>
-                  <div class="field-block">
-                    <label>Semester / Academic Year</label>
-                    <input type="text" class="form-control" id="infoSemester" readonly />
                   </div>
                 </div>
               </div>
@@ -1204,25 +1207,32 @@
   }
 
   function getCategoryEvaluatees(categoryKey = currentCategory) {
-    if (categoryKey === "head_peer") {
-      return evaluatees.filter(
-        e => e.isHead && e.name.trim().toLowerCase() !== CURRENT_USER.name.trim().toLowerCase()
-      );
-    }
-    if (categoryKey === "faculty") {
-      return evaluatees.filter(e => !e.isHead);
-    }
-    return [];
+    const select = document.getElementById("evaluateeSelect");
+    if (!select) return [];
+
+    return Array.from(select.options)
+      .filter(option => option.value)
+      .map(option => ({
+        id: String(option.value),
+        name: option.dataset.name || option.textContent.trim(),
+        department: option.dataset.department || "",
+        email: option.dataset.email || "",
+        isHead: categoryKey === "head_peer"
+      }));
   }
 
   function getEvaluateeNameById(categoryKey, evaluateeId) {
-    const person = getCategoryEvaluatees(categoryKey).find(p => String(p.id) === String(evaluateeId));
+    const person = getCategoryEvaluatees(categoryKey).find(
+      p => String(p.id) === String(evaluateeId)
+    );
     return person ? person.name : "selected evaluatee";
   }
 
   function getCurrentEvaluateeObject() {
     const id = getCurrentEvaluateeId();
-    return evaluatees.find(item => String(item.id) === String(id)) || null;
+    return getCategoryEvaluatees(currentCategory).find(
+      item => String(item.id) === String(id)
+    ) || null;
   }
 
   function ensureCategoryEvaluateePath(categoryKey, evaluateeId) {
@@ -1251,13 +1261,29 @@
   }
 
   function populateFacultyInfo() {
-    const person = getCurrentEvaluateeObject();
-    document.getElementById("infoFacultyName").value = person ? person.name : "";
-    document.getElementById("infoAcademicRank").value = person ? person.academicRank : "";
-    document.getElementById("infoDepartment").value = person ? person.department : "";
-    document.getElementById("infoCourse").value = person ? person.course : "";
-    document.getElementById("infoProgramYear").value = person ? person.programYear : "";
-    document.getElementById("infoSemester").value = person ? person.semester : "";
+      const select = document.getElementById("evaluateeSelect");
+      const selected = select ? select.options[select.selectedIndex] : null;
+
+      const facultyName = document.getElementById("infoFacultyName");
+      const department = document.getElementById("infoDepartment");
+      const academicRank = document.getElementById("infoAcademicRank");
+      const course = document.getElementById("infoCourse");
+      const programYear = document.getElementById("infoProgramYear");
+
+      if (!selected || !selected.value) {
+          if (facultyName) facultyName.value = "";
+          if (department) department.value = "";
+          if (academicRank) academicRank.value = "";
+          if (course) course.value = "";
+          if (programYear) programYear.value = "";
+          return;
+      }
+
+      if (facultyName) facultyName.value = selected.dataset.name || "";
+      if (department) department.value = selected.dataset.department || "";
+      if (academicRank) academicRank.value = "";
+      if (course) course.value = "";
+      if (programYear) programYear.value = "";
   }
 
   function loadComments() {
@@ -1569,50 +1595,40 @@
 
   function populateEvaluatees() {
     const select = document.getElementById("evaluateeSelect");
-    const available = getCategoryEvaluatees(currentCategory);
+    if (!select) return;
 
-    select.innerHTML = available.map(person =>
-      `<option value="${person.id}">${person.name}${person.isHead ? " - Head" : ""}</option>`
-    ).join("");
-
-    if (!available.length) {
-      lastSelectedEvaluateeId = null;
-      populateFacultyInfo();
-      return;
+    if (!select.value && select.options.length > 1) {
+      select.selectedIndex = 1;
     }
 
-    lastSelectedEvaluateeId = String(available[0].id);
-    select.value = lastSelectedEvaluateeId;
+    lastSelectedEvaluateeId = select.value ? String(select.value) : null;
 
-    ensureCategoryEvaluateePath(currentCategory, lastSelectedEvaluateeId);
+    if (lastSelectedEvaluateeId) {
+      ensureCategoryEvaluateePath(currentCategory, lastSelectedEvaluateeId);
+    }
+
     populateFacultyInfo();
     loadComments();
 
     select.onchange = () => {
       saveComments();
 
-      const nextId = String(select.value);
-      const previousId = String(lastSelectedEvaluateeId);
+      lastSelectedEvaluateeId = String(select.value || "");
 
-      if (nextId === previousId) return;
-
-      if (!isEvaluateeComplete(currentCategory, previousId)) {
-        select.value = previousId;
-        showInfoModal(
-          "Finish Current Evaluation First",
-          "You cannot move to another evaluatee yet. Please complete all sections of the current evaluation first."
-        );
-        return;
+      if (lastSelectedEvaluateeId) {
+        ensureCategoryEvaluateePath(currentCategory, lastSelectedEvaluateeId);
       }
 
-      lastSelectedEvaluateeId = nextId;
-      currentSectionIndex = 0;
-      ensureCategoryEvaluateePath(currentCategory, nextId);
+      // re-apply live copy whenever user switches faculty
+      if (getActiveLiveSourceId(currentCategory)) {
+        applyLiveCopy(currentCategory);
+      }
+
       populateFacultyInfo();
       loadComments();
       renderSectionStepper();
       renderSection();
-      scrollFormToTop();
+      renderDashboard();
     };
   }
 
@@ -1905,9 +1921,15 @@
     renderDashboard();
     renderSection();
   }
-
+  
   function copyCurrentEvaluationToOtherPeers() {
     const sourceId = getCurrentEvaluateeId();
+
+    if (!sourceId) {
+      showInfoModal("No Faculty Selected", "Please select a faculty member first.");
+      return;
+    }
+
     ensureCategoryEvaluateePath(currentCategory, sourceId);
     activateLiveCopy(currentCategory, sourceId);
 
@@ -1916,7 +1938,9 @@
       `This ${currentCategory === "head_peer" ? "head" : "faculty"} is now the live source. While live copy is on, the other ${currentCategory === "head_peer" ? "head" : "faculty"} pages will be view-only until live copy is turned off.`
     );
 
+    renderSectionStepper();
     renderSection();
+    renderDashboard();
   }
 
   function goBackToDashboard() {
@@ -1942,5 +1966,32 @@
     renderDashboard();
   });
 </script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const evaluateeSelect = document.getElementById("evaluateeSelect");
+    const infoFacultyName = document.getElementById("infoFacultyName");
+    const infoDepartment = document.getElementById("infoDepartment");
+
+    function populateFacultyInfoFromDropdown() {
+        const selected = evaluateeSelect.options[evaluateeSelect.selectedIndex];
+
+        if (!selected || !selected.value) {
+            if (infoFacultyName) infoFacultyName.value = "";
+            if (infoDepartment) infoDepartment.value = "";
+            return;
+        }
+
+        if (infoFacultyName) infoFacultyName.value = selected.dataset.name || "";
+        if (infoDepartment) infoDepartment.value = selected.dataset.department || "";
+    }
+
+    evaluateeSelect.addEventListener("change", populateFacultyInfoFromDropdown);
+
+    // run once on page load
+    populateFacultyInfoFromDropdown();
+});
+</script>
+
 </body>
 </html>
