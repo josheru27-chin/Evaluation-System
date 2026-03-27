@@ -946,6 +946,18 @@
             }
         }
     });
+
+    window.addEventListener('load', function () {
+
+    {% if login_modal %}
+        showSystemModal(
+            '{% if login_modal.type == "success" %}Check Your Email{% elif login_modal.type == "danger" %}Error{% else %}Notice{% endif %}',
+            '{{ login_modal.message|escapejs }}',
+            '{{ login_modal.type }}'
+        );
+    {% endif %}
+
+});
 </script>
 </body>
 </html>

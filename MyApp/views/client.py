@@ -40,7 +40,10 @@ def eval_login(request):
             action = "send_link"
 
         if not email:
-            messages.error(request, "Please enter your email address.")
+            request.session["login_modal"] = {
+                    "type": "danger",
+                    "message": "Please enter your email address."
+                }
             return redirect("eval_login")
 
         head = (
@@ -106,10 +109,11 @@ def eval_login(request):
             msg.attach_alternative(html_body, "text/html")
             msg.send()
 
-            messages.success(
-                request,
-                f"A secure login link has been sent to {head.email}."
-            )
+            request.session["login_modal"] = {
+                "type": "success",
+                "message": f"A secure login link has been sent to {head.email}."
+            }
+            
         except Exception:
             messages.error(
                 request,
@@ -118,9 +122,12 @@ def eval_login(request):
 
         return redirect("eval_login")
 
+    login_modal = request.session.pop("login_modal", None)
+
     context = {
         "portal_closed": portal_closed,
         "open_schedule": open_schedule,
+        "login_modal": login_modal,
     }
     return render(request, "evaluator/eval_login.html", context)
 
