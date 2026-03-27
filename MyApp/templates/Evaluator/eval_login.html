@@ -899,15 +899,6 @@
     });
 
     window.addEventListener('load', function () {
-        if (portalClosed) {
-            showSystemModal(
-                'Portal Closed',
-                'This portal is currently closed. Please wait for the announcement of faculty evaluation.',
-                'warning'
-            );
-            return;
-        }
-
         {% if messages %}
             {% for message in messages %}
                 {% if 'success' in message.tags %}

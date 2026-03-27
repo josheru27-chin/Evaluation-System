@@ -860,24 +860,12 @@
                   </div>
 
                 <div class="field-block">
-                  <label class="form-label fw-semibold"> Choose Faculty</label>
+                  <label class="form-label fw-semibold" id="evaluateeLabel">Choose Evaluatee</label>
                   <select class="form-select" id="evaluateeSelect">
-                      <option value="">Select faculty member</option>
-                      {% for faculty in department_faculty_members %}
-                          <option
-                              value="{{ faculty.id }}"
-                              data-name="{{ faculty.name }}"
-                              data-department="{{ faculty.department.name }}"
-                              data-email="{{ faculty.email }}"
-                          >
-                              {{ faculty.name }}
-                          </option>
-                      {% empty %}
-                          <option value="">No faculty members found</option>
-                      {% endfor %}
+                    <option value="">Select person to evaluate</option>
                   </select>
                 </div>
-
+                
                 <div class="field-block mt-3">
                   <label class="form-label fw-semibold">Category</label>
                   <input type="text" class="form-control" id="categoryDisplay" readonly>
@@ -1087,20 +1075,41 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script id="faculty-data" type="application/json">
+[
+  {% for faculty in department_faculty_members %}
+    {
+      "id": "{{ faculty.id }}",
+      "name": "{{ faculty.name|escapejs }}",
+      "department": "{{ faculty.department.name|escapejs }}",
+      "email": "{{ faculty.email|default:''|escapejs }}"
+    }{% if not forloop.last %},{% endif %}
+  {% endfor %}
+]
+</script>
+
+<script id="head-data" type="application/json">
+[
+  {% for head in other_heads %}
+    {
+      "id": "{{ head.id }}",
+      "name": "{{ head.name|escapejs }}",
+      "department": "{{ head.department.name|escapejs }}",
+      "email": "{{ head.email|default:''|escapejs }}"
+    }{% if not forloop.last %},{% endif %}
+  {% endfor %}
+]
+</script>
+
 <script>
+  const facultyData = JSON.parse(document.getElementById("faculty-data").textContent);
+  const headData = JSON.parse(document.getElementById("head-data").textContent);
+
   const CURRENT_USER = {
-    name: "Dr. Jose Head",
+    name: "{{ logged_in_head.name|escapejs }}",
     role: "head"
   };
-
-  const evaluatees = [
-    { id: 1, name: "Dr. Ana Cruz", isHead: true, academicRank: "Associate Professor", department: "College of Education", course: "EDU 101 - Foundations of Teaching", programYear: "1st Year", semester: "1st Semester AY 2025-2026" },
-    { id: 2, name: "Mr. Carlo Mendoza", isHead: true, academicRank: "Assistant Professor", department: "College of Education", course: "EDU 205 - Curriculum Development", programYear: "2nd Year", semester: "1st Semester AY 2025-2026" },
-    { id: 3, name: "Prof. Maria Santos", isHead: false, academicRank: "Instructor I", department: "College of Education", course: "ENG 102 - Purposive Communication", programYear: "1st Year", semester: "1st Semester AY 2025-2026" },
-    { id: 4, name: "Prof. John Reyes", isHead: false, academicRank: "Instructor II", department: "College of Education", course: "MTH 101 - Mathematics in the Modern World", programYear: "1st Year", semester: "1st Semester AY 2025-2026" },
-    { id: 5, name: "Prof. Leo Garcia", isHead: false, academicRank: "Assistant Professor", department: "College of Education", course: "SCI 110 - General Science", programYear: "2nd Year", semester: "1st Semester AY 2025-2026" },
-    { id: 6, name: "Ms. Nina Lopez", isHead: false, academicRank: "Instructor I", department: "College of Education", course: "FIL 101 - Komunikasyon sa Akademikong Filipino", programYear: "1st Year", semester: "1st Semester AY 2025-2026" }
-  ];
 
   const sections = [
     {
@@ -1148,11 +1157,7 @@
 
   const ratings = { head_peer: {}, faculty: {} };
   const commentsData = { head_peer: {}, faculty: {} };
-
-  // Category-level dashboard status
   const submissionStatus = { head_peer: "not_started", faculty: "not_started" };
-
-  // Per-evaluatee submission tracker
   const evaluateeSubmissionStatus = { head_peer: {}, faculty: {} };
 
   let currentCategory = null;
@@ -1163,14 +1168,21 @@
 
   function initModal() {
     const modalEl = document.getElementById("appActionModal");
+    if (!modalEl) return;
     appModalInstance = new bootstrap.Modal(modalEl);
-    document.getElementById("appModalConfirmBtn").addEventListener("click", () => appModalInstance.hide());
+
+    const confirmBtn = document.getElementById("appModalConfirmBtn");
+    if (confirmBtn) {
+      confirmBtn.addEventListener("click", () => appModalInstance.hide());
+    }
   }
 
   function showInfoModal(title, message) {
-    document.getElementById("appActionModalLabel").textContent = title;
-    document.getElementById("appActionModalMessage").innerHTML = message;
-    appModalInstance.show();
+    const titleEl = document.getElementById("appActionModalLabel");
+    const messageEl = document.getElementById("appActionModalMessage");
+    if (titleEl) titleEl.textContent = title;
+    if (messageEl) messageEl.innerHTML = message;
+    if (appModalInstance) appModalInstance.show();
   }
 
   function scrollFormToTop() {
@@ -1203,22 +1215,31 @@
 
   function getCurrentEvaluateeId() {
     const select = document.getElementById("evaluateeSelect");
-    return select ? String(select.value) : "";
+    return select ? String(select.value || "") : "";
   }
 
   function getCategoryEvaluatees(categoryKey = currentCategory) {
-    const select = document.getElementById("evaluateeSelect");
-    if (!select) return [];
-
-    return Array.from(select.options)
-      .filter(option => option.value)
-      .map(option => ({
-        id: String(option.value),
-        name: option.dataset.name || option.textContent.trim(),
-        department: option.dataset.department || "",
-        email: option.dataset.email || "",
-        isHead: categoryKey === "head_peer"
+    if (categoryKey === "head_peer") {
+      return headData.map(item => ({
+        id: String(item.id),
+        name: item.name,
+        department: item.department || "",
+        email: item.email || "",
+        isHead: true
       }));
+    }
+
+    if (categoryKey === "faculty") {
+      return facultyData.map(item => ({
+        id: String(item.id),
+        name: item.name,
+        department: item.department || "",
+        email: item.email || "",
+        isHead: false
+      }));
+    }
+
+    return [];
   }
 
   function getEvaluateeNameById(categoryKey, evaluateeId) {
@@ -1237,6 +1258,7 @@
 
   function ensureCategoryEvaluateePath(categoryKey, evaluateeId) {
     const evalId = String(evaluateeId);
+    if (!evalId) return;
 
     if (!ratings[categoryKey]) ratings[categoryKey] = {};
     if (!ratings[categoryKey][evalId]) ratings[categoryKey][evalId] = {};
@@ -1248,7 +1270,9 @@
     });
 
     if (!commentsData[categoryKey]) commentsData[categoryKey] = {};
-    if (!commentsData[categoryKey][evalId]) commentsData[categoryKey][evalId] = "";
+    if (typeof commentsData[categoryKey][evalId] === "undefined") {
+      commentsData[categoryKey][evalId] = "";
+    }
 
     if (!evaluateeSubmissionStatus[categoryKey]) evaluateeSubmissionStatus[categoryKey] = {};
     if (!evaluateeSubmissionStatus[categoryKey][evalId]) {
@@ -1257,45 +1281,57 @@
   }
 
   function ensureDataPath() {
-    ensureCategoryEvaluateePath(currentCategory, getCurrentEvaluateeId());
+    const evalId = getCurrentEvaluateeId();
+    if (!currentCategory || !evalId) return;
+    ensureCategoryEvaluateePath(currentCategory, evalId);
   }
 
   function populateFacultyInfo() {
-      const select = document.getElementById("evaluateeSelect");
-      const selected = select ? select.options[select.selectedIndex] : null;
+    const select = document.getElementById("evaluateeSelect");
+    const selected = select ? select.options[select.selectedIndex] : null;
 
-      const facultyName = document.getElementById("infoFacultyName");
-      const department = document.getElementById("infoDepartment");
-      const academicRank = document.getElementById("infoAcademicRank");
-      const course = document.getElementById("infoCourse");
-      const programYear = document.getElementById("infoProgramYear");
+    const facultyName = document.getElementById("infoFacultyName");
+    const department = document.getElementById("infoDepartment");
+    const academicRank = document.getElementById("infoAcademicRank");
+    const course = document.getElementById("infoCourse");
+    const programYear = document.getElementById("infoProgramYear");
 
-      if (!selected || !selected.value) {
-          if (facultyName) facultyName.value = "";
-          if (department) department.value = "";
-          if (academicRank) academicRank.value = "";
-          if (course) course.value = "";
-          if (programYear) programYear.value = "";
-          return;
-      }
+    const infoTitle = document.getElementById("personInfoTitle");
 
-      if (facultyName) facultyName.value = selected.dataset.name || "";
-      if (department) department.value = selected.dataset.department || "";
+    if (infoTitle) {
+      infoTitle.textContent = currentCategory === "head_peer" ? "A. Head Information" : "A. Faculty Information";
+    }
+
+    if (!selected || !selected.value) {
+      if (facultyName) facultyName.value = "";
+      if (department) department.value = "";
       if (academicRank) academicRank.value = "";
       if (course) course.value = "";
       if (programYear) programYear.value = "";
+      return;
+    }
+
+    if (facultyName) facultyName.value = selected.dataset.name || "";
+    if (department) department.value = selected.dataset.department || "";
+    if (academicRank) academicRank.value = "";
+    if (course) course.value = "";
+    if (programYear) programYear.value = "";
   }
 
   function loadComments() {
+    const commentsBox = document.getElementById("commentsBox");
     const evaluateeId = getCurrentEvaluateeId();
-    document.getElementById("commentsBox").value = commentsData[currentCategory]?.[evaluateeId] || "";
+    if (!commentsBox) return;
+    commentsBox.value = commentsData[currentCategory]?.[evaluateeId] || "";
   }
 
   function saveComments() {
-    if (!currentCategory || !getCurrentEvaluateeId()) return;
+    const commentsBox = document.getElementById("commentsBox");
+    if (!commentsBox || !currentCategory || !getCurrentEvaluateeId()) return;
+
     const evaluateeId = getCurrentEvaluateeId();
     ensureCategoryEvaluateePath(currentCategory, evaluateeId);
-    commentsData[currentCategory][evaluateeId] = document.getElementById("commentsBox").value;
+    commentsData[currentCategory][evaluateeId] = commentsBox.value;
   }
 
   function getActiveLiveSourceId(categoryKey = currentCategory) {
@@ -1320,7 +1356,9 @@
   }
 
   function isSectionComplete(sectionIndex) {
-    return isSectionCompleteFor(currentCategory, getCurrentEvaluateeId(), sectionIndex);
+    const evaluateeId = getCurrentEvaluateeId();
+    if (!evaluateeId) return false;
+    return isSectionCompleteFor(currentCategory, evaluateeId, sectionIndex);
   }
 
   function isEvaluateeComplete(categoryKey, evaluateeId) {
@@ -1328,7 +1366,9 @@
   }
 
   function isCurrentEvaluateeComplete() {
-    return isEvaluateeComplete(currentCategory, getCurrentEvaluateeId());
+    const evaluateeId = getCurrentEvaluateeId();
+    if (!evaluateeId) return false;
+    return isEvaluateeComplete(currentCategory, evaluateeId);
   }
 
   function isEntireCategoryCompleteAllEvaluatees() {
@@ -1338,6 +1378,7 @@
 
   function refreshCategoryStatus(categoryKey) {
     const list = getCategoryEvaluatees(categoryKey);
+
     if (!list.length) {
       submissionStatus[categoryKey] = "not_started";
       return;
@@ -1465,6 +1506,8 @@
   }
 
   function updateFormInteractivity() {
+    const questionsContainer = document.getElementById("questionsContainer");
+    const commentsBox = document.getElementById("commentsBox");
     const isReadOnly = isLiveLockedForCurrentEvaluatee();
     const labelType = currentCategory === "head_peer" ? "head" : "faculty";
     const activeId = getActiveLiveSourceId();
@@ -1481,29 +1524,35 @@
       btn.disabled = isReadOnly;
     });
 
-    document.getElementById("commentsBox").disabled = isReadOnly;
+    if (commentsBox) commentsBox.disabled = isReadOnly;
 
     const existingWarning = document.getElementById("liveCopyReadonlyNote");
     if (existingWarning) existingWarning.remove();
 
-    if (isReadOnly) {
+    if (isReadOnly && questionsContainer) {
       const note = document.createElement("div");
       note.id = "liveCopyReadonlyNote";
       note.className = "warning-note";
       note.innerHTML = `Live copy is on. This page is view-only because <strong>${getEvaluateeNameById(currentCategory, activeId)}</strong> is the active source. Turn off live copy to edit this ${labelType}.`;
-      document.getElementById("questionsContainer").prepend(note);
+      questionsContainer.prepend(note);
     }
   }
 
   function renderDashboard() {
     const container = document.getElementById("categoryCardsContainer");
     const mini = document.getElementById("categoryMiniProgress");
+    const requiredCount = document.getElementById("requiredCount");
+    const submittedCount = document.getElementById("submittedCount");
+    const badge = document.getElementById("allDoneBadge");
+
+    if (!container || !mini) return;
+
     const visibleCategories = categories.filter(c => c.allowed);
 
     visibleCategories.forEach(cat => refreshCategoryStatus(cat.key));
 
     let submitted = 0;
-    document.getElementById("requiredCount").textContent = visibleCategories.length;
+    if (requiredCount) requiredCount.textContent = visibleCategories.length;
     container.innerHTML = "";
     mini.innerHTML = "";
 
@@ -1534,12 +1583,13 @@
       `;
     });
 
-    document.getElementById("submittedCount").textContent = submitted;
+    if (submittedCount) submittedCount.textContent = submitted;
 
     const allDone = visibleCategories.every(cat => submissionStatus[cat.key] === "submitted");
-    const badge = document.getElementById("allDoneBadge");
-    badge.className = "status-pill " + (allDone ? "status-submitted" : "status-not-started");
-    badge.textContent = allDone ? "All required evaluations completed" : "Not yet complete";
+    if (badge) {
+      badge.className = "status-pill " + (allDone ? "status-submitted" : "status-not-started");
+      badge.textContent = allDone ? "All required evaluations completed" : "Not yet complete";
+    }
   }
 
   function openCategory(categoryKey) {
@@ -1550,18 +1600,38 @@
       submissionStatus[currentCategory] = "in_progress";
     }
 
-    document.getElementById("dashboardView").classList.add("hidden");
-    document.getElementById("formView").classList.remove("hidden");
+    const dashboardView = document.getElementById("dashboardView");
+    const formView = document.getElementById("formView");
+    const formTitle = document.getElementById("formTitle");
+    const formSubtitle = document.getElementById("formSubtitle");
+    const categoryDisplay = document.getElementById("categoryDisplay");
+    const statusEl = document.getElementById("currentCategoryStatus");
+    const sideStatus = document.getElementById("sideCategoryStatusText");
+    const evaluateeLabel = document.getElementById("evaluateeLabel");
+    const personInfoTitle = document.getElementById("personInfoTitle");
+
+    if (dashboardView) dashboardView.classList.add("hidden");
+    if (formView) formView.classList.remove("hidden");
 
     const categoryObj = categories.find(c => c.key === categoryKey);
-    document.getElementById("formTitle").textContent = categoryObj.title;
-    document.getElementById("formSubtitle").textContent = "Please answer each benchmark carefully and objectively.";
-    document.getElementById("categoryDisplay").value = categoryObj.title;
+    if (formTitle) formTitle.textContent = categoryObj.title;
+    if (formSubtitle) formSubtitle.textContent = "Please answer each benchmark carefully and objectively.";
+    if (categoryDisplay) categoryDisplay.value = categoryObj.title;
 
-    const statusEl = document.getElementById("currentCategoryStatus");
-    statusEl.className = "status-pill " + getStatusClass(submissionStatus[currentCategory]);
-    statusEl.textContent = getStatusLabel(submissionStatus[currentCategory]);
-    document.getElementById("sideCategoryStatusText").textContent = getStatusLabel(submissionStatus[currentCategory]);
+    if (statusEl) {
+      statusEl.className = "status-pill " + getStatusClass(submissionStatus[currentCategory]);
+      statusEl.textContent = getStatusLabel(submissionStatus[currentCategory]);
+    }
+
+    if (sideStatus) sideStatus.textContent = getStatusLabel(submissionStatus[currentCategory]);
+
+    if (evaluateeLabel) {
+      evaluateeLabel.textContent = categoryKey === "head_peer" ? "Choose Department Head" : "Choose Faculty Member";
+    }
+
+    if (personInfoTitle) {
+      personInfoTitle.textContent = categoryKey === "head_peer" ? "A. Head Information" : "A. Faculty Information";
+    }
 
     populateEvaluatees();
     togglePeerCopyCard();
@@ -1575,6 +1645,8 @@
     const card = document.getElementById("copyPeersCard");
     const titleEl = document.getElementById("copyPeersTitle");
     const noteEl = document.getElementById("copyPeersNote");
+
+    if (!card || !titleEl || !noteEl) return;
 
     if (currentCategory === "head_peer" || currentCategory === "faculty") {
       card.classList.remove("hidden");
@@ -1595,13 +1667,46 @@
 
   function populateEvaluatees() {
     const select = document.getElementById("evaluateeSelect");
+    const label = document.getElementById("evaluateeLabel");
     if (!select) return;
 
-    if (!select.value && select.options.length > 1) {
-      select.selectedIndex = 1;
+    const available = getCategoryEvaluatees(currentCategory);
+
+    let placeholder = "Select person to evaluate";
+    let labelText = "Choose Evaluatee";
+
+    if (currentCategory === "head_peer") {
+      placeholder = "Select department head";
+      labelText = "Choose Department Head";
+    } else if (currentCategory === "faculty") {
+      placeholder = "Select faculty member";
+      labelText = "Choose Faculty Member";
     }
 
-    lastSelectedEvaluateeId = select.value ? String(select.value) : null;
+    if (label) label.textContent = labelText;
+
+    const previousValue = lastSelectedEvaluateeId ? String(lastSelectedEvaluateeId) : "";
+    select.innerHTML = `<option value="">${placeholder}</option>`;
+
+    available.forEach(person => {
+      const option = document.createElement("option");
+      option.value = person.id;
+      option.textContent = person.name;
+      option.dataset.name = person.name;
+      option.dataset.department = person.department;
+      option.dataset.email = person.email;
+      select.appendChild(option);
+    });
+
+    if (previousValue && available.some(p => String(p.id) === previousValue)) {
+      select.value = previousValue;
+    } else if (available.length > 0) {
+      select.selectedIndex = 1;
+    } else {
+      select.selectedIndex = 0;
+    }
+
+    lastSelectedEvaluateeId = String(select.value || "");
 
     if (lastSelectedEvaluateeId) {
       ensureCategoryEvaluateePath(currentCategory, lastSelectedEvaluateeId);
@@ -1619,7 +1724,6 @@
         ensureCategoryEvaluateePath(currentCategory, lastSelectedEvaluateeId);
       }
 
-      // re-apply live copy whenever user switches faculty
       if (getActiveLiveSourceId(currentCategory)) {
         applyLiveCopy(currentCategory);
       }
@@ -1634,15 +1738,18 @@
 
   function renderSectionStepper() {
     const stepper = document.getElementById("sectionStepper");
+    if (!stepper) return;
+
+    const hasEvaluatee = !!getCurrentEvaluateeId();
     stepper.innerHTML = "";
 
     sections.forEach((section, index) => {
       let extraClass = "";
       if (index === currentSectionIndex) extraClass = "active";
-      else if (isSectionComplete(index)) extraClass = "done";
-      else if (!canAccessSection(index)) extraClass = "locked";
+      else if (hasEvaluatee && isSectionComplete(index)) extraClass = "done";
+      else if (hasEvaluatee && !canAccessSection(index)) extraClass = "locked";
 
-      const disabledAttr = canAccessSection(index) ? "" : "disabled";
+      const disabledAttr = !hasEvaluatee || !canAccessSection(index) ? "disabled" : "";
 
       stepper.innerHTML += `
         <button class="step-chip ${extraClass}" onclick="goToSection(${index})" ${disabledAttr}>
@@ -1654,6 +1761,11 @@
 
   function goToSection(index) {
     saveComments();
+
+    if (!getCurrentEvaluateeId()) {
+      showInfoModal("No Evaluatee Selected", "Please select a person to evaluate first.");
+      return;
+    }
 
     if (!canAccessSection(index)) {
       showInfoModal(
@@ -1670,12 +1782,52 @@
   }
 
   function renderSection() {
-    ensureDataPath();
+    const container = document.getElementById("questionsContainer");
+    const pageCompletionLabel = document.getElementById("pageCompletionLabel");
+    const sectionFooterTitle = document.getElementById("sectionFooterTitle");
+    const sectionFooterText = document.getElementById("sectionFooterText");
+    const sectionFooterSubtext = document.getElementById("sectionFooterSubtext");
+    const sideSectionName = document.getElementById("sideSectionName");
+    const sideCategoryStatusText = document.getElementById("sideCategoryStatusText");
+    const prevBtn = document.getElementById("prevBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const submitBtn = document.getElementById("submitCategoryBtn");
+
+    if (!container) return;
 
     const evaluateeId = getCurrentEvaluateeId();
+
+    if (!evaluateeId) {
+      container.innerHTML = `
+        <div class="alert alert-warning rounded-4">
+          Please select ${currentCategory === "head_peer" ? "a department head" : "a faculty member"} first.
+        </div>
+      `;
+
+      if (pageCompletionLabel) pageCompletionLabel.textContent = `0 / 0 answered`;
+      if (sectionFooterTitle) sectionFooterTitle.textContent = "";
+      if (sectionFooterText) sectionFooterText.textContent = "";
+      if (sectionFooterSubtext) sectionFooterSubtext.textContent = "";
+      if (sideSectionName) sideSectionName.textContent = "No section loaded";
+      if (sideCategoryStatusText) sideCategoryStatusText.textContent = getStatusLabel(submissionStatus[currentCategory]);
+
+      if (prevBtn) prevBtn.style.display = "none";
+      if (nextBtn) nextBtn.style.display = "inline-flex";
+      if (submitBtn) {
+        submitBtn.style.display = "none";
+        submitBtn.disabled = true;
+      }
+
+      togglePeerCopyCard();
+      syncPeerCopyAppliedUI();
+      populateFacultyInfo();
+      return;
+    }
+
+    ensureDataPath();
+
     const section = sections[currentSectionIndex];
     const answers = ratings[currentCategory][evaluateeId][section.key] || {};
-    const container = document.getElementById("questionsContainer");
     const isReadOnly = isLiveLockedForCurrentEvaluatee();
 
     container.innerHTML = `
@@ -1716,23 +1868,22 @@
     });
 
     const answered = Object.keys(answers).length;
-    document.getElementById("pageCompletionLabel").textContent = `${answered} / ${section.questions.length} answered`;
-    document.getElementById("sectionFooterTitle").textContent = section.title;
-    document.getElementById("sectionFooterText").textContent = section.title;
-    document.getElementById("sectionFooterSubtext").textContent = "You may go back to previous sections to review or change answers, but you cannot proceed forward while there are blanks.";
-    document.getElementById("sideSectionName").textContent = section.title;
+    if (pageCompletionLabel) pageCompletionLabel.textContent = `${answered} / ${section.questions.length} answered`;
+    if (sectionFooterTitle) sectionFooterTitle.textContent = section.title;
+    if (sectionFooterText) sectionFooterText.textContent = section.title;
+    if (sectionFooterSubtext) sectionFooterSubtext.textContent = "You may go back to previous sections to review or change answers, but you cannot proceed forward while there are blanks.";
+    if (sideSectionName) sideSectionName.textContent = section.title;
 
     const currentEvalSubmitStatus =
       evaluateeSubmissionStatus[currentCategory]?.[evaluateeId] || "not_started";
-    document.getElementById("sideCategoryStatusText").textContent = getStatusLabel(currentEvalSubmitStatus);
 
-    const prevBtn = document.getElementById("prevBtn");
-    const nextBtn = document.getElementById("nextBtn");
-    const submitBtn = document.getElementById("submitCategoryBtn");
+    if (sideCategoryStatusText) {
+      sideCategoryStatusText.textContent = getStatusLabel(currentEvalSubmitStatus);
+    }
 
-    prevBtn.style.display = currentSectionIndex === 0 ? "none" : "inline-flex";
-    nextBtn.style.display = currentSectionIndex === sections.length - 1 ? "none" : "inline-flex";
-    submitBtn.style.display = currentSectionIndex === sections.length - 1 ? "inline-flex" : "none";
+    if (prevBtn) prevBtn.style.display = currentSectionIndex === 0 ? "none" : "inline-flex";
+    if (nextBtn) nextBtn.style.display = currentSectionIndex === sections.length - 1 ? "none" : "inline-flex";
+    if (submitBtn) submitBtn.style.display = currentSectionIndex === sections.length - 1 ? "inline-flex" : "none";
 
     togglePeerCopyCard();
     syncPeerCopyAppliedUI();
@@ -1766,6 +1917,11 @@
   }
 
   function setRating(sectionKey, questionIndex, value) {
+    if (!getCurrentEvaluateeId()) {
+      showInfoModal("No Evaluatee Selected", "Please select a person to evaluate first.");
+      return;
+    }
+
     if (isLiveLockedForCurrentEvaluatee()) {
       showInfoModal("Live Copy Is On", getLockedEvaluateeMessage());
       return;
@@ -1788,6 +1944,11 @@
   }
 
   function applyScoreToCurrentSection(score) {
+    if (!getCurrentEvaluateeId()) {
+      showInfoModal("No Evaluatee Selected", "Please select a person to evaluate first.");
+      return;
+    }
+
     if (isLiveLockedForCurrentEvaluatee()) {
       showInfoModal("Live Copy Is On", getLockedEvaluateeMessage());
       return;
@@ -1818,6 +1979,11 @@
   }
 
   function clearCurrentSectionScores() {
+    if (!getCurrentEvaluateeId()) {
+      showInfoModal("No Evaluatee Selected", "Please select a person to evaluate first.");
+      return;
+    }
+
     if (isLiveLockedForCurrentEvaluatee()) {
       showInfoModal("Live Copy Is On", getLockedEvaluateeMessage());
       return;
@@ -1857,28 +2023,33 @@
     }
   }
 
-    function nextSection() {
-      saveComments();
+  function nextSection() {
+    saveComments();
 
-      if (!isSectionComplete(currentSectionIndex)) {
-        showInfoModal("Incomplete Section", "Please answer all questions in the current section before proceeding.");
-        return;
-      }
-
-      if (currentSectionIndex < sections.length - 1) {
-        currentSectionIndex++;
-        renderSectionStepper();
-        renderSection();
-
-        setTimeout(() => {
-          const quickApply = document.getElementById("quickApplyWrap");
-          if (quickApply) {
-            const y = quickApply.getBoundingClientRect().top + window.pageYOffset - (window.innerHeight * 0.35);
-            window.scrollTo({ top: y, behavior: "smooth" });
-          }
-        }, 80);
-      }
+    if (!getCurrentEvaluateeId()) {
+      showInfoModal("No Evaluatee Selected", "Please select a person to evaluate first.");
+      return;
     }
+
+    if (!isSectionComplete(currentSectionIndex)) {
+      showInfoModal("Incomplete Section", "Please answer all questions in the current section before proceeding.");
+      return;
+    }
+
+    if (currentSectionIndex < sections.length - 1) {
+      currentSectionIndex++;
+      renderSectionStepper();
+      renderSection();
+
+      setTimeout(() => {
+        const quickApply = document.getElementById("quickApplyWrap");
+        if (quickApply) {
+          const y = quickApply.getBoundingClientRect().top + window.pageYOffset - (window.innerHeight * 0.35);
+          window.scrollTo({ top: y, behavior: "smooth" });
+        }
+      }, 80);
+    }
+  }
 
   function updateSubmitButtonState() {
     const submitBtn = document.getElementById("submitCategoryBtn");
@@ -1896,6 +2067,11 @@
   function submitCurrentCategory() {
     saveComments();
 
+    if (!getCurrentEvaluateeId()) {
+      showInfoModal("No Evaluatee Selected", "Please select a person to evaluate first.");
+      return;
+    }
+
     if (!isCurrentEvaluateeComplete()) {
       showInfoModal(
         "Incomplete Evaluation",
@@ -1911,22 +2087,31 @@
     refreshCategoryStatus(currentCategory);
 
     const statusEl = document.getElementById("currentCategoryStatus");
-    statusEl.className = "status-pill " + getStatusClass(submissionStatus[currentCategory]);
-    statusEl.textContent = getStatusLabel(submissionStatus[currentCategory]);
+    const sideStatus = document.getElementById("sideCategoryStatusText");
 
-    document.getElementById("sideCategoryStatusText").textContent = "Submitted";
+    if (statusEl) {
+      statusEl.className = "status-pill " + getStatusClass(submissionStatus[currentCategory]);
+      statusEl.textContent = getStatusLabel(submissionStatus[currentCategory]);
+    }
+
+    if (sideStatus) {
+      sideStatus.textContent = "Submitted";
+    }
 
     showInfoModal("Submission Successful", "Evaluation submitted successfully.");
 
     renderDashboard();
     renderSection();
   }
-  
+
   function copyCurrentEvaluationToOtherPeers() {
     const sourceId = getCurrentEvaluateeId();
 
     if (!sourceId) {
-      showInfoModal("No Faculty Selected", "Please select a faculty member first.");
+      showInfoModal(
+        currentCategory === "head_peer" ? "No Head Selected" : "No Faculty Selected",
+        `Please select ${currentCategory === "head_peer" ? "a department head" : "a faculty member"} first.`
+      );
       return;
     }
 
@@ -1946,51 +2131,38 @@
   function goBackToDashboard() {
     saveComments();
     refreshCategoryStatus(currentCategory);
-    document.getElementById("formView").classList.add("hidden");
-    document.getElementById("dashboardView").classList.remove("hidden");
+
+    const formView = document.getElementById("formView");
+    const dashboardView = document.getElementById("dashboardView");
+
+    if (formView) formView.classList.add("hidden");
+    if (dashboardView) dashboardView.classList.remove("hidden");
+
     renderDashboard();
     scrollFormToTop();
   }
 
   document.addEventListener("DOMContentLoaded", () => {
-    document.getElementById("commentsBox").addEventListener("input", () => {
-      if (!currentCategory || !getCurrentEvaluateeId()) return;
-      saveComments();
-      if (isCurrentEvaluateeLiveSource()) {
-        applyLiveCopy(currentCategory);
-      }
-    });
+    const commentsBox = document.getElementById("commentsBox");
+    const roleLabel = document.getElementById("roleLabel");
 
-    document.getElementById("roleLabel").textContent = CURRENT_USER.role === "head" ? "Head" : "Faculty";
+    if (commentsBox) {
+      commentsBox.addEventListener("input", () => {
+        if (!currentCategory || !getCurrentEvaluateeId()) return;
+        saveComments();
+        if (isCurrentEvaluateeLiveSource()) {
+          applyLiveCopy(currentCategory);
+        }
+      });
+    }
+
+    if (roleLabel) {
+      roleLabel.textContent = CURRENT_USER.role === "head" ? "Head" : "Faculty";
+    }
+
     initModal();
     renderDashboard();
   });
-</script>
-
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-    const evaluateeSelect = document.getElementById("evaluateeSelect");
-    const infoFacultyName = document.getElementById("infoFacultyName");
-    const infoDepartment = document.getElementById("infoDepartment");
-
-    function populateFacultyInfoFromDropdown() {
-        const selected = evaluateeSelect.options[evaluateeSelect.selectedIndex];
-
-        if (!selected || !selected.value) {
-            if (infoFacultyName) infoFacultyName.value = "";
-            if (infoDepartment) infoDepartment.value = "";
-            return;
-        }
-
-        if (infoFacultyName) infoFacultyName.value = selected.dataset.name || "";
-        if (infoDepartment) infoDepartment.value = selected.dataset.department || "";
-    }
-
-    evaluateeSelect.addEventListener("change", populateFacultyInfoFromDropdown);
-
-    // run once on page load
-    populateFacultyInfoFromDropdown();
-});
 </script>
 
 </body>
