@@ -665,6 +665,31 @@
                 border-radius: 16px;
             }
         }
+
+        .login-header-top {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 12px;
+        }
+
+        .admin-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: var(--primary-red-light);
+            color: var(--primary-red-dark);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 700;
+            border: 1px solid #efd5db;
+        }
+
+        .admin-chip:hover {
+            background: #f3dfe4;
+            color: var(--primary-red-dark);
+        }
     </style>
 </head>
 <body>
@@ -677,7 +702,7 @@
                         Secure Email Link Access
                     </div>
 
-                    <h1 class="brand-title">Faculty Evaluation System</h1>
+                    <h1 class="brand-title"> Evaluation Form</h1>
                     <p class="brand-subtitle">
                         Access the evaluation portal securely using your email and a secure login link.
                         This helps ensure that only authorized department heads can proceed to the evaluation form.
@@ -718,10 +743,17 @@
 
             <section class="login-panel">
                 <div class="login-card">
+                    
+                    <div class="login-header-top">
+                        <a href="{% url 'admin_login' %}" class="admin-chip">
+                            <i class="bi bi-person-gear me-1"></i>Login Account
+                        </a>
+                    </div>
+
                     <div class="login-header">
-                        <h2>Login to Continue</h2>
+                        <h2>Login</h2>
                         <p>
-                            Enter your email address and we will send a secure login link to access the evaluation form.
+                            Enter your gsfe address and we will send a secure login link to access the evaluation form.
                         </p>
                     </div>
 
@@ -778,7 +810,6 @@
                         >
                             <i class="bi bi-send-fill me-2"></i>Send Secure Login Link
                         </button>
-
                     </form>
 
                     <div class="footer-note">
