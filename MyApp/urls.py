@@ -7,6 +7,7 @@ urlpatterns = [
     path('form/', views.eval_forms, name='eval_forms'),
     path('verify-login-link/<str:token>/', views.verify_login_link, name='verify_login_link'),
     path('logout/', views.eval_logout, name='eval_logout'),
+    path("evaluation/save/", views.save_evaluation, name="save_evaluation"),
 
     # Admin
     path('dashboard/login/', views.admin_login, name='admin_login'),

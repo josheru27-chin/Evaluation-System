@@ -1,13 +1,26 @@
+import json
+
 from django.conf import settings
 from django.contrib import messages
 from django.core.mail import EmailMultiAlternatives
 from django.core.signing import BadSignature, SignatureExpired, TimestampSigner
+from django.db import transaction
+from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
+from django.views.decorators.http import require_POST
 
-from ..models import EvaluationSchedule, DepartmentHead, FacultyMember
+from ..models import (
+    EvaluationSchedule,
+    DepartmentHead,
+    FacultyMember,
+    HeadEvaluation,
+    HeadEvaluationResponse,
+    FacultyEvaluation,
+    FacultyEvaluationResponse,
+)
 
 
 LOGIN_LINK_MAX_AGE = 300  # 5 minutes
@@ -22,6 +35,91 @@ def get_open_schedule():
         .order_by("start_datetime")
         .first()
     )
+
+
+def _build_saved_state_for_head(schedule, logged_in_head):
+    head_saved = []
+    faculty_saved = []
+
+    head_evaluations = (
+        HeadEvaluation.objects
+        .filter(schedule=schedule, evaluator_head=logged_in_head)
+        .select_related("evaluatee_head")
+        .prefetch_related("responses")
+    )
+
+    for evaluation in head_evaluations:
+        response_map = {}
+        for response in evaluation.responses.all().order_by("section_name", "question_number"):
+            section_key = (response.section_name or "").strip()
+            if not section_key:
+                continue
+            response_map.setdefault(section_key, {})[str(response.question_number - 1)] = response.rating
+
+        head_saved.append({
+            "evaluatee_id": str(evaluation.evaluatee_head_id),
+            "comments": evaluation.comments or "",
+            "status": evaluation.status or "submitted",
+            "answers": response_map,
+        })
+
+    faculty_evaluations = (
+        FacultyEvaluation.objects
+        .filter(schedule=schedule, evaluator_head=logged_in_head)
+        .select_related("evaluatee_faculty")
+        .prefetch_related("responses")
+    )
+
+    for evaluation in faculty_evaluations:
+        response_map = {}
+        for response in evaluation.responses.all().order_by("section_name", "question_number"):
+            section_key = (response.section_name or "").strip()
+            if not section_key:
+                continue
+            response_map.setdefault(section_key, {})[str(response.question_number - 1)] = response.rating
+
+        faculty_saved.append({
+            "evaluatee_id": str(evaluation.evaluatee_faculty_id),
+            "comments": evaluation.comments or "",
+            "status": evaluation.status or "submitted",
+            "answers": response_map,
+        })
+
+    return {
+        "head_peer": head_saved,
+        "faculty": faculty_saved,
+    }
+
+
+
+
+def _build_dashboard_summary(schedule, logged_in_head, other_heads, department_faculty_members):
+    head_saved_count = HeadEvaluation.objects.filter(
+        schedule=schedule, evaluator_head=logged_in_head, status="submitted"
+    ).count()
+    faculty_saved_count = FacultyEvaluation.objects.filter(
+        schedule=schedule, evaluator_head=logged_in_head, status="submitted"
+    ).count()
+
+    head_required_count = other_heads.count() if hasattr(other_heads, "count") else len(other_heads)
+    faculty_required_count = department_faculty_members.count() if hasattr(department_faculty_members, "count") else len(department_faculty_members)
+
+    return {
+        "head_peer": {
+            "saved": head_saved_count,
+            "required": head_required_count,
+            "status": "submitted" if head_required_count and head_saved_count == head_required_count else ("in_progress" if head_saved_count > 0 else "not_started"),
+        },
+        "faculty": {
+            "saved": faculty_saved_count,
+            "required": faculty_required_count,
+            "status": "submitted" if faculty_required_count and faculty_saved_count == faculty_required_count else ("in_progress" if faculty_saved_count > 0 else "not_started"),
+        },
+        "overall": {
+            "saved": head_saved_count + faculty_saved_count,
+            "required": head_required_count + faculty_required_count,
+        }
+    }
 
 
 def eval_login(request):
@@ -41,9 +139,9 @@ def eval_login(request):
 
         if not email:
             request.session["login_modal"] = {
-                    "type": "danger",
-                    "message": "Please enter your email address."
-                }
+                "type": "danger",
+                "message": "Please enter your email address."
+            }
             return redirect("eval_login")
 
         head = (
@@ -113,7 +211,7 @@ def eval_login(request):
                 "type": "success",
                 "message": f"A secure login link has been sent to {head.email}."
             }
-            
+
         except Exception:
             messages.error(
                 request,
@@ -213,14 +311,249 @@ def eval_forms(request):
         .order_by("name")
     )
 
+    saved_state = _build_saved_state_for_head(open_schedule, logged_in_head)
+    dashboard_summary = _build_dashboard_summary(
+        open_schedule, logged_in_head, other_heads, department_faculty_members
+    )
+
     context = {
         "logged_in_head": logged_in_head,
         "open_schedule": open_schedule,
         "department_faculty_members": department_faculty_members,
         "other_heads": other_heads,
+        "saved_evaluations_json": saved_state,
+        "dashboard_summary_json": dashboard_summary,
     }
 
+
+    print("========== DEBUG ==========")
+    print("OPEN SCHEDULE ID:", open_schedule.id if open_schedule else None)
+    print("LOGGED IN HEAD ID:", logged_in_head.id)
+
+    count = HeadEvaluation.objects.filter(
+        schedule=open_schedule,
+        evaluator_head=logged_in_head,
+        status="submitted"
+    ).count()
+
+    print("HEAD COUNT:", count)
+    print("===========================")
+    
     return render(request, "evaluator/eval_forms.html", context)
+
+
+@require_POST
+def save_evaluation(request):
+    open_schedule = get_open_schedule()
+
+    if not open_schedule:
+        return JsonResponse({
+            "success": False,
+            "message": "The evaluation portal is currently closed."
+        }, status=403)
+
+    is_head_authenticated = request.session.get("is_head_authenticated")
+    head_id = request.session.get("head_id")
+    department_id = request.session.get("department_id")
+
+    if not is_head_authenticated or not head_id or not department_id:
+        return JsonResponse({
+            "success": False,
+            "message": "Please log in first."
+        }, status=401)
+
+    logged_in_head = (
+        DepartmentHead.objects
+        .select_related("department")
+        .filter(id=head_id, department_id=department_id)
+        .first()
+    )
+
+    if not logged_in_head:
+        request.session.flush()
+        return JsonResponse({
+            "success": False,
+            "message": "Your session is invalid. Please log in again."
+        }, status=401)
+
+    try:
+        payload = json.loads(request.body.decode("utf-8"))
+    except json.JSONDecodeError:
+        return JsonResponse({
+            "success": False,
+            "message": "Invalid request data."
+        }, status=400)
+
+    category = (payload.get("category") or "").strip()
+    evaluatee_id = str(payload.get("evaluatee_id") or "").strip()
+    comments = (payload.get("comments") or "").strip()
+    answers = payload.get("answers") or {}
+
+    if category not in ["head_peer", "faculty"]:
+        return JsonResponse({
+            "success": False,
+            "message": "Invalid category."
+        }, status=400)
+
+    if not evaluatee_id:
+        return JsonResponse({
+            "success": False,
+            "message": "Please select a person to evaluate."
+        }, status=400)
+
+    evaluatee_head = None
+    evaluatee_faculty = None
+    db_category = "head" if category == "head_peer" else "faculty"
+
+    if category == "head_peer":
+        print("===== HEAD SAVE DEBUG =====")
+        print("LOGGED IN HEAD ID:", logged_in_head.id)
+        print("RECEIVED EVALUATEE ID:", evaluatee_id)
+
+        evaluatee_head = (
+            DepartmentHead.objects
+            .select_related("department")
+            .filter(id=evaluatee_id)
+            .exclude(id=logged_in_head.id)
+            .first()
+        )
+
+        print("FOUND EVALUATEE HEAD:", evaluatee_head.name if evaluatee_head else None)
+        print("===========================")
+
+        if not evaluatee_head:
+            return JsonResponse({
+                "success": False,
+                "message": "Selected head was not found."
+            }, status=404)
+
+    cleaned_answers = []
+
+    for section_name, section_answers in answers.items():
+        if not isinstance(section_answers, dict):
+            continue
+
+        for question_number, rating in section_answers.items():
+            try:
+                q_no = int(question_number)
+                score = int(rating)
+            except (TypeError, ValueError):
+                return JsonResponse({
+                    "success": False,
+                    "message": "Invalid rating data."
+                }, status=400)
+
+            if score not in [1, 2, 3, 4, 5]:
+                return JsonResponse({
+                    "success": False,
+                    "message": "Ratings must be from 1 to 5 only."
+                }, status=400)
+
+            cleaned_answers.append({
+                "section_code": str(section_name).strip(),
+                "section_name": str(section_name).strip(),
+                "question_number": q_no + 1,
+                "question_text": "",
+                "rating": score,
+            })
+
+    if not cleaned_answers:
+        return JsonResponse({
+            "success": False,
+            "message": "No answers were found to save."
+        }, status=400)
+
+    evaluatee_name = evaluatee_head.name if evaluatee_head else evaluatee_faculty.name
+    evaluatee_department = (
+        evaluatee_head.department.name if evaluatee_head
+        else evaluatee_faculty.department.name
+    )
+
+    total_score = sum(item["rating"] for item in cleaned_answers)
+    average_score = round(total_score / len(cleaned_answers), 2) if cleaned_answers else 0
+
+    with transaction.atomic():
+        if db_category == "head":
+            evaluation, created = HeadEvaluation.objects.update_or_create(
+                schedule=open_schedule,
+                evaluator_head=logged_in_head,
+                evaluatee_head=evaluatee_head,
+                defaults={
+                    "evaluator_name": logged_in_head.name,
+                    "evaluator_department": logged_in_head.department.name,
+                    "evaluatee_name": evaluatee_name,
+                    "evaluatee_department": evaluatee_department,
+                    "comments": comments,
+                    "status": "submitted",
+                    "total_score": total_score,
+                    "average_score": average_score,
+                    "submitted_at": timezone.now(),
+                    "updated_at": timezone.now(),
+                }
+            )
+
+            HeadEvaluationResponse.objects.filter(evaluation=evaluation).delete()
+
+            HeadEvaluationResponse.objects.bulk_create([
+                HeadEvaluationResponse(
+                    evaluation=evaluation,
+                    section_code=item["section_code"],
+                    section_name=item["section_name"],
+                    question_number=item["question_number"],
+                    question_text=item["question_text"],
+                    rating=item["rating"],
+                    evaluator_name=evaluation.evaluator_name,
+                    evaluator_department=evaluation.evaluator_department,
+                    evaluatee_name=evaluation.evaluatee_name,
+                    evaluatee_department=evaluation.evaluatee_department,
+                )
+                for item in cleaned_answers
+            ])
+        else:
+            evaluation, created = FacultyEvaluation.objects.update_or_create(
+                schedule=open_schedule,
+                evaluator_head=logged_in_head,
+                evaluatee_faculty=evaluatee_faculty,
+                defaults={
+                    "evaluator_name": logged_in_head.name,
+                    "evaluator_department": logged_in_head.department.name,
+                    "evaluatee_name": evaluatee_name,
+                    "evaluatee_department": evaluatee_department,
+                    "comments": comments,
+                    "status": "submitted",
+                    "total_score": total_score,
+                    "average_score": average_score,
+                    "submitted_at": timezone.now(),
+                    "updated_at": timezone.now(),
+                }
+            )
+
+            FacultyEvaluationResponse.objects.filter(evaluation=evaluation).delete()
+
+            FacultyEvaluationResponse.objects.bulk_create([
+                FacultyEvaluationResponse(
+                    evaluation=evaluation,
+                    section_code=item["section_code"],
+                    section_name=item["section_name"],
+                    question_number=item["question_number"],
+                    question_text=item["question_text"],
+                    rating=item["rating"],
+                    evaluator_name=evaluation.evaluator_name,
+                    evaluator_department=evaluation.evaluator_department,
+                    evaluatee_name=evaluation.evaluatee_name,
+                    evaluatee_department=evaluation.evaluatee_department,
+                )
+                for item in cleaned_answers
+            ])
+
+    return JsonResponse({
+        "success": True,
+        "message": "Evaluation saved successfully.",
+        "evaluation_id": evaluation.id,
+        "evaluatee_name": evaluation.evaluatee_name,
+        "total_score": total_score,
+        "average_score": average_score,
+    })
 
 
 def eval_logout(request):
