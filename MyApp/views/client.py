@@ -131,7 +131,10 @@ def eval_login(request):
         email = (request.POST.get("email") or "").strip().lower()
 
         if portal_closed:
-            messages.error(request, "The evaluation portal is currently closed.")
+            request.session["login_modal"] = {
+                "type": "warning",
+                "message": "The evaluation portal is currently closed. Please wait for the next evaluation schedule."
+            }
             return redirect("eval_login")
 
         if action != "send_link":
@@ -160,15 +163,15 @@ def eval_login(request):
 
         if not head:
             if faculty:
-                messages.error(
-                    request,
-                    "This account is registered as faculty only. Faculty members are not allowed to access the head evaluation portal."
-                )
+                request.session["login_modal"] = {
+                    "type": "danger",
+                    "message": "This account is registered as faculty only. Faculty members are not allowed to access the head evaluation portal."
+                }
             else:
-                messages.error(
-                    request,
-                    "This email is not registered in the evaluation system."
-                )
+                request.session["login_modal"] = {
+                    "type": "danger",
+                    "message": "This email is not registered in the evaluation system."
+                }
             return redirect("eval_login")
 
         signer = TimestampSigner(salt=LINK_SALT)
@@ -211,16 +214,21 @@ def eval_login(request):
                 "type": "success",
                 "message": f"A secure login link has been sent to {head.email}."
             }
-
         except Exception:
-            messages.error(
-                request,
-                "The login link could not be sent. Please check your email settings."
-            )
+            request.session["login_modal"] = {
+                "type": "danger",
+                "message": "The login link could not be sent. Please check your email settings."
+            }
 
         return redirect("eval_login")
 
     login_modal = request.session.pop("login_modal", None)
+
+    if portal_closed and not login_modal:
+        login_modal = {
+            "type": "warning",
+            "message": "The evaluation portal is currently closed. Please wait for the announcement of the next evaluation schedule."
+        }
 
     context = {
         "portal_closed": portal_closed,
@@ -228,7 +236,6 @@ def eval_login(request):
         "login_modal": login_modal,
     }
     return render(request, "evaluator/eval_login.html", context)
-
 
 def verify_login_link(request, token):
     open_schedule = get_open_schedule()

@@ -269,7 +269,66 @@
       transform:translateY(-1px);
       box-shadow:0 14px 28px rgba(152, 27, 46, 0.28);
     }
-      
+
+    .faculty-info-card .faculty-info-grid{
+      display:grid;
+      grid-template-columns:1.4fr 1fr;
+      gap:16px;
+      align-items:start;
+    }
+
+    .faculty-info-card .field-block{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .faculty-info-card .field-block label{
+      font-size:.8rem;
+      font-weight:800;
+      letter-spacing:.05em;
+      text-transform:uppercase;
+      color:var(--primary);
+      margin:0;
+    }
+
+    .faculty-info-card #infoFacultyName,
+    .faculty-info-card #infoDepartment{
+      background:linear-gradient(135deg, #fff8f9 0%, #ffffff 100%);
+      border:1px solid #ead3d8;
+      border-radius:18px;
+      box-shadow:0 8px 24px rgba(152, 27, 46, 0.06);
+      color:var(--text);
+      cursor:default !important;
+    }
+
+    .faculty-info-card #infoFacultyName{
+      min-height:64px;
+      padding:14px 18px;
+      font-size:1.2rem;
+      font-weight:800;
+      color:#7d1626;
+    }
+
+    .faculty-info-card #infoDepartment{
+      min-height:64px;
+      padding:14px 18px;
+      font-size:1rem;
+      font-weight:700;
+    }
+
+    .faculty-info-card #infoFacultyName:focus,
+    .faculty-info-card #infoDepartment:focus{
+      border-color:#ead3d8;
+      box-shadow:0 8px 24px rgba(152, 27, 46, 0.06);
+      outline:none;
+    }
+
+    @media (max-width: 768px){
+      .faculty-info-card .faculty-info-grid{
+        grid-template-columns:1fr;
+      }
+    }
   </style>
 </head>
 <body>
@@ -349,52 +408,55 @@
               <div class="left-rail-card">
                 <div class="left-rail-title">Evaluation panel</div>
 
-                <div class="field-block">
-                  <label>Department</label>
-                  <input type="text" class="form-control" id="infoDepartment" readonly />
-                </div>
-
                 <div class="field-block mt-3">
                   <label class="form-label fw-semibold" id="evaluateeLabel">Choose Evaluatee</label>
-                  <select class="form-select" id="evaluateeSelect">
+                  <select class="form-select" style="cursor: pointer;" id="evaluateeSelect">
                     <option value="">Select person to evaluate</option>
                   </select>
                 </div>
 
                 <div class="field-block mt-3">
                   <label class="form-label fw-semibold">Category</label>
-                  <input type="text" class="form-control" id="categoryDisplay" readonly>
+                  <input type="text" class="form-control"  style="cursor:default;" id="categoryDisplay" readonly>
                 </div>
 
                 <div class="field-block mt-3">
                   <label class="form-label fw-semibold">Current Section Progress</label>
-                  <div class="form-control bg-light" id="pageCompletionLabel">0 / 0 answered</div>
+                  <div class="form-control bg-light" style="cursor: default;" id="pageCompletionLabel">0 / 0 answered</div>
                 </div>
 
                 <div class="progress-panel">
                   <div class="progress-title">Live section overview</div>
-                  <div class="progress-value" id="sideSectionName">Section</div>
-                  <div class="left-rail-sub mt-1">This stays on the left so the main evaluation area can use more width.</div>
+                  <div class="progress-value"  style="cursor: default;" id="sideSectionName">Section</div>
                 </div>
 
                 <div class="left-rail-divider"></div>
 
                 <div class="status-panel">
                   <div class="status-label">Current status</div>
-                  <div class="status-value" id="sideCategoryStatusText">In Progress</div>
+                  <div class="status-value" style="cursor: default;" id="sideCategoryStatusText">In Progress</div>
                 </div>
               </div>
             </aside>
 
             <div class="form-main-content">
+
+
               <div class="faculty-info-card mb-3">
                 <div class="fw-bold fs-5 mb-2" id="personInfoTitle">A. Faculty Information</div>
                 <div class="small-text text-muted">To be accomplished by the designated office or pre-filled by the system.</div>
 
                 <div class="faculty-info-grid">
-                  <div class="field-block">
-                    <label id="personNameLabel">Name of Faculty Being Evaluated</label>
-                    <input type="text" class="form-control" id="infoFacultyName" readonly />
+                 <div class="faculty-info-grid">
+                    <div class="field-block">
+                      <label id="personNameLabel">Name of Faculty Being Evaluated</label>
+                      <input type="text" style="cursor: default;" class="form-control" id="infoFacultyName" readonly />
+                    </div>
+
+                    <div class="field-block">
+                      <label>Department</label>
+                      <input type="text" class="form-control" style="cursor: default;" id="infoDepartment" readonly />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -442,7 +504,7 @@
                     <div class="fw-bold mb-2">Section Navigation</div>
                     <div class="stepper" id="sectionStepper"></div>
                   </div>
-                  <div class="text-end">
+                  <div class="text-end d-none">
                     <div class="small text-muted">Current section</div>
                     <div class="fw-bold" id="sectionFooterTitle">Section</div>
                   </div>
@@ -543,6 +605,35 @@
   </div>
 </div>
 
+
+<div class="modal fade" id="submitConfirmModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg" style="border-radius:22px; overflow:hidden;">
+      <div class="modal-header text-white" style="background:linear-gradient(135deg, #981b2e 0%, #7d1626 100%);">
+        <h5 class="modal-title fw-bold" id="submitConfirmTitle">Confirm Submission</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body py-4">
+        <div id="submitConfirmMessage" class="text-muted" style="line-height:1.7;">
+          Are you sure you want to submit this evaluation?
+        </div>
+      </div>
+
+      <div class="modal-footer border-0 pt-0">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+          Cancel
+        </button>
+        <button type="button" class="btn btn-primary" id="confirmSubmitBtn">
+          Yes, Submit
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
   <script>
@@ -639,19 +730,44 @@
     let lastSelectedEvaluateeId = null;
     let appModalInstance = null;
     let activeLiveSourceByCategory = { head_peer: null, faculty: null };
-
+    let submitConfirmModalInstance = null;
+    let pendingSubmitHandler = null;
+        
     function initModal() {
       const modalEl = document.getElementById("appActionModal");
-      if (!modalEl) return;
-      appModalInstance = new bootstrap.Modal(modalEl);
-      document.getElementById("appModalConfirmBtn")?.addEventListener("click", () => appModalInstance.hide());
+      if (modalEl) {
+        appModalInstance = new bootstrap.Modal(modalEl);
+        document.getElementById("appModalConfirmBtn")?.addEventListener("click", () => appModalInstance.hide());
+      }
+
+      const submitModalEl = document.getElementById("submitConfirmModal");
+      if (submitModalEl) {
+        submitConfirmModalInstance = new bootstrap.Modal(submitModalEl);
+
+        document.getElementById("confirmSubmitBtn")?.addEventListener("click", async () => {
+          if (typeof pendingSubmitHandler === "function") {
+            const handler = pendingSubmitHandler;
+            pendingSubmitHandler = null;
+            submitConfirmModalInstance.hide();
+            await handler();
+          }
+        });
+      }
     }
 
-    function showInfoModal(title, message) {
-      document.getElementById("appActionModalLabel").textContent = title;
-      document.getElementById("appActionModalMessage").innerHTML = message;
-      appModalInstance?.show();
+    function submitCurrentEvaluateeAndProceed() {
+      document.getElementById("submitConfirmMessage").innerHTML =
+        "Are you sure you want to submit this evaluation?";
+
+      pendingSubmitHandler = confirmAndSubmitCurrentEvaluateeAndProceed;
+      submitConfirmModalInstance.show();
     }
+
+        function showInfoModal(title, message) {
+          document.getElementById("appActionModalLabel").textContent = title;
+          document.getElementById("appActionModalMessage").innerHTML = message;
+          appModalInstance?.show();
+        }
 
     function scrollFormToTop() {
       const formView = document.getElementById("formView");
@@ -1367,7 +1483,7 @@ function isCurrentCategorySubmitted() {
       renderDashboard();
     }
 
-    async function submitCurrentEvaluateeAndProceed() {
+    async function confirmAndSubmitCurrentEvaluateeAndProceed() {
       saveComments();
       if (!getCurrentEvaluateeId()) return showInfoModal("No Evaluatee Selected", "Please select a person to evaluate first.");
       if (!isCurrentEvaluateeComplete()) return showInfoModal("Incomplete Evaluation", "Please answer all questions before proceeding.");
@@ -1393,76 +1509,34 @@ function isCurrentCategorySubmitted() {
             comments: commentsData[currentCategory]?.[targetId] || "",
             answers: ratings[currentCategory]?.[targetId] || {}
           };
-          console.log("Saving evaluatee:", targetId, payload);
-          
-            const response = await fetch("{% url 'save_evaluation' %}", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "X-CSRFToken": csrftoken
-              },
-              body: JSON.stringify(payload)
-            });
 
-            const rawText = await response.text();
-            console.log("SAVE STATUS:", response.status);
-            console.log("SAVE OK:", response.ok);
-            console.log("RAW SAVE RESPONSE:", rawText);
+          const response = await fetch("{% url 'save_evaluation' %}", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRFToken": csrftoken
+            },
+            body: JSON.stringify(payload)
+          });
 
+          const rawText = await response.text();
+          let data = JSON.parse(rawText);
 
-            let data;
-            try {
-              data = JSON.parse(rawText);
-            } catch (e) {
-              throw new Error("Server returned HTML instead of JSON. Check terminal.");
-            }
+          if (!response.ok || !data.success) throw new Error(data.message);
 
-          if (!response.ok || !data.success) throw new Error(data.message || `Could not save evaluation for ${getEvaluateeNameById(currentCategory, targetId)}.`);
           evaluateeSubmissionStatus[currentCategory][String(targetId)] = "submitted";
         }
 
         markCategoryCompletedIfDone();
 
-        if (isLiveSource) {
-          submissionStatus[currentCategory] = "submitted";
-          activeLiveSourceByCategory[currentCategory] = null;
-          refreshCategoryStatus(currentCategory);
-          renderDashboard();
-          document.getElementById("formView").classList.add("hidden");
-          document.getElementById("dashboardView").classList.remove("hidden");
-          showInfoModal("Category Completed", `Apply to All was active, so the answers from <strong>${getEvaluateeNameById(currentCategory, evaluateeId)}</strong> were saved for all required ${currentCategory === "head_peer" ? "department heads" : "faculty members"} in this category.`);
-          return;
-        }
-
-        const nextPerson = getNextEvaluateeAfter(currentCategory, evaluateeId);
-        if (nextPerson) {
-          lastSelectedEvaluateeId = String(nextPerson.id);
-          ensureCategoryEvaluateePath(currentCategory, lastSelectedEvaluateeId);
-          currentSectionIndex = 0;
-          populateEvaluatees();
-          populateFacultyInfo();
-          loadComments();
-          togglePeerCopyCard();
-          renderSectionStepper();
-          renderSection();
-          updateSubmitButtonState();
-          showInfoModal("Saved Successfully", `The evaluation for <strong>${getEvaluateeNameById(currentCategory, evaluateeId)}</strong> has been saved. You may now continue with <strong>${nextPerson.name}</strong>.`);
-          return;
-        }
-
-        submissionStatus[currentCategory] = "submitted";
-        refreshCategoryStatus(currentCategory);
-        renderDashboard();
         document.getElementById("formView").classList.add("hidden");
         document.getElementById("dashboardView").classList.remove("hidden");
-        showInfoModal("Category Completed", `All required ${currentCategory === "head_peer" ? "department head" : "faculty"} evaluations have been saved to the database.`);
+
+        window.location.reload();
+
       } catch (error) {
-        console.error(error);
-        showInfoModal("Save Failed", error.message || "Could not save evaluation.");
-      } finally {
-        populateEvaluatees();
-        renderSectionStepper();
-        renderSection();
+        showInfoModal("Save Failed", error.message || "Something went wrong while saving.");
+        submitBtn.disabled = false;
         updateSubmitButtonState();
       }
     }

@@ -298,16 +298,6 @@
 
 {% block content %}
 
-{% if messages %}
-    <div class="mb-4">
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        {% endfor %}
-    </div>
-{% endif %}
 
 <div class="content-card mb-4">
     <form method="POST" enctype="multipart/form-data" action="{% url 'admin_department' %}">
