@@ -6,9 +6,19 @@ from openpyxl import load_workbook
 from io import TextIOWrapper
 from datetime import datetime
 import csv
+from collections import defaultdict
+from django.db.models import Prefetch
 
-from ..models import Department, FacultyMember, DepartmentHead, EvaluationSchedule
-
+from ..models import (
+    Department,
+    FacultyMember,
+    DepartmentHead,
+    EvaluationSchedule,
+    FacultyEvaluation,
+    FacultyEvaluationResponse,
+    HeadEvaluation,
+    HeadEvaluationResponse,
+)
 
 DEPARTMENT_MAP = {
     "DED": "Department of Industrial Education",
@@ -272,22 +282,6 @@ def admin_department(request):
     return render(request, "admin/admin_department.html", context)
 
 
-def admin_results_summary(request):
-    return render(
-        request,
-        "admin/admin_overall.html",
-        _admin_context("results_summary"),
-    )
-
-
-def admin_overall(request):
-    return render(
-        request,
-        "admin/admin_overall.html",
-        _admin_context("results_summary"),
-    )
-
-
 def admin_manage(request):
     if request.method == "POST":
         action = request.POST.get("action")
@@ -477,3 +471,210 @@ def delete_department(request, dept_id):
 
     messages.success(request, f"Department '{department_name}' was deleted successfully.")
     return redirect("admin_department")
+
+
+
+
+
+##################### NANGEELAM AQ HERE  - JOCHELLE
+
+def admin_results_summary(request):
+    faculty_evaluations = (
+        FacultyEvaluation.objects
+        .filter(status="submitted")
+        .select_related(
+            "evaluatee_faculty__department",
+            "evaluator_head__department",
+            "schedule",
+        )
+        .prefetch_related(
+            Prefetch(
+                "responses",
+                queryset=FacultyEvaluationResponse.objects.all().order_by("section_name", "question_number"),
+            )
+        )
+        .order_by("evaluatee_name", "evaluator_name")
+    )
+
+    head_evaluations = (
+        HeadEvaluation.objects
+        .filter(status="submitted")
+        .select_related(
+            "evaluatee_head__department",
+            "evaluator_head__department",
+            "schedule",
+        )
+        .prefetch_related(
+            Prefetch(
+                "responses",
+                queryset=HeadEvaluationResponse.objects.all().order_by("section_name", "question_number"),
+            )
+        )
+        .order_by("evaluatee_name", "evaluator_name")
+    )
+
+    grouped_results = {}
+
+    def add_evaluation_to_group(
+        grouped,
+        result_type,
+        target_id,
+        target_name,
+        target_department,
+        evaluator_name,
+        evaluator_department,
+        average_score,
+        total_score,
+        comments,
+        submitted_at,
+        responses,
+    ):
+        group_key = f"{result_type}-{target_id}"
+
+        if group_key not in grouped:
+            grouped[group_key] = {
+                "id": target_id,
+                "result_type": result_type,
+                "name": target_name,
+                "department": target_department,
+                "evaluators": [],
+                "section_values": defaultdict(list),
+                "total_scores": [],
+                "computed_ratings": [],
+                "overall_values": [],
+            }
+
+        section_groups = defaultdict(list)
+        detailed_answers = defaultdict(list)
+
+        for response in responses:
+            section_key = (response.section_code or "").strip()
+            section_name = (response.section_name or "").strip() or "Unnamed Section"
+
+            if section_key:
+                section_groups[section_key].append(response.rating)
+
+            detailed_answers[section_name].append({
+                "question_number": response.question_number,
+                "question_text": response.question_text or f"Question {response.question_number}",
+                "rating": response.rating,
+            })
+
+        evaluator_sections = {}
+        for section_key, ratings in section_groups.items():
+            if ratings:
+                evaluator_sections[section_key] = round(sum(ratings) / len(ratings), 2)
+
+        evaluator_overall = round(float(average_score or 0), 2)
+        evaluator_total_score = round(float(total_score or 0), 2)
+        evaluator_computed_rating = round((evaluator_total_score / 75) * 100, 2) if evaluator_total_score else 0
+
+        grouped[group_key]["evaluators"].append({
+            "evaluator_name": evaluator_name or "Unknown Evaluator",
+            "evaluator_department": evaluator_department or "",
+            "sections": evaluator_sections,
+            "overall": evaluator_overall,
+            "total_score": evaluator_total_score,
+            "computed_rating": evaluator_computed_rating,
+            "comments": comments or "",
+            "submitted_at": submitted_at.strftime("%Y-%m-%d %H:%M") if submitted_at else "",
+            "detailed_answers": dict(detailed_answers),
+        })
+
+        grouped[group_key]["total_scores"].append(evaluator_total_score)
+        grouped[group_key]["computed_ratings"].append(evaluator_computed_rating)
+        grouped[group_key]["overall_values"].append(evaluator_overall)
+
+        for section_key, value in evaluator_sections.items():
+            grouped[group_key]["section_values"][section_key].append(value)
+
+    for evaluation in faculty_evaluations:
+        if not evaluation.evaluatee_faculty:
+            continue
+
+        add_evaluation_to_group(
+            grouped=grouped_results,
+            result_type="faculty",
+            target_id=evaluation.evaluatee_faculty.id,
+            target_name=evaluation.evaluatee_name or evaluation.evaluatee_faculty.name,
+            target_department=evaluation.evaluatee_department or (
+                evaluation.evaluatee_faculty.department.name if evaluation.evaluatee_faculty.department else ""
+            ),
+            evaluator_name=evaluation.evaluator_name,
+            evaluator_department=evaluation.evaluator_department,
+            average_score=evaluation.average_score,
+            total_score=evaluation.total_score,
+            comments=evaluation.comments,
+            submitted_at=evaluation.submitted_at,
+            responses=evaluation.responses.all(),
+        )
+
+    for evaluation in head_evaluations:
+        if not evaluation.evaluatee_head:
+            continue
+
+        add_evaluation_to_group(
+            grouped=grouped_results,
+            result_type="head",
+            target_id=evaluation.evaluatee_head.id,
+            target_name=evaluation.evaluatee_name or evaluation.evaluatee_head.name,
+            target_department=evaluation.evaluatee_department or (
+                evaluation.evaluatee_head.department.name if evaluation.evaluatee_head.department else ""
+            ),
+            evaluator_name=evaluation.evaluator_name,
+            evaluator_department=evaluation.evaluator_department,
+            average_score=evaluation.average_score,
+            total_score=evaluation.total_score,
+            comments=evaluation.comments,
+            submitted_at=evaluation.submitted_at,
+            responses=evaluation.responses.all(),
+        )
+
+    results = []
+
+    for _, item in grouped_results.items():
+        section_averages = {}
+        for section_key, values in item["section_values"].items():
+            section_averages[section_key] = round(sum(values) / len(values), 2) if values else 0
+
+        overall_average = round(sum(item["overall_values"]) / len(item["overall_values"]), 2) if item["overall_values"] else 0
+        average_total_score = round(sum(item["total_scores"]) / len(item["total_scores"]), 2) if item["total_scores"] else 0
+        computed_rating = round(sum(item["computed_ratings"]) / len(item["computed_ratings"]), 2) if item["computed_ratings"] else 0
+
+        results.append({
+            "id": item["id"],
+            "result_type": item["result_type"],
+            "name": item["name"],
+            "department": item["department"],
+            "sections": section_averages,
+            "overall": overall_average,
+            "average_total_score": average_total_score,
+            "computed_rating": computed_rating,
+            "evaluator_count": len(item["evaluators"]),
+            "evaluators": item["evaluators"],
+        })
+
+    results.sort(key=lambda x: (x["result_type"], x["name"].lower()))
+
+    overall_list = [r["overall"] for r in results if r["overall"] > 0]
+    departments = list(
+        Department.objects.order_by("name").values_list("name", flat=True)
+    )
+
+    context = _admin_context(
+        "results_summary",
+        {
+            "faculty_results": results,
+            "departments": departments,
+            "total_faculty_count": len(results),
+            "highest_average_grade": round(max(overall_list), 2) if overall_list else 0,
+            "lowest_average_grade": round(min(overall_list), 2) if overall_list else 0,
+            "overall_faculty_average": round(sum(overall_list) / len(overall_list), 2) if overall_list else 0,
+        },
+    )
+
+    return render(request, "admin/admin_overall.html", context)
+
+
+def admin_overall(request):
+    return admin_results_summary(request)

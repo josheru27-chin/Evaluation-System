@@ -3,15 +3,17 @@
 
 {% block title %}Results and Summary | Admin{% endblock %}
 {% block page_title %}Faculty Evaluation Results{% endblock %}
-{% block page_subtitle %}Search faculty members, review their total average grade, and view the detailed evaluator breakdown per sector.{% endblock %}
+{% block page_subtitle %}Search faculty members, review their total average grade, and view the detailed evaluator breakdown per section.{% endblock %}
 
 {% block topbar_actions %}
-<button class="btn btn-soft">
-    <i class="bi bi-printer me-1"></i> Print
-</button>
-<button class="btn btn-red">
-    <i class="bi bi-file-earmark-arrow-down me-1"></i> Export Results
-</button>
+<div class="d-flex flex-wrap gap-2">
+    <button class="btn btn-soft" type="button" id="printBatchBtn">
+        <i class="bi bi-printer me-1"></i> Print Summary
+    </button>
+    <button class="btn btn-red" type="button" id="exportResultsBtn">
+        <i class="bi bi-file-earmark-arrow-down me-1"></i> Export Results
+    </button>
+</div>
 {% endblock %}
 
 {% block extra_css %}
@@ -39,15 +41,48 @@
     .faculty-search-bar {
         display: flex;
         justify-content: space-between;
-        align-items: center;
-        gap: 14px;
+        align-items: flex-end;
+        gap: 18px;
         flex-wrap: wrap;
         margin-bottom: 18px;
     }
 
+    .filter-title-wrap {
+        flex: 1 1 320px;
+        max-width: 420px;
+    }
+
+    .filter-title-wrap h5 {
+        margin-bottom: 6px;
+    }
+
+    .filter-title-wrap p {
+        font-size: 0.92rem;
+        line-height: 1.55;
+    }
+
+    .filter-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 10px;
+        flex: 1 1 520px;
+        flex-wrap: wrap;
+    }
+
+    .filter-toolbar .form-select {
+        width: 150px;
+        min-width: 150px;
+        border-radius: 14px;
+        min-height: 46px;
+        font-size: 0.92rem;
+    }
+
     .search-wrap {
         position: relative;
-        min-width: 320px;
+        width: 280px;
+        min-width: 220px;
+        flex: 0 1 280px;
     }
 
     .search-wrap i {
@@ -56,10 +91,14 @@
         top: 50%;
         transform: translateY(-50%);
         color: var(--text-muted);
+        z-index: 2;
     }
 
     .search-wrap input {
         padding-left: 42px !important;
+        border-radius: 14px;
+        min-height: 46px;
+        font-size: 0.92rem;
     }
 
     .mini-stat {
@@ -89,6 +128,56 @@
         color: var(--text-muted);
     }
 
+    .results-table-wrap {
+        max-height: 520px;
+        overflow: auto;
+        border: 1px solid var(--border-soft);
+        border-radius: 18px;
+        background: #fff;
+    }
+
+    .results-table-wrap::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+
+    .results-table-wrap::-webkit-scrollbar-thumb {
+        background: #cfd6df;
+        border-radius: 999px;
+    }
+
+    .results-table-wrap::-webkit-scrollbar-track {
+        background: #f7f8fb;
+    }
+
+    #facultyResultsTable {
+        margin-bottom: 0;
+        min-width: 1280px;
+    }
+
+    #facultyResultsTable thead th {
+        white-space: nowrap;
+        position: sticky;
+        top: 0;
+        z-index: 3;
+        background: #fff;
+        box-shadow: inset 0 -1px 0 var(--border-soft);
+        color: #627086;
+        font-weight: 800;
+        font-size: 0.94rem;
+        padding: 16px 14px;
+    }
+
+    #facultyResultsTable tbody td {
+        padding: 18px 14px;
+        vertical-align: middle;
+        border-color: #eef1f5;
+    }
+
+    #facultyResultsTable tbody tr:hover {
+        background: #fcf7f8;
+    }
+
     .faculty-name-box {
         display: flex;
         flex-direction: column;
@@ -97,10 +186,26 @@
 
     .faculty-name-box strong {
         color: var(--text-dark);
+        font-size: 0.98rem;
     }
 
     .faculty-name-box small {
         color: var(--text-muted);
+        font-size: 0.9rem;
+        line-height: 1.45;
+    }
+
+    .type-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 9px 14px;
+        border-radius: 999px;
+        font-size: 0.84rem;
+        font-weight: 800;
+        background: #f8f4f5;
+        color: var(--text-dark);
+        border: 1px solid #ead9de;
     }
 
     .grade-pill {
@@ -108,12 +213,12 @@
         align-items: center;
         justify-content: center;
         min-width: 68px;
-        padding: 8px 12px;
+        padding: 9px 13px;
         border-radius: 999px;
         font-size: 0.84rem;
         font-weight: 700;
         border: 1px solid #efd3d9;
-        background: var(--primary-red-light);
+        background: #f9eff2;
         color: var(--primary-red);
     }
 
@@ -121,8 +226,8 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        min-width: 78px;
-        padding: 9px 14px;
+        min-width: 80px;
+        padding: 10px 15px;
         border-radius: 999px;
         font-size: 0.88rem;
         font-weight: 800;
@@ -130,24 +235,56 @@
         color: #fff;
     }
 
-    .btn-view-more {
-        border: 1px solid #efd3d9;
-        background: var(--primary-red-light);
-        color: var(--primary-red);
-        border-radius: 12px;
-        padding: 8px 12px;
-        font-weight: 700;
+    .action-stack {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 8px;
+    }
+
+    .btn-view-more,
+    .btn-print-person {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-width: 132px;
+        border-radius: 14px;
+        padding: 10px 14px;
+        font-weight: 800;
         font-size: 0.88rem;
+        transition: all 0.2s ease;
+    }
+
+    .btn-view-more {
+        border: none;
+        background: linear-gradient(135deg, #fff7f9, #f7e8ec);
+        color: var(--primary-red);
+        box-shadow: 0 8px 18px rgba(152, 27, 46, 0.08);
     }
 
     .btn-view-more:hover {
-        background: #f2dfe4;
+        background: linear-gradient(135deg, #fff1f5, #f2dbe2);
         color: var(--primary-red-dark);
+        transform: translateY(-1px);
+    }
+
+    .btn-print-person {
+        border: 1px solid #e4d8dd;
+        background: #fff;
+        color: var(--text-dark);
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
+    }
+
+    .btn-print-person:hover {
+        background: #faf7f8;
+        color: var(--primary-red-dark);
+        border-color: #d9c6cd;
     }
 
     .sector-grid {
         display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 12px;
         margin-bottom: 18px;
     }
@@ -164,6 +301,7 @@
         font-size: 0.9rem;
         font-weight: 700;
         color: var(--text-muted);
+        line-height: 1.45;
     }
 
     .sector-card h4 {
@@ -192,6 +330,8 @@
 
     .modal-body {
         padding: 22px;
+        max-height: 80vh;
+        overflow-y: auto;
     }
 
     .modal-footer {
@@ -218,25 +358,213 @@
         color: var(--text-muted);
     }
 
+    .evaluator-table-wrap {
+        max-height: 260px;
+        overflow: auto;
+        border: 1px solid var(--border-soft);
+        border-radius: 18px;
+        background: #fff;
+    }
+
+    .evaluator-table-wrap table {
+        margin-bottom: 0;
+        min-width: 1450px;
+    }
+
+    .evaluator-table-wrap thead th {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background: #fff;
+        white-space: nowrap;
+    }
+
+    .detail-box {
+        border: 1px solid var(--border-soft);
+        background: #fff;
+        border-radius: 20px;
+        padding: 18px;
+        margin-bottom: 18px;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+    }
+
+    .detail-box-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 14px;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+    }
+
+    .detail-box h6 {
+        margin: 0;
+        font-weight: 800;
+        color: var(--text-dark);
+    }
+
+    .detail-meta {
+        color: var(--text-muted);
+        margin-top: 4px;
+        font-size: 0.92rem;
+    }
+
+    .detail-score-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+        margin-bottom: 16px;
+    }
+
+    .detail-score-card {
+        border: 1px solid #f0e5e8;
+        background: linear-gradient(135deg, #fff, #fcf7f8);
+        border-radius: 16px;
+        padding: 14px;
+    }
+
+    .detail-score-card span {
+        display: block;
+        color: var(--text-muted);
+        font-size: 0.82rem;
+        font-weight: 700;
+        margin-bottom: 6px;
+    }
+
+    .detail-score-card strong {
+        font-size: 1rem;
+        color: var(--text-dark);
+    }
+
+    .comment-box {
+        background: #fff8fa;
+        border: 1px solid #f1dfe4;
+        border-radius: 14px;
+        padding: 14px;
+        margin-bottom: 14px;
+        color: var(--text-dark);
+    }
+
+    .question-section-card {
+        border: 1px solid var(--border-soft);
+        border-radius: 16px;
+        overflow: hidden;
+        margin-bottom: 14px;
+    }
+
+    .question-section-header {
+        background: #faf7f8;
+        padding: 12px 14px;
+        font-weight: 800;
+        color: var(--text-dark);
+        border-bottom: 1px solid var(--border-soft);
+    }
+
+    .question-table-wrap {
+        overflow-x: auto;
+    }
+
+    .question-table-wrap table {
+        margin-bottom: 0;
+        min-width: 600px;
+    }
+
+    .question-no-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 44px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: #f6f7fb;
+        border: 1px solid #e3e7ef;
+        font-size: 0.8rem;
+        font-weight: 800;
+        color: var(--text-dark);
+    }
+
     .empty-state {
         text-align: center;
         padding: 32px 16px;
         color: var(--text-muted);
     }
 
+    .section-blockless {
+        box-shadow: none !important;
+        padding: 0 !important;
+        border: none !important;
+        background: transparent !important;
+    }
+
     @media (max-width: 991px) {
-        .sector-grid {
+        .faculty-search-bar {
+            align-items: stretch;
+        }
+
+        .filter-title-wrap,
+        .filter-toolbar {
+            flex: 1 1 100%;
+            max-width: 100%;
+        }
+
+        .filter-toolbar {
+            justify-content: flex-start;
+        }
+
+        .sector-grid,
+        .detail-score-grid {
             grid-template-columns: repeat(2, minmax(0, 1fr));
         }
     }
 
     @media (max-width: 767px) {
+        .filter-toolbar .form-select,
         .search-wrap {
+            width: 100%;
             min-width: 100%;
+            flex: 1 1 100%;
         }
 
-        .sector-grid {
+        .sector-grid,
+        .detail-score-grid {
             grid-template-columns: 1fr;
+        }
+
+        .action-stack {
+            align-items: stretch;
+        }
+
+        .btn-view-more,
+        .btn-print-person {
+            width: 100%;
+        }
+    }
+
+    @media print {
+        .topbar,
+        .topbar-actions,
+        .sidebar,
+        .faculty-search-bar,
+        .btn,
+        #exportResultsBtn,
+        #printBatchBtn {
+            display: none !important;
+        }
+
+        .main-content {
+            margin-left: 0 !important;
+            width: 100% !important;
+            padding: 0 !important;
+        }
+
+        .content-card,
+        .mini-stat,
+        .results-hero,
+        .results-table-wrap,
+        .evaluator-table-wrap {
+            box-shadow: none !important;
+            max-height: none !important;
+            overflow: visible !important;
         }
     }
 </style>
@@ -246,38 +574,37 @@
 <div class="results-hero">
     <h5><i class="bi bi-bar-chart-line me-2"></i>Faculty Performance Results</h5>
     <p>
-        This page shows the list of faculty members together with their total average rating grade and
-        their average grades in the four required sectors: Commitment, Knowledge of Subject,
-        Teaching for Independent Learning, and Management of Learning.
+        This page shows the list of faculty members and heads together with their total average rating,
+        section averages, computed rating percentage, and detailed per-question evaluator breakdown.
     </p>
 </div>
 
 <div class="row g-4 mb-4">
     <div class="col-md-3">
         <div class="mini-stat">
-            <h6>Total Faculty Members</h6>
-            <h3 id="totalFacultyCount">8</h3>
-            <small>Faculty members with recorded evaluation results</small>
+            <h6>Total Records</h6>
+            <h3 id="totalFacultyCount">{{ total_faculty_count|default:0 }}</h3>
+            <small>Total faculty/head results with submitted evaluations</small>
         </div>
     </div>
     <div class="col-md-3">
         <div class="mini-stat">
             <h6>Highest Average Grade</h6>
-            <h3 id="highestAverageGrade">4.82</h3>
-            <small>Top faculty overall average grade</small>
+            <h3 id="highestAverageGrade">{{ highest_average_grade|default:"0.00" }}</h3>
+            <small>Top overall average grade</small>
         </div>
     </div>
     <div class="col-md-3">
         <div class="mini-stat">
             <h6>Lowest Average Grade</h6>
-            <h3 id="lowestAverageGrade">4.08</h3>
-            <small>Lowest faculty overall average grade</small>
+            <h3 id="lowestAverageGrade">{{ lowest_average_grade|default:"0.00" }}</h3>
+            <small>Lowest overall average grade</small>
         </div>
     </div>
     <div class="col-md-3">
         <div class="mini-stat">
-            <h6>Average of All Faculty</h6>
-            <h3 id="overallFacultyAverage">4.46</h3>
+            <h6>Average of All Results</h6>
+            <h3 id="overallFacultyAverage">{{ overall_faculty_average|default:"0.00" }}</h3>
             <small>Institution-wide computed average</small>
         </div>
     </div>
@@ -285,28 +612,45 @@
 
 <div class="content-card">
     <div class="faculty-search-bar">
-        <div>
-            <h5 class="section-title mb-0">Faculty Member Results List</h5>
-            <p class="text-muted mb-0 mt-1">Search a faculty member and view their complete evaluator breakdown.</p>
+        <div class="filter-title-wrap">
+            <h5 class="section-title mb-0">Evaluation Results List</h5>
+            <p class="text-muted mb-0">
+                Filter by result type, department, and name. Open View More to inspect all answers per evaluator.
+            </p>
         </div>
 
-        <div class="search-wrap">
-            <i class="bi bi-search"></i>
-            <input type="text" id="facultySearchInput" class="form-control" placeholder="Search faculty member name...">
+        <div class="filter-toolbar">
+            <select id="resultTypeFilter" class="form-select">
+                <option value="all">All Results</option>
+                <option value="faculty">Faculty Only</option>
+                <option value="head">Head Only</option>
+            </select>
+
+            <select id="departmentFilter" class="form-select">
+                <option value="all">All Departments</option>
+                {% for dept in departments %}
+                    <option value="{{ dept }}">{{ dept }}</option>
+                {% endfor %}
+            </select>
+
+            <div class="search-wrap">
+                <i class="bi bi-search"></i>
+                <input type="text" id="facultySearchInput" class="form-control" placeholder="Search name...">
+            </div>
         </div>
     </div>
 
-    <div class="table-responsive">
+    <div class="results-table-wrap">
         <table class="table align-middle" id="facultyResultsTable">
             <thead>
                 <tr>
-                    <th style="min-width: 220px;">Faculty Member</th>
-                    <th style="min-width: 120px;">Total Average</th>
-                    <th style="min-width: 140px;">Commitment</th>
-                    <th style="min-width: 170px;">Knowledge of Subject</th>
-                    <th style="min-width: 210px;">Teaching for Independent Learning</th>
-                    <th style="min-width: 170px;">Management of Learning</th>
-                    <th class="text-end" style="min-width: 140px;">Action</th>
+                    <th style="min-width: 130px;">Type</th>
+                    <th style="min-width: 240px;">Evaluatee</th>
+                    <th style="min-width: 130px;">Total Average</th>
+                    <th style="min-width: 240px;">Management of Teaching <br>and Learning</th>
+                    <th style="min-width: 280px;">Content Knowledge, Pedagogy, <br>and Technology</th>
+                    <th style="min-width: 220px;">Commitment and <br> Transparency</th>
+                    <th class="text-end" style="min-width: 180px;">Action</th>
                 </tr>
             </thead>
             <tbody id="facultyResultsBody">
@@ -317,51 +661,69 @@
 </div>
 
 <div class="modal fade" id="viewMoreModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="bi bi-person-lines-fill me-2"></i>Faculty Evaluation Details</h5>
+                <h5 class="modal-title">
+                    <i class="bi bi-person-lines-fill me-2"></i>Evaluation Details
+                </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
             <div class="modal-body">
                 <div class="faculty-summary-box">
-                    <h6 id="modalFacultyName">Faculty Name</h6>
+                    <h6 id="modalFacultyName">Name</h6>
                     <p id="modalFacultySubtitle">Detailed evaluator breakdown and average grades.</p>
+                </div>
+
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                    <button type="button" class="btn btn-soft" id="modalPrintPersonBtn">
+                        <i class="bi bi-printer me-1"></i> Print This Person
+                    </button>
                 </div>
 
                 <div class="sector-grid">
                     <div class="sector-card">
-                        <h6>Commitment</h6>
-                        <h4 id="modalCommitmentAvg">0.00</h4>
+                        <h6>Management of Teaching and Learning</h6>
+                        <h4 id="modalManagementTeachingAvg">0.00</h4>
                     </div>
                     <div class="sector-card">
-                        <h6>Knowledge of Subject</h6>
-                        <h4 id="modalKnowledgeAvg">0.00</h4>
+                        <h6>Content Knowledge, Pedagogy, and Technology</h6>
+                        <h4 id="modalContentKnowledgeAvg">0.00</h4>
                     </div>
                     <div class="sector-card">
-                        <h6>Teaching for Independent Learning</h6>
-                        <h4 id="modalTeachingAvg">0.00</h4>
+                        <h6>Commitment and Transparency</h6>
+                        <h4 id="modalCommitmentTransparencyAvg">0.00</h4>
                     </div>
                     <div class="sector-card">
-                        <h6>Management of Learning</h6>
-                        <h4 id="modalManagementAvg">0.00</h4>
+                        <h6>Total Average Grade</h6>
+                        <h4 id="modalOverallAvg">0.00</h4>
+                    </div>
+                    <div class="sector-card">
+                        <h6>Average Total Score</h6>
+                        <h4 id="modalAverageTotalScore">0.00</h4>
+                    </div>
+                    <div class="sector-card">
+                        <h6>Computed Rating (%)</h6>
+                        <h4 id="modalComputedRating">0.00%</h4>
                     </div>
                 </div>
 
-                <div class="content-card" style="box-shadow:none; padding:0; border:none;">
-                    <h5 class="section-title mb-3">Faculty Members Who Evaluated This Faculty</h5>
+                <div class="content-card section-blockless">
+                    <h5 class="section-title mb-3">Evaluators for This Result</h5>
 
-                    <div class="table-responsive">
+                    <div class="evaluator-table-wrap">
                         <table class="table align-middle">
                             <thead>
                                 <tr>
                                     <th style="min-width: 220px;">Evaluator Name</th>
-                                    <th style="min-width: 130px;">Commitment</th>
-                                    <th style="min-width: 170px;">Knowledge of Subject</th>
-                                    <th style="min-width: 210px;">Teaching for Independent Learning</th>
-                                    <th style="min-width: 170px;">Management of Learning</th>
-                                    <th style="min-width: 140px;">Total Average Grade</th>
+                                    <th style="min-width: 180px;">Department</th>
+                                    <th style="min-width: 220px;">Management of Teaching and Learning</th>
+                                    <th style="min-width: 250px;">Content Knowledge, Pedagogy, and Technology</th>
+                                    <th style="min-width: 200px;">Commitment and Transparency</th>
+                                    <th style="min-width: 130px;">Total Score</th>
+                                    <th style="min-width: 150px;">Total Average</th>
+                                    <th style="min-width: 150px;">Computed Rating</th>
                                 </tr>
                             </thead>
                             <tbody id="modalEvaluatorTableBody">
@@ -369,6 +731,11 @@
                             </tbody>
                         </table>
                     </div>
+                </div>
+
+                <div class="content-card mt-4 section-blockless">
+                    <h5 class="section-title mb-3">Detailed Answers Per Evaluator</h5>
+                    <div id="modalDetailedAnswersContainer"></div>
                 </div>
             </div>
 
@@ -378,135 +745,150 @@
         </div>
     </div>
 </div>
+
+{{ faculty_results|default:"[]"|json_script:"faculty-results-data" }}
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    const facultyResults = [
-        {
-            id: 1,
-            name: "Dr. Maria Santos",
-            department: "College of Information Technology",
-            evaluators: [
-                { name: "Prof. Roberto Cruz", commitment: 4.9, knowledge: 4.8, teaching: 4.7, management: 4.8 },
-                { name: "Ms. Elena Ramos", commitment: 4.8, knowledge: 4.9, teaching: 4.8, management: 4.7 },
-                { name: "Mr. Jonas Dela Cruz", commitment: 4.9, knowledge: 4.8, teaching: 4.9, management: 4.8 }
-            ]
+    const questionBankByCode = {
+        management_teaching_learning: {
+            title: "Management of Teaching and Learning",
+            questions: {
+                1: "Comes to class on time.",
+                2: "Submits updated syllabus, grade sheets, and other required reports on time.",
+                3: "Maximizes the allocated time or learning hours effectively.",
+                4: "Provides appropriate learning activities that facilitate students' critical thinking and creativity.",
+                5: "Guides students to learn on their own, reflect on new ideas and experiences, and make decisions in accomplishing given tasks.",
+                6: "Communicates constructive feedback to students for their academic growth."
+            }
         },
-        {
-            id: 2,
-            name: "Prof. Roberto Cruz",
-            department: "College of Engineering",
-            evaluators: [
-                { name: "Dr. Maria Santos", commitment: 4.7, knowledge: 4.8, teaching: 4.6, management: 4.7 },
-                { name: "Ms. Elena Ramos", commitment: 4.6, knowledge: 4.7, teaching: 4.8, management: 4.6 },
-                { name: "Mr. Jonas Dela Cruz", commitment: 4.7, knowledge: 4.8, teaching: 4.7, management: 4.7 }
-            ]
+        content_knowledge_pedagogy_technology: {
+            title: "Content Knowledge, Pedagogy, and Technology",
+            questions: {
+                1: "Demonstrates extensive and broad knowledge of the subject or course.",
+                2: "Simplifies complex ideas in the lesson for ease of understanding.",
+                3: "Integrates contemporary issues and developments in the discipline and/or daily life activities in the syllabus.",
+                4: "Promotes active learning and student engagement by using appropriate teaching and learning resources including ICT tools and platforms.",
+                5: "Uses appropriate assessments such as projects, exams, quizzes, and assignments aligned with the learning outcomes."
+            }
         },
-        {
-            id: 3,
-            name: "Ms. Elena Ramos",
-            department: "College of Education",
-            evaluators: [
-                { name: "Dr. Maria Santos", commitment: 4.5, knowledge: 4.4, teaching: 4.6, management: 4.5 },
-                { name: "Prof. Roberto Cruz", commitment: 4.4, knowledge: 4.5, teaching: 4.5, management: 4.4 },
-                { name: "Mr. Jonas Dela Cruz", commitment: 4.6, knowledge: 4.5, teaching: 4.6, management: 4.5 }
-            ]
-        },
-        {
-            id: 4,
-            name: "Mr. Jonas Dela Cruz",
-            department: "College of Arts and Sciences",
-            evaluators: [
-                { name: "Dr. Maria Santos", commitment: 4.2, knowledge: 4.3, teaching: 4.1, management: 4.2 },
-                { name: "Prof. Roberto Cruz", commitment: 4.1, knowledge: 4.0, teaching: 4.2, management: 4.1 },
-                { name: "Ms. Elena Ramos", commitment: 4.3, knowledge: 4.2, teaching: 4.2, management: 4.1 }
-            ]
-        },
-        {
-            id: 5,
-            name: "Anne Lopez",
-            department: "College of Information Technology",
-            evaluators: [
-                { name: "Dr. Maria Santos", commitment: 4.8, knowledge: 4.7, teaching: 4.8, management: 4.7 },
-                { name: "Prof. Roberto Cruz", commitment: 4.7, knowledge: 4.6, teaching: 4.7, management: 4.7 },
-                { name: "Ms. Elena Ramos", commitment: 4.8, knowledge: 4.7, teaching: 4.8, management: 4.8 }
-            ]
-        },
-        {
-            id: 6,
-            name: "Miguel Santos",
-            department: "College of Engineering",
-            evaluators: [
-                { name: "Prof. Roberto Cruz", commitment: 4.3, knowledge: 4.4, teaching: 4.3, management: 4.2 },
-                { name: "Dr. Maria Santos", commitment: 4.4, knowledge: 4.5, teaching: 4.3, management: 4.4 },
-                { name: "Ms. Elena Ramos", commitment: 4.3, knowledge: 4.4, teaching: 4.2, management: 4.3 }
-            ]
-        },
-        {
-            id: 7,
-            name: "Lina Santos",
-            department: "College of Education",
-            evaluators: [
-                { name: "Ms. Elena Ramos", commitment: 4.6, knowledge: 4.5, teaching: 4.7, management: 4.5 },
-                { name: "Dr. Maria Santos", commitment: 4.5, knowledge: 4.6, teaching: 4.6, management: 4.5 },
-                { name: "Prof. Roberto Cruz", commitment: 4.6, knowledge: 4.5, teaching: 4.6, management: 4.6 }
-            ]
-        },
-        {
-            id: 8,
-            name: "Philip Gomez",
-            department: "College of Arts and Sciences",
-            evaluators: [
-                { name: "Mr. Jonas Dela Cruz", commitment: 4.1, knowledge: 4.2, teaching: 4.0, management: 4.1 },
-                { name: "Dr. Maria Santos", commitment: 4.0, knowledge: 4.1, teaching: 4.2, management: 4.1 },
-                { name: "Ms. Elena Ramos", commitment: 4.1, knowledge: 4.0, teaching: 4.1, management: 4.0 }
-            ]
+        commitment_transparency: {
+            title: "Commitment and Transparency",
+            questions: {
+                1: "Recognizes and values the unique diversity and individual differences among students.",
+                2: "Assists students with their learning challenges during consultation hours.",
+                3: "Provides immediate feedback on student outputs and performance.",
+                4: "Provides transparent and clear criteria in rating student performance."
+            }
         }
-    ];
+    };
+
+    const sectionNameToCode = {
+        "Management of Teaching and Learning": "management_teaching_learning",
+        "Content Knowledge, Pedagogy, and Technology": "content_knowledge_pedagogy_technology",
+        "Commitment and Transparency": "commitment_transparency",
+        "A. Management of Teaching and Learning": "management_teaching_learning",
+        "B. Content Knowledge, Pedagogy, and Technology": "content_knowledge_pedagogy_technology",
+        "C. Commitment and Transparency": "commitment_transparency"
+    };
+
+    const facultyResults = JSON.parse(
+        document.getElementById('faculty-results-data').textContent || '[]'
+    );
 
     const facultyResultsBody = document.getElementById('facultyResultsBody');
     const facultySearchInput = document.getElementById('facultySearchInput');
+    const departmentFilter = document.getElementById('departmentFilter');
+    const resultTypeFilter = document.getElementById('resultTypeFilter');
+    const exportResultsBtn = document.getElementById('exportResultsBtn');
+    const printBatchBtn = document.getElementById('printBatchBtn');
+    const modalPrintPersonBtn = document.getElementById('modalPrintPersonBtn');
 
-    function computeFacultyAverages(faculty) {
-        const total = faculty.evaluators.length;
-
-        const commitment = faculty.evaluators.reduce((sum, item) => sum + item.commitment, 0) / total;
-        const knowledge = faculty.evaluators.reduce((sum, item) => sum + item.knowledge, 0) / total;
-        const teaching = faculty.evaluators.reduce((sum, item) => sum + item.teaching, 0) / total;
-        const management = faculty.evaluators.reduce((sum, item) => sum + item.management, 0) / total;
-        const overall = (commitment + knowledge + teaching + management) / 4;
-
-        return {
-            commitment,
-            knowledge,
-            teaching,
-            management,
-            overall
-        };
-    }
+    let currentModalItem = null;
 
     function toFixedGrade(value) {
-        return Number(value).toFixed(2);
+        return Number(value || 0).toFixed(2);
+    }
+
+    function getSection(source, key) {
+        return Number((source && source.sections && source.sections[key]) || 0);
+    }
+
+    function formatTypeLabel(type) {
+        return type === 'head' ? 'Head' : 'Faculty';
+    }
+
+    function getTypeIcon(type) {
+        return type === 'head' ? 'bi-person-badge' : 'bi-person-workspace';
+    }
+
+    function normalizeSectionCode(sectionName = '') {
+        const trimmed = String(sectionName || '').trim();
+        if (sectionNameToCode[trimmed]) return sectionNameToCode[trimmed];
+
+        const lowered = trimmed.toLowerCase();
+
+        if (lowered.includes('management') && lowered.includes('teaching')) return 'management_teaching_learning';
+        if (lowered.includes('content') || lowered.includes('pedagogy') || lowered.includes('technology')) return 'content_knowledge_pedagogy_technology';
+        if (lowered.includes('commitment') || lowered.includes('transparency')) return 'commitment_transparency';
+
+        return '';
+    }
+
+    function getQuestionText(sectionName, questionNumber, fallbackText = '') {
+        if (fallbackText && !/^Question\s+\d+$/i.test(String(fallbackText).trim())) {
+            return fallbackText;
+        }
+
+        const sectionCode = normalizeSectionCode(sectionName);
+        if (!sectionCode) return fallbackText || `Question ${questionNumber}`;
+
+        return questionBankByCode?.[sectionCode]?.questions?.[questionNumber] || fallbackText || `Question ${questionNumber}`;
+    }
+
+    function escapeHtml(value) {
+        return String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
     }
 
     function renderStats() {
-        const computed = facultyResults.map(item => computeFacultyAverages(item));
-        const overallValues = computed.map(item => item.overall);
-        const institutionAverage = overallValues.reduce((sum, value) => sum + value, 0) / overallValues.length;
+        const values = facultyResults
+            .map(item => Number(item.overall || 0))
+            .filter(value => value > 0);
 
-        document.getElementById('totalFacultyCount').textContent = facultyResults.length;
-        document.getElementById('highestAverageGrade').textContent = toFixedGrade(Math.max(...overallValues));
-        document.getElementById('lowestAverageGrade').textContent = toFixedGrade(Math.min(...overallValues));
-        document.getElementById('overallFacultyAverage').textContent = toFixedGrade(institutionAverage);
+        const total = facultyResults.length;
+        const highest = values.length ? Math.max(...values) : 0;
+        const lowest = values.length ? Math.min(...values) : 0;
+        const average = values.length
+            ? values.reduce((sum, value) => sum + value, 0) / values.length
+            : 0;
+
+        document.getElementById('totalFacultyCount').textContent = total;
+        document.getElementById('highestAverageGrade').textContent = toFixedGrade(highest);
+        document.getElementById('lowestAverageGrade').textContent = toFixedGrade(lowest);
+        document.getElementById('overallFacultyAverage').textContent = toFixedGrade(average);
+    }
+
+    function getFilteredResults() {
+        const keyword = facultySearchInput.value.trim().toLowerCase();
+        const selectedDepartment = departmentFilter.value;
+        const selectedType = resultTypeFilter.value;
+
+        return facultyResults.filter(item => {
+            const matchesKeyword = String(item.name || '').toLowerCase().includes(keyword);
+            const matchesDepartment = selectedDepartment === 'all' || (item.department || '') === selectedDepartment;
+            const matchesType = selectedType === 'all' || (item.result_type || '') === selectedType;
+            return matchesKeyword && matchesDepartment && matchesType;
+        });
     }
 
     function renderFacultyTable() {
-        const keyword = facultySearchInput.value.trim().toLowerCase();
-
-        const filtered = facultyResults.filter(item =>
-            item.name.toLowerCase().includes(keyword)
-        );
+        const filtered = getFilteredResults();
 
         if (!filtered.length) {
             facultyResultsBody.innerHTML = `
@@ -514,7 +896,7 @@
                     <td colspan="7">
                         <div class="empty-state">
                             <i class="bi bi-search fs-3 d-block mb-2"></i>
-                            No faculty member matched your search.
+                            No result matched your filters.
                         </div>
                     </td>
                 </tr>
@@ -522,69 +904,658 @@
             return;
         }
 
-        facultyResultsBody.innerHTML = filtered.map(item => {
-            const avg = computeFacultyAverages(item);
-
-            return `
-                <tr>
-                    <td>
-                        <div class="faculty-name-box">
-                            <strong>${item.name}</strong>
-                            <small>${item.department}</small>
-                        </div>
-                    </td>
-                    <td><span class="overall-pill">${toFixedGrade(avg.overall)}</span></td>
-                    <td><span class="grade-pill">${toFixedGrade(avg.commitment)}</span></td>
-                    <td><span class="grade-pill">${toFixedGrade(avg.knowledge)}</span></td>
-                    <td><span class="grade-pill">${toFixedGrade(avg.teaching)}</span></td>
-                    <td><span class="grade-pill">${toFixedGrade(avg.management)}</span></td>
-                    <td class="text-end">
-                        <button type="button" class="btn-view-more" onclick="openViewMore(${item.id})">
-                            <i class="bi bi-eye me-1"></i> View More
+        facultyResultsBody.innerHTML = filtered.map(item => `
+            <tr>
+                <td>
+                    <span class="type-badge">
+                        <i class="bi ${getTypeIcon(item.result_type)}"></i>
+                        ${formatTypeLabel(item.result_type)}
+                    </span>
+                </td>
+                <td>
+                    <div class="faculty-name-box">
+                        <strong>${escapeHtml(item.name || 'Unnamed')}</strong>
+                        <small>${escapeHtml(item.department || 'No Department')}</small>
+                    </div>
+                </td>
+                <td><span class="overall-pill">${toFixedGrade(item.overall)}</span></td>
+                <td><span class="grade-pill">${toFixedGrade(getSection(item, 'management_teaching_learning'))}</span></td>
+                <td><span class="grade-pill">${toFixedGrade(getSection(item, 'content_knowledge_pedagogy_technology'))}</span></td>
+                <td><span class="grade-pill">${toFixedGrade(getSection(item, 'commitment_transparency'))}</span></td>
+                <td class="text-end">
+                    <div class="action-stack">
+                        <button type="button" class="btn-view-more" onclick="openViewMore(${item.id}, '${item.result_type}')">
+                            <i class="bi bi-eye"></i>
+                            <span>View More</span>
                         </button>
-                    </td>
-                </tr>
-            `;
-        }).join('');
+                        <button type="button" class="btn-print-person" onclick="printSinglePerson(${item.id}, '${item.result_type}')">
+                            <i class="bi bi-printer"></i>
+                            <span>Print</span>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
     }
 
-    function openViewMore(id) {
-        const faculty = facultyResults.find(item => item.id === id);
-        if (!faculty) return;
+    function openViewMore(id, resultType) {
+        const item = facultyResults.find(entry =>
+            Number(entry.id) === Number(id) && String(entry.result_type) === String(resultType)
+        );
+        if (!item) return;
 
-        const avg = computeFacultyAverages(faculty);
+        currentModalItem = item;
 
-        document.getElementById('modalFacultyName').textContent = faculty.name;
+        document.getElementById('modalFacultyName').textContent =
+            `${item.name || 'Unnamed'} (${formatTypeLabel(item.result_type)})`;
+
         document.getElementById('modalFacultySubtitle').textContent =
-            `${faculty.department} • ${faculty.evaluators.length} evaluator(s)`;
+            `${item.department || 'No Department'} • ${item.evaluator_count || 0} evaluator(s)`;
 
-        document.getElementById('modalCommitmentAvg').textContent = toFixedGrade(avg.commitment);
-        document.getElementById('modalKnowledgeAvg').textContent = toFixedGrade(avg.knowledge);
-        document.getElementById('modalTeachingAvg').textContent = toFixedGrade(avg.teaching);
-        document.getElementById('modalManagementAvg').textContent = toFixedGrade(avg.management);
+        document.getElementById('modalManagementTeachingAvg').textContent =
+            toFixedGrade(getSection(item, 'management_teaching_learning'));
 
-        const modalEvaluatorTableBody = document.getElementById('modalEvaluatorTableBody');
-        modalEvaluatorTableBody.innerHTML = faculty.evaluators.map(evaluator => {
-            const evaluatorOverall = (evaluator.commitment + evaluator.knowledge + evaluator.teaching + evaluator.management) / 4;
+        document.getElementById('modalContentKnowledgeAvg').textContent =
+            toFixedGrade(getSection(item, 'content_knowledge_pedagogy_technology'));
 
-            return `
+        document.getElementById('modalCommitmentTransparencyAvg').textContent =
+            toFixedGrade(getSection(item, 'commitment_transparency'));
+
+        document.getElementById('modalOverallAvg').textContent =
+            toFixedGrade(item.overall);
+
+        document.getElementById('modalAverageTotalScore').textContent =
+            toFixedGrade(item.average_total_score);
+
+        document.getElementById('modalComputedRating').textContent =
+            toFixedGrade(item.computed_rating) + '%';
+
+        const tbody = document.getElementById('modalEvaluatorTableBody');
+        const detailContainer = document.getElementById('modalDetailedAnswersContainer');
+
+        if (!item.evaluators || !item.evaluators.length) {
+            tbody.innerHTML = `
                 <tr>
-                    <td><strong>${evaluator.name}</strong></td>
-                    <td>${toFixedGrade(evaluator.commitment)}</td>
-                    <td>${toFixedGrade(evaluator.knowledge)}</td>
-                    <td>${toFixedGrade(evaluator.teaching)}</td>
-                    <td>${toFixedGrade(evaluator.management)}</td>
-                    <td><span class="overall-pill">${toFixedGrade(evaluatorOverall)}</span></td>
+                    <td colspan="8">
+                        <div class="empty-state py-3">No evaluator records found.</div>
+                    </td>
                 </tr>
             `;
-        }).join('');
+            detailContainer.innerHTML = `<div class="empty-state py-3">No detailed answers found.</div>`;
+        } else {
+            tbody.innerHTML = item.evaluators.map(evaluator => `
+                <tr>
+                    <td><strong>${escapeHtml(evaluator.evaluator_name || 'Unknown Evaluator')}</strong></td>
+                    <td>${escapeHtml(evaluator.evaluator_department || '')}</td>
+                    <td>${toFixedGrade(getSection(evaluator, 'management_teaching_learning'))}</td>
+                    <td>${toFixedGrade(getSection(evaluator, 'content_knowledge_pedagogy_technology'))}</td>
+                    <td>${toFixedGrade(getSection(evaluator, 'commitment_transparency'))}</td>
+                    <td>${toFixedGrade(evaluator.total_score)}</td>
+                    <td><span class="overall-pill">${toFixedGrade(evaluator.overall)}</span></td>
+                    <td><span class="overall-pill">${toFixedGrade(evaluator.computed_rating)}%</span></td>
+                </tr>
+            `).join('');
+
+            detailContainer.innerHTML = item.evaluators.map((evaluator, index) => {
+                const detailedAnswers = evaluator.detailed_answers || {};
+                const sectionBlocks = Object.entries(detailedAnswers).map(([sectionName, answers]) => `
+                    <div class="question-section-card">
+                        <div class="question-section-header">
+                            ${escapeHtml(sectionName)}
+                        </div>
+                        <div class="question-table-wrap">
+                            <table class="table table-sm align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th style="min-width: 90px;">No.</th>
+                                        <th>Question</th>
+                                        <th style="min-width: 110px;">Rating</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${answers.map(answer => `
+                                        <tr>
+                                            <td><span class="question-no-badge">Q${answer.question_number}</span></td>
+                                            <td>${escapeHtml(getQuestionText(sectionName, answer.question_number, answer.question_text))}</td>
+                                            <td><span class="grade-pill">${toFixedGrade(answer.rating)}</span></td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `).join('');
+
+                return `
+                    <div class="detail-box">
+                        <div class="detail-box-header">
+                            <div>
+                                <h6>${escapeHtml(evaluator.evaluator_name || 'Unknown Evaluator')}</h6>
+                                <div class="detail-meta">${escapeHtml(evaluator.evaluator_department || 'No Department')}</div>
+                            </div>
+                            <span class="type-badge">
+                                <i class="bi bi-person-check"></i>
+                                Evaluator ${index + 1}
+                            </span>
+                        </div>
+
+                        <div class="detail-score-grid">
+                            <div class="detail-score-card">
+                                <span>Total Score</span>
+                                <strong>${toFixedGrade(evaluator.total_score)}</strong>
+                            </div>
+                            <div class="detail-score-card">
+                                <span>Total Average</span>
+                                <strong>${toFixedGrade(evaluator.overall)}</strong>
+                            </div>
+                            <div class="detail-score-card">
+                                <span>Computed Rating</span>
+                                <strong>${toFixedGrade(evaluator.computed_rating)}%</strong>
+                            </div>
+                        </div>
+
+                        ${evaluator.comments ? `
+                            <div class="comment-box">
+                                <strong><i class="bi bi-chat-left-text me-1"></i>Comment:</strong><br>
+                                ${escapeHtml(evaluator.comments)}
+                            </div>
+                        ` : ''}
+
+                        ${sectionBlocks || '<div class="text-muted">No detailed answers available.</div>'}
+                    </div>
+                `;
+            }).join('');
+        }
 
         new bootstrap.Modal(document.getElementById('viewMoreModal')).show();
     }
 
+    function buildDocumentStyles() {
+        return `
+            <style>
+                @page {
+                    size: A4;
+                    margin: 18mm 14mm 18mm 14mm;
+                }
+
+                body {
+                    font-family: "Times New Roman", serif;
+                    color: #111827;
+                    margin: 0;
+                    background: #fff;
+                    font-size: 12pt;
+                    line-height: 1.45;
+                }
+
+                .doc-shell {
+                    width: 100%;
+                }
+
+                .doc-header {
+                    text-align: center;
+                    margin-bottom: 18px;
+                    border-bottom: 2px solid #7f1d2d;
+                    padding-bottom: 10px;
+                }
+
+                .doc-header h1 {
+                    font-size: 18pt;
+                    margin: 0 0 4px;
+                    font-weight: 700;
+                    text-transform: uppercase;
+                }
+
+                .doc-header h2 {
+                    font-size: 12pt;
+                    margin: 0;
+                    font-weight: 400;
+                }
+
+                .doc-subheader {
+                    display: flex;
+                    justify-content: space-between;
+                    gap: 16px;
+                    margin: 12px 0 18px;
+                    flex-wrap: wrap;
+                }
+
+                .doc-subheader .meta-group {
+                    flex: 1 1 260px;
+                }
+
+                .doc-label {
+                    font-weight: 700;
+                }
+
+                .summary-grid {
+                    display: grid;
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                    gap: 10px;
+                    margin: 14px 0 18px;
+                }
+
+                .summary-box {
+                    border: 1px solid #cfd6df;
+                    padding: 10px 12px;
+                    border-radius: 6px;
+                    background: #fafafa;
+                }
+
+                .summary-box .small {
+                    display: block;
+                    font-size: 10pt;
+                    color: #4b5563;
+                    margin-bottom: 4px;
+                }
+
+                .summary-box .big {
+                    font-size: 13pt;
+                    font-weight: 700;
+                }
+
+                .section-title {
+                    font-size: 13pt;
+                    font-weight: 700;
+                    margin: 18px 0 10px;
+                    color: #7f1d2d;
+                }
+
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-bottom: 16px;
+                }
+
+                th, td {
+                    border: 1px solid #bfc8d4;
+                    padding: 7px 8px;
+                    vertical-align: top;
+                    font-size: 10.8pt;
+                }
+
+                th {
+                    background: #f3f4f6;
+                    font-weight: 700;
+                    text-align: left;
+                }
+
+                .person-block,
+                .evaluator-block {
+                    border: 1px solid #d5dbe4;
+                    border-radius: 8px;
+                    padding: 12px;
+                    margin-bottom: 16px;
+                    page-break-inside: avoid;
+                }
+
+                .evaluator-title {
+                    font-size: 12pt;
+                    font-weight: 700;
+                    margin-bottom: 6px;
+                }
+
+                .muted {
+                    color: #4b5563;
+                }
+
+                .comment-box {
+                    border-left: 4px solid #7f1d2d;
+                    background: #faf5f6;
+                    padding: 10px 12px;
+                    margin: 10px 0 12px;
+                }
+
+                .footer-note {
+                    margin-top: 20px;
+                    font-size: 10pt;
+                    color: #6b7280;
+                    text-align: right;
+                }
+
+                .page-break {
+                    page-break-before: always;
+                }
+            </style>
+        `;
+    }
+
+    function buildSinglePersonPrintHtml(item) {
+        const evaluatorRows = (item.evaluators || []).map(evaluator => `
+            <tr>
+                <td>${escapeHtml(evaluator.evaluator_name || 'Unknown Evaluator')}</td>
+                <td>${escapeHtml(evaluator.evaluator_department || '')}</td>
+                <td>${toFixedGrade(getSection(evaluator, 'management_teaching_learning'))}</td>
+                <td>${toFixedGrade(getSection(evaluator, 'content_knowledge_pedagogy_technology'))}</td>
+                <td>${toFixedGrade(getSection(evaluator, 'commitment_transparency'))}</td>
+                <td>${toFixedGrade(evaluator.total_score)}</td>
+                <td>${toFixedGrade(evaluator.overall)}</td>
+                <td>${toFixedGrade(evaluator.computed_rating)}%</td>
+            </tr>
+        `).join('');
+
+        const detailedBlocks = (item.evaluators || []).map((evaluator, index) => {
+            const detailedAnswers = evaluator.detailed_answers || {};
+            const sections = Object.entries(detailedAnswers).map(([sectionName, answers]) => `
+                <div style="margin-top:12px;">
+                    <div class="section-title" style="font-size:11.5pt; margin-top:12px;">${escapeHtml(sectionName)}</div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width:70px;">No.</th>
+                                <th>Question</th>
+                                <th style="width:90px;">Rating</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${answers.map(answer => `
+                                <tr>
+                                    <td>Q${answer.question_number}</td>
+                                    <td>${escapeHtml(getQuestionText(sectionName, answer.question_number, answer.question_text))}</td>
+                                    <td>${toFixedGrade(answer.rating)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `).join('');
+
+            return `
+                <div class="evaluator-block">
+                    <div class="evaluator-title">Evaluator ${index + 1}: ${escapeHtml(evaluator.evaluator_name || 'Unknown Evaluator')}</div>
+                    <div class="muted"><strong>Department:</strong> ${escapeHtml(evaluator.evaluator_department || 'No Department')}</div>
+                    <div style="margin-top:8px;">
+                        <strong>Total Score:</strong> ${toFixedGrade(evaluator.total_score)} &nbsp;&nbsp;|&nbsp;&nbsp;
+                        <strong>Total Average:</strong> ${toFixedGrade(evaluator.overall)} &nbsp;&nbsp;|&nbsp;&nbsp;
+                        <strong>Computed Rating:</strong> ${toFixedGrade(evaluator.computed_rating)}%
+                    </div>
+
+                    ${evaluator.comments ? `
+                        <div class="comment-box">
+                            <strong>Comment:</strong><br>
+                            ${escapeHtml(evaluator.comments)}
+                        </div>
+                    ` : ''}
+
+                    ${sections || '<div class="muted" style="margin-top:8px;">No detailed answers available.</div>'}
+                </div>
+            `;
+        }).join('');
+
+        return `
+            <html>
+            <head>
+                <title>Evaluation Summary - ${escapeHtml(item.name || 'Evaluatee')}</title>
+                ${buildDocumentStyles()}
+            </head>
+            <body>
+                <div class="doc-shell">
+                    <div class="doc-header">
+                        <h1>Faculty Evaluation Summary Report</h1>
+                        <h2>Generated from Faculty Evaluation Results and Summary</h2>
+                    </div>
+
+                    <div class="doc-subheader">
+                        <div class="meta-group">
+                            <div><span class="doc-label">Evaluatee:</span> ${escapeHtml(item.name || 'Unnamed')}</div>
+                            <div><span class="doc-label">Type:</span> ${escapeHtml(formatTypeLabel(item.result_type))}</div>
+                            <div><span class="doc-label">Department:</span> ${escapeHtml(item.department || 'No Department')}</div>
+                        </div>
+                        <div class="meta-group">
+                            <div><span class="doc-label">Evaluator Count:</span> ${item.evaluator_count || 0}</div>
+                            <div><span class="doc-label">Average Total Score:</span> ${toFixedGrade(item.average_total_score)}</div>
+                            <div><span class="doc-label">Computed Rating:</span> ${toFixedGrade(item.computed_rating)}%</div>
+                        </div>
+                    </div>
+
+                    <div class="section-title">Overall Summary</div>
+                    <div class="summary-grid">
+                        <div class="summary-box">
+                            <span class="small">Management of Teaching and Learning</span>
+                            <span class="big">${toFixedGrade(getSection(item, 'management_teaching_learning'))}</span>
+                        </div>
+                        <div class="summary-box">
+                            <span class="small">Content Knowledge, Pedagogy, and Technology</span>
+                            <span class="big">${toFixedGrade(getSection(item, 'content_knowledge_pedagogy_technology'))}</span>
+                        </div>
+                        <div class="summary-box">
+                            <span class="small">Commitment and Transparency</span>
+                            <span class="big">${toFixedGrade(getSection(item, 'commitment_transparency'))}</span>
+                        </div>
+                        <div class="summary-box">
+                            <span class="small">Total Average Grade</span>
+                            <span class="big">${toFixedGrade(item.overall)}</span>
+                        </div>
+                    </div>
+
+                    <div class="section-title">Evaluator Summary Table</div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Evaluator Name</th>
+                                <th>Department</th>
+                                <th>Management</th>
+                                <th>Content Knowledge</th>
+                                <th>Commitment</th>
+                                <th>Total Score</th>
+                                <th>Total Average</th>
+                                <th>Computed Rating</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${evaluatorRows || '<tr><td colspan="8">No evaluator records found.</td></tr>'}
+                        </tbody>
+                    </table>
+
+                    <div class="section-title">Detailed Answers Per Evaluator</div>
+                    ${detailedBlocks || '<div class="muted">No detailed answers found.</div>'}
+
+                    <div class="footer-note">
+                        Generated on ${new Date().toLocaleString()}
+                    </div>
+                </div>
+            </body>
+            </html>
+        `;
+    }
+
+    function buildBatchPrintHtml(items) {
+        const cards = items.map((item, index) => `
+            <div class="person-block ${index > 0 ? 'page-break' : ''}">
+                <div class="doc-header" style="margin-bottom:14px;">
+                    <h1 style="font-size:16pt;">Faculty Evaluation Summary Report</h1>
+                    <h2 style="font-size:11pt;">Batch Printing - Current Filtered Results</h2>
+                </div>
+
+                <div class="doc-subheader">
+                    <div class="meta-group">
+                        <div><span class="doc-label">Evaluatee:</span> ${escapeHtml(item.name || 'Unnamed')}</div>
+                        <div><span class="doc-label">Type:</span> ${escapeHtml(formatTypeLabel(item.result_type))}</div>
+                        <div><span class="doc-label">Department:</span> ${escapeHtml(item.department || 'No Department')}</div>
+                    </div>
+                    <div class="meta-group">
+                        <div><span class="doc-label">Evaluator Count:</span> ${item.evaluator_count || 0}</div>
+                        <div><span class="doc-label">Average Total Score:</span> ${toFixedGrade(item.average_total_score)}</div>
+                        <div><span class="doc-label">Computed Rating:</span> ${toFixedGrade(item.computed_rating)}%</div>
+                    </div>
+                </div>
+
+                <div class="summary-grid">
+                    <div class="summary-box">
+                        <span class="small">Management of Teaching and Learning</span>
+                        <span class="big">${toFixedGrade(getSection(item, 'management_teaching_learning'))}</span>
+                    </div>
+                    <div class="summary-box">
+                        <span class="small">Content Knowledge, Pedagogy, and Technology</span>
+                        <span class="big">${toFixedGrade(getSection(item, 'content_knowledge_pedagogy_technology'))}</span>
+                    </div>
+                    <div class="summary-box">
+                        <span class="small">Commitment and Transparency</span>
+                        <span class="big">${toFixedGrade(getSection(item, 'commitment_transparency'))}</span>
+                    </div>
+                    <div class="summary-box">
+                        <span class="small">Total Average Grade</span>
+                        <span class="big">${toFixedGrade(item.overall)}</span>
+                    </div>
+                </div>
+
+                <table>
+                    <tbody>
+                        <tr>
+                            <th style="width:45%;">Average Total Score</th>
+                            <td>${toFixedGrade(item.average_total_score)}</td>
+                        </tr>
+                        <tr>
+                            <th>Computed Rating</th>
+                            <td>${toFixedGrade(item.computed_rating)}%</td>
+                        </tr>
+                        <tr>
+                            <th>Evaluator Count</th>
+                            <td>${item.evaluator_count || 0}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        `).join('');
+
+        return `
+            <html>
+            <head>
+                <title>Batch Evaluation Summary Report</title>
+                ${buildDocumentStyles()}
+            </head>
+            <body>
+                <div class="doc-shell">
+                    ${cards || '<div class="muted">No results available to print.</div>'}
+                    <div class="footer-note">
+                        Generated on ${new Date().toLocaleString()}
+                    </div>
+                </div>
+            </body>
+            </html>
+        `;
+    }
+
+    function openPrintWindow(html) {
+        const printWindow = window.open('', '_blank', 'width=1100,height=900');
+        if (!printWindow) {
+            alert('Please allow popups for printing.');
+            return;
+        }
+
+        printWindow.document.open();
+        printWindow.document.write(html);
+        printWindow.document.close();
+
+        printWindow.onload = function() {
+            printWindow.focus();
+            setTimeout(() => {
+                printWindow.print();
+            }, 350);
+        };
+    }
+
+    function printSinglePerson(id, resultType) {
+        const item = facultyResults.find(entry =>
+            Number(entry.id) === Number(id) && String(entry.result_type) === String(resultType)
+        );
+
+        if (!item) {
+            alert('Result not found.');
+            return;
+        }
+
+        openPrintWindow(buildSinglePersonPrintHtml(item));
+    }
+
+    function printBatchSummary() {
+        const filtered = getFilteredResults();
+
+        if (!filtered.length) {
+            alert('No filtered results available to print.');
+            return;
+        }
+
+        openPrintWindow(buildBatchPrintHtml(filtered));
+    }
+
+    function exportResultsToCSV() {
+        const filtered = getFilteredResults();
+
+        if (!filtered.length) {
+            alert('No results available to export.');
+            return;
+        }
+
+        const rows = [[
+            'Type',
+            'Evaluatee Name',
+            'Department',
+            'Overall Average',
+            'Average Total Score',
+            'Computed Rating (%)',
+            'Management of Teaching and Learning',
+            'Content Knowledge, Pedagogy, and Technology',
+            'Commitment and Transparency',
+            'Evaluator Count'
+        ]];
+
+        filtered.forEach(item => {
+            rows.push([
+                formatTypeLabel(item.result_type),
+                item.name || '',
+                item.department || '',
+                toFixedGrade(item.overall),
+                toFixedGrade(item.average_total_score),
+                toFixedGrade(item.computed_rating),
+                toFixedGrade(getSection(item, 'management_teaching_learning')),
+                toFixedGrade(getSection(item, 'content_knowledge_pedagogy_technology')),
+                toFixedGrade(getSection(item, 'commitment_transparency')),
+                item.evaluator_count || 0
+            ]);
+        });
+
+        const csvContent = rows.map(row =>
+            row.map(value => `"${String(value).replace(/"/g, '""')}"`).join(',')
+        ).join('\n');
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+
+        link.href = url;
+        link.setAttribute('download', 'evaluation_results_summary.csv');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }
+
     facultySearchInput.addEventListener('input', renderFacultyTable);
+    departmentFilter.addEventListener('change', renderFacultyTable);
+    resultTypeFilter.addEventListener('change', renderFacultyTable);
+
+    if (exportResultsBtn) {
+        exportResultsBtn.addEventListener('click', exportResultsToCSV);
+    }
+
+    if (printBatchBtn) {
+        printBatchBtn.addEventListener('click', printBatchSummary);
+    }
+
+    if (modalPrintPersonBtn) {
+        modalPrintPersonBtn.addEventListener('click', function() {
+            if (!currentModalItem) {
+                alert('No person selected.');
+                return;
+            }
+            printSinglePerson(currentModalItem.id, currentModalItem.result_type);
+        });
+    }
 
     renderStats();
     renderFacultyTable();
+
+    window.openViewMore = openViewMore;
+    window.printSinglePerson = printSinglePerson;
 </script>
 {% endblock %}
