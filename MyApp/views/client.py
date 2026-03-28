@@ -326,9 +326,9 @@ def eval_forms(request):
     }
 
 
-    print("========== DEBUG ==========")
-    print("OPEN SCHEDULE ID:", open_schedule.id if open_schedule else None)
-    print("LOGGED IN HEAD ID:", logged_in_head.id)
+    #print("========== DEBUG ==========")
+    #print("OPEN SCHEDULE ID:", open_schedule.id if open_schedule else None)
+    #print("LOGGED IN HEAD ID:", logged_in_head.id)
 
     count = HeadEvaluation.objects.filter(
         schedule=open_schedule,
@@ -336,8 +336,8 @@ def eval_forms(request):
         status="submitted"
     ).count()
 
-    print("HEAD COUNT:", count)
-    print("===========================")
+    #print("HEAD COUNT:", count)
+    #print("===========================")
     
     return render(request, "evaluator/eval_forms.html", context)
 
@@ -406,9 +406,9 @@ def save_evaluation(request):
     db_category = "head" if category == "head_peer" else "faculty"
 
     if category == "head_peer":
-        print("===== HEAD SAVE DEBUG =====")
-        print("LOGGED IN HEAD ID:", logged_in_head.id)
-        print("RECEIVED EVALUATEE ID:", evaluatee_id)
+        #print("===== HEAD SAVE DEBUG =====")
+        #print("LOGGED IN HEAD ID:", logged_in_head.id)
+        #print("RECEIVED EVALUATEE ID:", evaluatee_id)
 
         evaluatee_head = (
             DepartmentHead.objects
@@ -426,6 +426,30 @@ def save_evaluation(request):
                 "success": False,
                 "message": "Selected head was not found."
             }, status=404)
+
+    elif category == "faculty":
+        #print("===== FACULTY SAVE DEBUG =====")
+        #print("LOGGED IN HEAD ID:", logged_in_head.id)
+        #print("RECEIVED EVALUATEE ID:", evaluatee_id)
+
+        evaluatee_faculty = (
+            FacultyMember.objects
+            .select_related("department")
+            .filter(id=evaluatee_id, department_id=logged_in_head.department_id)
+            .first()
+        )
+
+        print("FOUND EVALUATEE FACULTY:", evaluatee_faculty.name if evaluatee_faculty else None)
+        print("==============================")
+
+        if not evaluatee_faculty:
+            return JsonResponse({
+                "success": False,
+                "message": "Selected faculty was not found."
+            }, status=404)
+
+
+
 
     cleaned_answers = []
 
@@ -462,12 +486,13 @@ def save_evaluation(request):
             "success": False,
             "message": "No answers were found to save."
         }, status=400)
-
-    evaluatee_name = evaluatee_head.name if evaluatee_head else evaluatee_faculty.name
-    evaluatee_department = (
-        evaluatee_head.department.name if evaluatee_head
-        else evaluatee_faculty.department.name
-    )
+        
+    if db_category == "head":
+        evaluatee_name = evaluatee_head.name
+        evaluatee_department = evaluatee_head.department.name
+    else:
+        evaluatee_name = evaluatee_faculty.name
+        evaluatee_department = evaluatee_faculty.department.name
 
     total_score = sum(item["rating"] for item in cleaned_answers)
     average_score = round(total_score / len(cleaned_answers), 2) if cleaned_answers else 0

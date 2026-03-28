@@ -278,7 +278,7 @@
       <div id="dashboardView">
         <div class="hero">
           <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
-            <div>
+            <div><br>
               <h1>Head Evaluation Portal</h1>
               <p>Evaluate fellow heads and faculty members, complete each category, and track submission progress. Self-evaluation is not included in this version.</p>
             </div>
@@ -658,10 +658,15 @@
       if (formView) formView.scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
-    function scrollToQuickApply() {
-      const quickApply = document.getElementById("quickApplyWrap");
-      if (!quickApply) return;
-      const y = quickApply.getBoundingClientRect().top + window.pageYOffset - (window.innerHeight * 0.35);
+  function scrollToQuickApply() {
+      const target =
+        document.getElementById("submitCategoryBtn")?.style.display !== "none"
+          ? document.getElementById("submitCategoryBtn")
+          : document.getElementById("nextBtn") || document.getElementById("quickApplyWrap");
+
+      if (!target) return;
+
+      const y = target.getBoundingClientRect().top + window.pageYOffset - (window.innerHeight * 0.35);
       window.scrollTo({ top: y, behavior: "smooth" });
     }
 
@@ -676,7 +681,9 @@
       if (status === "in_progress") return "In Progress";
       return "Not Started";
     }
-
+function isCurrentCategorySubmitted() {
+  return submissionStatus[currentCategory] === "submitted";
+}
     function getCurrentEvaluateeId() {
       return String(document.getElementById("evaluateeSelect")?.value || "");
     }
@@ -907,27 +914,57 @@
       return `Please finish <strong>${getEvaluateeNameById(currentCategory, activeId)}</strong> or turn off Apply to All first.`;
     }
 
-    function updateFormInteractivity() {
-      const questionsContainer = document.getElementById("questionsContainer");
-      const commentsBox = document.getElementById("commentsBox");
-      const isReadOnly = isLiveLockedForCurrentEvaluatee();
-      const labelType = currentCategory === "head_peer" ? "head" : "faculty";
-      const activeId = getActiveLiveSourceId();
+  function updateFormInteractivity() {
+    const questionsContainer = document.getElementById("questionsContainer");
+    const commentsBox = document.getElementById("commentsBox");
+    const submitBtn = document.getElementById("submitCategoryBtn");
+    const copyBtn = document.getElementById("copyPeersBtn");
+    const disableCopyBtn = document.getElementById("disableCopyBtn");
 
-      document.querySelectorAll("#questionsContainer input[type='radio']").forEach(input => input.disabled = isReadOnly);
-      document.querySelectorAll("#questionsContainer .question-card").forEach(card => card.classList.toggle("readonly", isReadOnly));
-      document.querySelectorAll("#quickApplyWrap .score-chip, #quickApplyWrap .btn").forEach(btn => btn.disabled = isReadOnly);
-      if (commentsBox) commentsBox.disabled = isReadOnly;
+    const categoryReadOnly = isCurrentCategorySubmitted();
+    const liveReadOnly = isLiveLockedForCurrentEvaluatee();
+    const isReadOnly = categoryReadOnly || liveReadOnly;
 
-      document.getElementById("liveCopyReadonlyNote")?.remove();
-      if (isReadOnly && questionsContainer) {
-        const note = document.createElement("div");
-        note.id = "liveCopyReadonlyNote";
-        note.className = "warning-note";
-        note.innerHTML = `Apply to All is on. This page is view-only because <strong>${getEvaluateeNameById(currentCategory, activeId)}</strong> is the active source. Turn off Apply to All to edit this ${labelType}.`;
-        questionsContainer.prepend(note);
+    const labelType = currentCategory === "head_peer" ? "Head Evaluation" : "Faculty Evaluation";
+    const activeId = getActiveLiveSourceId();
+
+    document.querySelectorAll("#questionsContainer input[type='radio']").forEach(input => {
+      input.disabled = isReadOnly;
+    });
+
+    document.querySelectorAll("#questionsContainer .question-card").forEach(card => {
+      card.classList.toggle("readonly", isReadOnly);
+    });
+
+    document.querySelectorAll("#quickApplyWrap .score-chip, #quickApplyWrap .btn").forEach(btn => {
+      btn.disabled = isReadOnly;
+    });
+
+    if (commentsBox) commentsBox.disabled = isReadOnly;
+    if (copyBtn) copyBtn.disabled = isReadOnly;
+    if (disableCopyBtn) disableCopyBtn.disabled = isReadOnly;
+
+    document.getElementById("liveCopyReadonlyNote")?.remove();
+
+    if (isReadOnly && questionsContainer) {
+      const note = document.createElement("div");
+      note.id = "liveCopyReadonlyNote";
+      note.className = "warning-note";
+
+      if (categoryReadOnly) {
+        note.innerHTML = `This <strong>${labelType}</strong> has already been fully submitted. The form is now view-only.`;
+      } else {
+        note.innerHTML = `Apply to All is on. This page is view-only because <strong>${getEvaluateeNameById(currentCategory, activeId)}</strong> is the active source. Turn off Apply to All to edit this form.`;
       }
+
+      questionsContainer.prepend(note);
     }
+
+    if (submitBtn && categoryReadOnly) {
+      submitBtn.style.display = "none";
+      submitBtn.disabled = true;
+    }
+}
 
     function renderDashboard() {
     const container = document.getElementById("categoryCardsContainer");
@@ -974,10 +1011,12 @@
       const dbRequired = Number(dashboardSummary?.[cat.key]?.required ?? 0);
       const status = submissionStatus[cat.key] || "not_started";
 
-      const openBtn = cat.allowed
-        ? `<button class="btn btn-primary mt-3" onclick="openCategory('${cat.key}')">Open Form</button>`
-        : `<div class="alert alert-light border mt-3 mb-0 small">This category is available for heads only.</div>`;
+      const buttonText = status === "submitted" ? "View Only" : "Open Form";
 
+      const openBtn = cat.allowed
+        ? `<button class="btn btn-primary mt-3" onclick="openCategory('${cat.key}')">${buttonText}</button>`
+        : `<div class="alert alert-light border mt-3 mb-0 small">This category is available for heads only.</div>`;
+        
       container.innerHTML += `
         <div class="col-md-6 col-xl-4">
           <div class="category-card">
@@ -1013,6 +1052,7 @@
 
     function openCategory(categoryKey) {
       currentCategory = categoryKey;
+      submissionStatus[currentCategory] = dashboardSummary?.[currentCategory]?.status || submissionStatus[currentCategory];
       currentSectionIndex = 0;
       if (submissionStatus[currentCategory] === "not_started") submissionStatus[currentCategory] = getSubmittedCount(currentCategory) > 0 ? "in_progress" : submissionStatus[currentCategory];
       document.getElementById("dashboardView").classList.add("hidden");
@@ -1248,7 +1288,7 @@
         currentSectionIndex--;
         renderSectionStepper();
         renderSection();
-        setTimeout(scrollFormToTop, 50);
+        setTimeout(scrollToNextSectionTop, 120);
       }
     }
 
@@ -1256,13 +1296,25 @@
       saveComments();
       if (!getCurrentEvaluateeId()) return showInfoModal("No Evaluatee Selected", "Please select a person to evaluate first.");
       if (!isSectionComplete(currentSectionIndex)) return showInfoModal("Incomplete Section", "Please answer all questions in the current section before proceeding.");
+
       if (currentSectionIndex < sections.length - 1) {
         currentSectionIndex++;
         renderSectionStepper();
         renderSection();
-        setTimeout(scrollToQuickApply, 80);
+        setTimeout(scrollToNextSectionTop, 120);
       }
     }
+
+    function scrollToNextSectionTop() {
+    const questionsContainer = document.getElementById("questionsContainer");
+    const sectionHeader = questionsContainer?.querySelector(".section-header");
+    const target = sectionHeader || questionsContainer;
+
+    if (!target) return;
+
+    const y = target.getBoundingClientRect().top + window.pageYOffset - 110;
+    window.scrollTo({ top: y, behavior: "smooth" });
+  }
 
     function updateSubmitButtonState() {
       const submitBtn = document.getElementById("submitCategoryBtn");
@@ -1272,12 +1324,37 @@
       const isLiveSource = !!activeId && String(activeId) === getCurrentEvaluateeId();
       const allComplete = areAllEvaluateesComplete(currentCategory);
       const allSubmitted = areAllEvaluateesSubmitted(currentCategory);
+
       submitBtn.style.display = hasEvaluatee && onLastSection ? "inline-block" : "none";
-      if (!hasEvaluatee || !onLastSection) { submitBtn.disabled = true; return; }
+
+      if (!hasEvaluatee || !onLastSection) {
+        submitBtn.disabled = true;
+        return;
+      }
+
+      if (isCurrentCategorySubmitted()) {
+        submitBtn.style.display = "none";
+        submitBtn.disabled = true;
+        return;
+      }
+
       submitBtn.textContent = getActionButtonLabel();
-      if (isLiveLockedForCurrentEvaluatee()) { submitBtn.disabled = true; return; }
-      if (isLiveSource) { submitBtn.disabled = !isCurrentEvaluateeComplete(); return; }
-      if (allComplete || allSubmitted) { submitBtn.disabled = false; return; }
+
+      if (isLiveLockedForCurrentEvaluatee()) {
+        submitBtn.disabled = true;
+        return;
+      }
+
+      if (isLiveSource) {
+        submitBtn.disabled = !isCurrentEvaluateeComplete();
+        return;
+      }
+
+      if (allComplete || allSubmitted) {
+        submitBtn.disabled = false;
+        return;
+      }
+
       submitBtn.disabled = !isCurrentEvaluateeComplete();
     }
 
@@ -1317,12 +1394,29 @@
             answers: ratings[currentCategory]?.[targetId] || {}
           };
           console.log("Saving evaluatee:", targetId, payload);
-          const response = await fetch("{% url 'save_evaluation' %}", {
-            method: "POST",
-            headers: { "Content-Type": "application/json", "X-CSRFToken": csrftoken },
-            body: JSON.stringify(payload)
-          });
-          const data = await response.json();
+          
+            const response = await fetch("{% url 'save_evaluation' %}", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrftoken
+              },
+              body: JSON.stringify(payload)
+            });
+
+            const rawText = await response.text();
+            console.log("SAVE STATUS:", response.status);
+            console.log("SAVE OK:", response.ok);
+            console.log("RAW SAVE RESPONSE:", rawText);
+
+
+            let data;
+            try {
+              data = JSON.parse(rawText);
+            } catch (e) {
+              throw new Error("Server returned HTML instead of JSON. Check terminal.");
+            }
+
           if (!response.ok || !data.success) throw new Error(data.message || `Could not save evaluation for ${getEvaluateeNameById(currentCategory, targetId)}.`);
           evaluateeSubmissionStatus[currentCategory][String(targetId)] = "submitted";
         }
