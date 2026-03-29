@@ -925,7 +925,6 @@
                 return;
             }
 
-            sessionStorage.removeItem('eval_login_modal_shown');
 
             sendLinkBtn.disabled = true;
             sendLinkBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Sending Link...';
@@ -939,56 +938,17 @@
         }
     });
 
+
     window.addEventListener('load', function () {
-        const modalAlreadyShown = sessionStorage.getItem('eval_login_modal_shown') === 'true';
-
-        if (!modalAlreadyShown) {
-            let modalWasShown = false;
-
-            {% if messages %}
-                {% for message in messages %}
-                    {% if 'success' in message.tags %}
-                        showSystemModal(
-                            'Check Your Email',
-                            'A secure login link has been sent successfully. Please check your email to verify your email and continue to the evaluation form.',
-                            'success'
-                        );
-                        modalWasShown = true;
-                    {% elif 'error' in message.tags %}
-                        showSystemModal(
-                            'Request Failed',
-                            '{{ message|escapejs }}',
-                            'danger'
-                        );
-                        modalWasShown = true;
-                    {% elif 'warning' in message.tags %}
-                        showSystemModal(
-                            'Notice',
-                            '{{ message|escapejs }}',
-                            'warning'
-                        );
-                        modalWasShown = true;
-                    {% endif %}
-                {% endfor %}
-            {% endif %}
-
-            if (modalWasShown) {
-                sessionStorage.setItem('eval_login_modal_shown', 'true');
-            }
-        }
+        {% if login_modal %}
+            showSystemModal(
+                '{% if login_modal.type == "success" %}Check Your Email{% elif login_modal.type == "danger" %}Error{% else %}Notice{% endif %}',
+                '{{ login_modal.message|escapejs }}',
+                '{{ login_modal.type }}'
+            );
+        {% endif %}
     });
 
-    window.addEventListener('load', function () {
-
-    {% if login_modal %}
-        showSystemModal(
-            '{% if login_modal.type == "success" %}Check Your Email{% elif login_modal.type == "danger" %}Error{% else %}Notice{% endif %}',
-            '{{ login_modal.message|escapejs }}',
-            '{{ login_modal.type }}'
-        );
-    {% endif %}
-
-});
 </script>
 </body>
 </html>

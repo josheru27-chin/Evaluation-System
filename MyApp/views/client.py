@@ -603,3 +603,38 @@ def eval_logout(request):
 
     messages.success(request, "You have been logged out.")
     return redirect("eval_login")
+
+
+def verify_head_login_link(request, token):
+    signer = TimestampSigner(salt=LINK_SALT)
+
+    try:
+        unsigned_value = signer.unsign(token, max_age=LOGIN_LINK_MAX_AGE)
+        head_id = int(unsigned_value)
+    except SignatureExpired:
+        messages.error(request, "This login link has expired. Please request a new one.")
+        return redirect("admin_login")
+    except (BadSignature, ValueError):
+        messages.error(request, "This login link is invalid.")
+        return redirect("admin_login")
+
+    logged_in_head = (
+        DepartmentHead.objects
+        .select_related("department")
+        .filter(id=head_id)
+        .first()
+    )
+
+    if not logged_in_head:
+        messages.error(request, "Head account not found.")
+        return redirect("admin_login")
+
+    request.session["head_id"] = logged_in_head.id
+    request.session["head_name"] = logged_in_head.name
+    request.session["head_email"] = logged_in_head.email
+    request.session["department_id"] = logged_in_head.department.id
+    request.session["department_name"] = logged_in_head.department.name
+    request.session["is_head_authenticated"] = True
+
+    messages.success(request, f"Welcome, {logged_in_head.name}.")
+    return redirect("head_monitor")

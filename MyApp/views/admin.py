@@ -7,7 +7,12 @@ from io import TextIOWrapper
 from datetime import datetime
 import csv
 from collections import defaultdict
-from django.db.models import Prefetch
+from django.db.models import Prefetch, Case, When, IntegerField
+from django.conf import settings
+from django.core.mail import EmailMultiAlternatives
+from django.core.signing import TimestampSigner
+from django.template.loader import render_to_string
+from django.urls import reverse
 
 from ..models import (
     Department,
@@ -19,6 +24,18 @@ from ..models import (
     HeadEvaluation,
     HeadEvaluationResponse,
 )
+
+LOGIN_LINK_MAX_AGE = 300  # 5 minutes
+LINK_SALT = "faculty-eval-login"
+
+def _get_open_schedule():
+    now = timezone.localtime(timezone.now())
+    return (
+        EvaluationSchedule.objects
+        .filter(start_datetime__lte=now, end_datetime__gte=now)
+        .order_by("start_datetime")
+        .first()
+    )
 
 DEPARTMENT_MAP = {
     "DED": "Department of Industrial Education",
@@ -173,14 +190,6 @@ def _parse_datetime_local(value):
 # =========================
 # BASIC ADMIN PAGES
 # =========================
-
-def admin_login(request):
-    return render(
-        request,
-        "admin/admin_login.html",
-        _admin_context("login"),
-    )
-
 
 def admin_department(request):
     if request.method == "POST" and request.FILES.get("excel_file"):
@@ -490,7 +499,7 @@ def admin_results_summary(request):
         .prefetch_related(
             Prefetch(
                 "responses",
-                queryset=FacultyEvaluationResponse.objects.all().order_by("section_name", "question_number"),
+                queryset=_ordered_response_queryset(FacultyEvaluationResponse),
             )
         )
         .order_by("evaluatee_name", "evaluator_name")
@@ -507,7 +516,7 @@ def admin_results_summary(request):
         .prefetch_related(
             Prefetch(
                 "responses",
-                queryset=HeadEvaluationResponse.objects.all().order_by("section_name", "question_number"),
+                queryset=_ordered_response_queryset(HeadEvaluationResponse),
             )
         )
         .order_by("evaluatee_name", "evaluator_name")
@@ -676,5 +685,158 @@ def admin_results_summary(request):
     return render(request, "admin/admin_overall.html", context)
 
 
+def _ordered_response_queryset(model):
+    return model.objects.annotate(
+        section_order=Case(
+            When(section_code="management_teaching_learning", then=0),
+            When(section_code="content_knowledge_pedagogy_technology", then=1),
+            When(section_code="commitment_transparency", then=2),
+            default=99,
+            output_field=IntegerField(),
+        )
+    ).order_by("section_order", "question_number")
+
+
+
+
 def admin_overall(request):
     return admin_results_summary(request)
+
+def admin_login(request):
+    open_schedule = _get_open_schedule()
+    portal_closed = open_schedule is None
+
+    if request.method == "POST":
+        login_type = (request.POST.get("login_type") or "").strip()
+
+        # =========================
+        # ADMIN LOGIN (frontend only for now)
+        # =========================
+        if login_type == "admin":
+            username = (request.POST.get("username") or "").strip()
+            password = (request.POST.get("password") or "").strip()
+
+            if not username or not password:
+                request.session["login_modal"] = {
+                    "type": "danger",
+                    "message": "Please enter both username and password for admin login."
+                }
+                return redirect("admin_login")
+
+            # CURRENT BEHAVIOR:
+            # still frontend/demo only, redirects to admin dashboard page
+            return redirect("admin_department")
+
+        # =========================
+        # DEPARTMENT HEAD LOGIN
+        # =========================
+        elif login_type == "head":
+            email = (request.POST.get("email") or "").strip().lower()
+
+            if portal_closed:
+                request.session["login_modal"] = {
+                    "type": "warning",
+                    "message": "The evaluation portal is currently closed. Please wait for the next evaluation schedule."
+                }
+                return redirect("admin_login")
+
+            if not email:
+                request.session["login_modal"] = {
+                    "type": "danger",
+                    "message": "Please enter your GSFE email address."
+                }
+                return redirect("admin_login")
+
+            head = (
+                DepartmentHead.objects
+                .select_related("department")
+                .filter(email__iexact=email)
+                .first()
+            )
+
+            faculty = (
+                FacultyMember.objects
+                .select_related("department")
+                .filter(email__iexact=email)
+                .first()
+            )
+
+            if not head:
+                if faculty:
+                    request.session["login_modal"] = {
+                        "type": "danger",
+                        "message": "This account is registered as faculty only. Faculty members are not allowed to access the department head portal."
+                    }
+                else:
+                    request.session["login_modal"] = {
+                        "type": "danger",
+                        "message": "This email is not registered as a department head in the evaluation system."
+                    }
+                return redirect("admin_login")
+
+            signer = TimestampSigner(salt=LINK_SALT)
+            token = signer.sign(str(head.id))
+
+            verify_url = request.build_absolute_uri(
+                reverse("verify_head_login_link", args=[token])
+            )
+
+            subject = "Faculty Evaluation Login Link"
+
+            context = {
+                "head": head,
+                "verify_url": verify_url,
+                "expires_minutes": LOGIN_LINK_MAX_AGE // 60,
+                "open_schedule": open_schedule,
+            }
+
+            text_body = (
+                f"Hello {head.name},\n\n"
+                f"Click the link below to access the Faculty Evaluation System:\n\n"
+                f"{verify_url}\n\n"
+                f"This link will expire in {LOGIN_LINK_MAX_AGE // 60} minutes.\n"
+                f"If you did not request this, please ignore this email."
+            )
+
+            html_body = render_to_string("evaluator/email_login_link.html", context)
+
+            try:
+                msg = EmailMultiAlternatives(
+                    subject=subject,
+                    body=text_body,
+                    from_email=getattr(settings, "DEFAULT_FROM_EMAIL", None),
+                    to=[head.email],
+                )
+                msg.attach_alternative(html_body, "text/html")
+                msg.send()
+
+                request.session["login_modal"] = {
+                    "type": "success",
+                    "message": f"A secure login link has been sent to {head.email}."
+                }
+            except Exception:
+                request.session["login_modal"] = {
+                    "type": "danger",
+                    "message": "The login link could not be sent. Please check your email settings."
+                }
+
+            return redirect("admin_login")
+
+        else:
+            request.session["login_modal"] = {
+                "type": "danger",
+                "message": "Please choose a login type first."
+            }
+            return redirect("admin_login")
+
+    login_modal = request.session.pop("login_modal", None)
+
+    context = _admin_context(
+        "login",
+        {
+            "login_modal": login_modal,
+            "open_schedule": open_schedule,
+            "portal_closed": portal_closed,
+        },
+    )
+    return render(request, "admin/admin_login.html", context)

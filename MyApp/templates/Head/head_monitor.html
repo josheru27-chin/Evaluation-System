@@ -4,782 +4,712 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Results | Head Dashboard</title>
+
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
-<style>
-  :root{
-    --primary:#981b2e;
-    --primary-dark:#7d1626;
-    --primary-soft:#f7e9ec;
-    --bg:#f4f6f9;
-    --card:#ffffff;
-    --text:#1f2937;
-    --muted:#6b7280;
-    --border:#e5e7eb;
-    --input-bg:#f7f9fc;
-    --success-bg:#eaf7ee;
-    --success-border:#c9e7d2;
-    --success-text:#22613a;
-    --danger-bg:#fff1f2;
-    --danger-border:#f3c5cb;
-    --danger-text:#a22735;
-    --warning-bg:#fff8e8;
-    --warning-border:#f4d58d;
-    --warning-text:#8a5a00;
-    --shadow:0 10px 28px rgba(31, 41, 55, 0.08);
-    --sidebar-width:280px;
-  }
+  <style>
+    :root{
+      --primary:#981b2e;
+      --primary-dark:#7d1626;
+      --primary-soft:#f7e9ec;
+      --bg:#f4f6f9;
+      --card:#ffffff;
+      --text:#1f2937;
+      --muted:#6b7280;
+      --border:#e5e7eb;
+      --input-bg:#f7f9fc;
+      --success-bg:#eaf7ee;
+      --success-border:#c9e7d2;
+      --success-text:#22613a;
+      --danger-bg:#fff1f2;
+      --danger-border:#f3c5cb;
+      --danger-text:#a22735;
+      --warning-bg:#fff8e8;
+      --warning-border:#f4d58d;
+      --warning-text:#8a5a00;
+      --shadow:0 10px 28px rgba(31, 41, 55, 0.08);
+      --sidebar-width:280px;
+    }
+
+    *{
+      box-sizing:border-box;
+    }
+
+    body{
+      margin:0;
+      font-family:"Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background:linear-gradient(180deg, #ffffff 0%, var(--bg) 100%);
+      color:var(--text);
+      min-height:100vh;
+    }
 
-  *{ box-sizing:border-box; }
-
-  body{
-    margin:0;
-    font-family:"Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-    background:linear-gradient(180deg, #ffffff 0%, var(--bg) 100%);
-    color:var(--text);
-    min-height:100vh;
-  }
-
-  /* ── Sidebar ─────────────────────────────────────── */
-  .sidebar{
-    position:fixed;
-    left:0; top:0;
-    width:var(--sidebar-width);
-    height:100vh;
-    background:linear-gradient(180deg, var(--primary-dark) 0%, var(--primary) 100%);
-    color:#fff;
-    display:flex;
-    flex-direction:column;
-    z-index:1000;
-    box-shadow:4px 0 24px rgba(0,0,0,0.1);
-  }
-
-  .sidebar-header{
-    padding:28px 24px;
-    border-bottom:1px solid rgba(255,255,255,0.1);
-  }
-
-  .sidebar-brand{
-    display:flex;
-    align-items:center;
-    gap:12px;
-    font-size:1.25rem;
-    font-weight:800;
-  }
-
-  .sidebar-brand-icon{
-    width:44px; height:44px;
-    background:rgba(255,255,255,0.15);
-    border-radius:14px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size:1.4rem;
-    backdrop-filter:blur(4px);
-  }
-
-  .sidebar-user{
-    padding:20px 24px;
-    background:rgba(0,0,0,0.15);
-    margin:16px;
-    border-radius:18px;
-    border:1px solid rgba(255,255,255,0.1);
-  }
-
-  .sidebar-user-label{
-    font-size:0.75rem;
-    text-transform:uppercase;
-    letter-spacing:0.5px;
-    opacity:0.7;
-    margin-bottom:4px;
-  }
-
-  .sidebar-user-name{ font-size:1rem; font-weight:700; }
-  .sidebar-user-role{ font-size:0.85rem; opacity:0.8; margin-top:2px; }
-
-  .sidebar-nav{
-    flex:1;
-    padding:16px 12px;
-    overflow-y:auto;
-  }
-
-  .sidebar-section{ margin-bottom:8px; }
-
-  .sidebar-section-title{
-    font-size:0.7rem;
-    text-transform:uppercase;
-    letter-spacing:1px;
-    opacity:0.6;
-    padding:0 16px;
-    margin-bottom:8px;
-    font-weight:700;
-  }
-
-  .sidebar-link{
-    display:flex;
-    align-items:center;
-    gap:14px;
-    padding:14px 18px;
-    margin:4px 12px;
-    border-radius:14px;
-    color:rgba(255,255,255,0.9);
-    text-decoration:none;
-    font-weight:600;
-    font-size:0.95rem;
-    transition:all 0.2s ease;
-    position:relative;
-  }
-
-  .sidebar-link:hover{
-    background:rgba(255,255,255,0.1);
-    color:#fff;
-    transform:translateX(4px);
-  }
-
-  .sidebar-link.active{
-    background:rgba(255,255,255,0.2);
-    color:#fff;
-    box-shadow:0 4px 12px rgba(0,0,0,0.15);
-  }
-
-  .sidebar-link.active::before{
-    content:'';
-    position:absolute;
-    left:0; top:50%;
-    transform:translateY(-50%);
-    width:4px; height:24px;
-    background:#fff;
-    border-radius:0 4px 4px 0;
-  }
-
-  .sidebar-link i{
-    font-size:1.2rem;
-    width:24px;
-    text-align:center;
-  }
-
-  .sidebar-footer{
-    padding:20px 24px;
-    border-top:1px solid rgba(255,255,255,0.1);
-  }
-
-  .sidebar-logout{
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    gap:10px;
-    padding:14px;
-    background:rgba(255,255,255,0.1);
-    border:1px solid rgba(255,255,255,0.15);
-    border-radius:14px;
-    color:#fff;
-    text-decoration:none;
-    font-weight:600;
-    transition:all 0.2s ease;
-  }
-
-  .sidebar-logout:hover{
-    background:rgba(255,255,255,0.2);
-    color:#fff;
-  }
-
-  /* ── Main Content ─────────────────────────────────── */
-  .main-content{
-    margin-left:var(--sidebar-width);
-    min-height:100vh;
-    padding:28px 32px 40px;
-  }
-
-  .page-header{ margin-bottom:28px; }
-
-  .page-title{
-    font-size:1.85rem;
-    font-weight:800;
-    color:var(--text);
-    margin-bottom:6px;
-  }
-
-  .page-subtitle{ color:var(--muted); font-size:1rem; }
-
-  /* ── Stat Info Grid ───────────────────────────────── */
-  .info-grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
-    gap:20px;
-    margin-bottom:28px;
-  }
-
-  .info-item{
-    background:#fff;
-    border:1px solid var(--border);
-    border-radius:18px;
-    padding:20px;
-    display:flex;
-    align-items:center;
-    gap:16px;
-    box-shadow:var(--shadow);
-  }
-
-  .info-icon{
-    width:52px; height:52px;
-    border-radius:14px;
-    background:var(--primary-soft);
-    color:var(--primary);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size:1.4rem;
-    flex-shrink:0;
-  }
-
-  .info-icon.success{ background:var(--success-bg); color:var(--success-text); }
-  .info-icon.warning{ background:var(--warning-bg); color:var(--warning-text); }
-
-  .info-label{ font-size:0.85rem; color:var(--muted); margin-bottom:2px; }
-  .info-value{ font-size:1.15rem; font-weight:800; color:var(--text); }
-
-  /* ── Content Card ─────────────────────────────────── */
-  .content-card{
-    background:var(--card);
-    border:1px solid var(--border);
-    border-radius:24px;
-    overflow:hidden;
-    box-shadow:var(--shadow);
-    margin-bottom:28px;
-  }
-
-  .card-header-custom{
-    background:linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-    color:#fff;
-    padding:24px 28px;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    flex-wrap:wrap;
-    gap:12px;
-  }
-
-  .card-header-custom h2{
-    font-size:1.35rem;
-    font-weight:700;
-    margin:0;
-  }
-
-  .card-header-custom p{
-    margin:6px 0 0;
-    opacity:0.9;
-    font-size:0.95rem;
-  }
-
-  .card-body-custom{ padding:28px; }
-
-  /* ── Filter / Search Row ──────────────────────────── */
-  .filter-row{
-    display:flex;
-    flex-wrap:wrap;
-    gap:12px;
-    margin-bottom:22px;
-    align-items:center;
-  }
-
-  .search-wrap{
-    position:relative;
-    flex:1;
-    min-width:200px;
-  }
-
-  .search-wrap i{
-    position:absolute;
-    left:16px; top:50%;
-    transform:translateY(-50%);
-    color:#9aa3af;
-    font-size:1.05rem;
-    z-index:2;
-  }
-
-  .search-wrap input{
-    padding-left:46px;
-  }
-
-  .form-control, .form-select{
-    min-height:48px;
-    border-radius:14px;
-    border:1px solid var(--border);
-    background:var(--input-bg);
-    padding:10px 16px;
-    color:var(--text);
-    font-size:0.95rem;
-    box-shadow:none;
-    transition:0.2s ease;
-  }
-
-  .form-control:focus, .form-select:focus{
-    border-color:rgba(152,27,46,0.45);
-    background:#fff;
-    box-shadow:0 0 0 4px rgba(152,27,46,0.08);
-    outline:none;
-  }
-
-  /* ── Table ────────────────────────────────────────── */
-  .table-responsive{ border-radius:16px; overflow:hidden; }
-
-  .results-table{
-    width:100%;
-    border-collapse:collapse;
-    font-size:0.93rem;
-  }
-
-  .results-table thead{
-    background:linear-gradient(90deg, #fdf3f5, #fef9fa);
-  }
-
-  .results-table thead th{
-    padding:14px 18px;
-    font-weight:700;
-    font-size:0.82rem;
-    text-transform:uppercase;
-    letter-spacing:0.5px;
-    color:var(--primary);
-    border-bottom:2px solid var(--danger-border);
-    white-space:nowrap;
-  }
-
-  .results-table tbody tr{
-    border-bottom:1px solid #f1f3f6;
-    transition:background 0.15s ease;
-  }
-
-  .results-table tbody tr:last-child{ border-bottom:none; }
-
-  .results-table tbody tr:hover{ background:#fdf6f7; }
-
-  .results-table tbody td{
-    padding:14px 18px;
-    vertical-align:middle;
-    color:var(--text);
-  }
-
-  /* Faculty name cell */
-  .faculty-cell{
-    display:flex;
-    align-items:center;
-    gap:12px;
-  }
-
-  .faculty-avatar{
-    width:40px; height:40px;
-    border-radius:12px;
-    background:var(--primary-soft);
-    color:var(--primary);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size:1rem;
-    font-weight:700;
-    flex-shrink:0;
-  }
-
-  .faculty-name{ font-weight:700; margin-bottom:2px; }
-  .faculty-id{ font-size:0.8rem; color:var(--muted); }
-
-  /* Evaluator count cell */
-  .evaluator-cell{
-    display:flex;
-    align-items:center;
-    gap:8px;
-    font-weight:600;
-    font-size:0.9rem;
-    color:var(--text);
-  }
-
-  .evaluator-cell i{
-    color:var(--primary);
-    font-size:1rem;
-  }
-
-  .score-num{
-    font-weight:800;
-  }
-
-  /* Badges */
-  .badge-pill{
-    display:inline-block;
-    padding:6px 14px;
-    border-radius:999px;
-    font-size:0.78rem;
-    font-weight:700;
-    letter-spacing:0.2px;
-  }
-
-  .badge-success{
-    background:var(--success-bg);
-    color:var(--success-text);
-    border:1px solid var(--success-border);
-  }
-
-  .badge-warning{
-    background:var(--warning-bg);
-    color:var(--warning-text);
-    border:1px solid var(--warning-border);
-  }
-
-  .badge-danger{
-    background:var(--danger-bg);
-    color:var(--danger-text);
-    border:1px solid var(--danger-border);
-  }
-
-  .badge-soft-red{
-    background:var(--primary-soft);
-    color:var(--primary);
-    border:1px solid #efd3d9;
-  }
-
-  /* Action buttons */
-  .btn-icon{
-    width:36px; height:36px;
-    border-radius:10px;
-    border:1px solid var(--border);
-    background:#fff;
-    color:var(--muted);
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    transition:all 0.2s ease;
-    cursor:pointer;
-    font-size:0.95rem;
-  }
-
-  .btn-icon:hover{
-    background:var(--primary-soft);
-    color:var(--primary);
-    border-color:#efd3d9;
-  }
-
-  .btn-primary-custom{
-    background:var(--primary);
-    border-color:var(--primary);
-    color:#fff;
-    min-height:48px;
-    border-radius:14px;
-    font-weight:700;
-    padding:10px 22px;
-    box-shadow:0 10px 20px rgba(152,27,46,0.18);
-    transition:all 0.2s ease;
-    border:none;
-    cursor:pointer;
-  }
-
-  .btn-primary-custom:hover{
-    background:var(--primary-dark);
-    transform:translateY(-2px);
-    box-shadow:0 12px 24px rgba(152,27,46,0.25);
-    color:#fff;
-  }
-
-  .btn-outline-custom{
-    background:#fff;
-    border:1px solid var(--border);
-    color:var(--text);
-    min-height:48px;
-    border-radius:14px;
-    font-weight:700;
-    padding:10px 22px;
-    transition:all 0.2s ease;
-    cursor:pointer;
-  }
-
-  .btn-outline-custom:hover{
-    border-color:var(--primary);
-    color:var(--primary);
-    background:var(--primary-soft);
-  }
-
-  /* ── Summary Boxes below table ────────────────────── */
-  .summary-grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));
-    gap:16px;
-    margin-top:24px;
-  }
-
-  .summary-item{
-    background:linear-gradient(135deg, #fff, #fcf3f5);
-    border:1px solid #f2dde2;
-    border-radius:18px;
-    padding:18px 20px;
-  }
-
-  .summary-item-label{
-    font-size:0.82rem;
-    color:var(--muted);
-    font-weight:600;
-    text-transform:uppercase;
-    letter-spacing:0.4px;
-    margin-bottom:6px;
-  }
-
-  .summary-item-value{
-    font-size:1.5rem;
-    font-weight:800;
-    color:var(--text);
-  }
-
-  .summary-item-sub{
-    font-size:0.82rem;
-    color:var(--muted);
-    margin-top:3px;
-  }
-
-  /* ── Info Notice ──────────────────────────────────── */
-  .helper-box{
-    border:1px dashed var(--danger-border);
-    background:var(--danger-bg);
-    color:var(--danger-text);
-    border-radius:18px;
-    padding:16px 20px;
-    margin-bottom:24px;
-    display:flex;
-    align-items:flex-start;
-    gap:12px;
-  }
-
-  .helper-box i{ font-size:1.2rem; margin-top:2px; }
-
-  /* ── Modal Styles (matching admin_overall) ─────────── */
-  .modal-content {
-    border: none;
-    border-radius: 24px;
-    overflow: hidden;
-    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.16);
-  }
-
-  .modal-header {
-    border-bottom: 1px solid var(--border);
-    background: linear-gradient(135deg, #fff, #fcf3f5);
-    padding: 18px 22px;
-  }
-
-  .modal-title {
-    font-weight: 800;
-    color: var(--text);
-  }
-
-  .modal-body {
-    padding: 22px;
-    max-height: 70vh;
-    overflow-y: auto;
-  }
-
-  .modal-footer {
-    border-top: 1px solid var(--border);
-    padding: 16px 22px;
-  }
-
-  .faculty-summary-box {
-    background: #fcfcfd;
-    border: 1px solid var(--border);
-    border-radius: 18px;
-    padding: 16px;
-    margin-bottom: 18px;
-  }
-
-  .faculty-summary-box h6 {
-    margin: 0 0 10px;
-    font-weight: 800;
-    color: var(--text);
-  }
-
-  .faculty-summary-box p {
-    margin: 0;
-    color: var(--muted);
-  }
-
-  .sector-grid {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 12px;
-    margin-bottom: 18px;
-  }
-
-  .sector-card {
-    border: 1px solid var(--border);
-    background: #fff;
-    border-radius: 18px;
-    padding: 16px;
-  }
-
-  .sector-card h6 {
-    margin: 0 0 8px;
-    font-size: 0.9rem;
-    font-weight: 700;
-    color: var(--muted);
-  }
-
-  .sector-card h4 {
-    margin: 0;
-    font-weight: 800;
-    color: var(--text);
-  }
-
-  .grade-pill {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 68px;
-    padding: 8px 12px;
-    border-radius: 999px;
-    font-size: 0.84rem;
-    font-weight: 700;
-    border: 1px solid #efd3d9;
-    background: var(--primary-soft);
-    color: var(--primary);
-  }
-
-  .overall-pill {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 78px;
-    padding: 9px 14px;
-    border-radius: 999px;
-    font-size: 0.88rem;
-    font-weight: 800;
-    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-    color: #fff;
-  }
-
-  .section-title {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: var(--text);
-    margin-bottom: 16px;
-  }
-
-  /* Modal Table Styles */
-  .modal-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.92rem;
-  }
-
-  .modal-table thead {
-    background: linear-gradient(90deg, #fdf3f5, #fef9fa);
-  }
-
-  .modal-table thead th {
-    padding: 13px 16px;
-    font-weight: 700;
-    font-size: 0.8rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--primary);
-    border-bottom: 2px solid var(--danger-border);
-    white-space: nowrap;
-  }
-
-  .modal-table tbody tr {
-    border-bottom: 1px solid #f1f3f6;
-    transition: background 0.15s ease;
-  }
-
-  .modal-table tbody tr:last-child {
-    border-bottom: none;
-  }
-
-  .modal-table tbody tr:hover {
-    background: #fdf6f7;
-  }
-
-  .modal-table tbody td {
-    padding: 13px 16px;
-    vertical-align: middle;
-    color: var(--text);
-  }
-
-  /* ── Mobile Toggle ────────────────────────────────── */
-  @media (max-width: 991px){
     .sidebar{
-      transform:translateX(-100%);
-      transition:transform 0.3s ease;
-    }
-
-    .sidebar.show{ transform:translateX(0); }
-
-    .main-content{
-      margin-left:0;
-      padding:20px;
-    }
-
-    .mobile-toggle{
-      display:block !important;
       position:fixed;
-      top:20px; left:20px;
-      z-index:1001;
-      background:var(--primary);
+      left:0;
+      top:0;
+      width:var(--sidebar-width);
+      height:100vh;
+      background:linear-gradient(180deg, var(--primary-dark) 0%, var(--primary) 100%);
       color:#fff;
-      border:none;
-      width:48px; height:48px;
-      border-radius:12px;
-      font-size:1.3rem;
+      display:flex;
+      flex-direction:column;
+      z-index:1000;
+      box-shadow:4px 0 24px rgba(0,0,0,0.1);
+      overflow-y:auto;
+    }
+
+    .sidebar-header{
+      padding:28px 24px;
+      border-bottom:1px solid rgba(255,255,255,0.1);
+    }
+
+    .sidebar-brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      font-size:1.25rem;
+      font-weight:800;
+    }
+
+    .sidebar-brand-icon{
+      width:44px;
+      height:44px;
+      background:rgba(255,255,255,0.15);
+      border-radius:14px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:1.4rem;
+      backdrop-filter:blur(4px);
+    }
+
+    .sidebar-user{
+      padding:20px 24px;
+      background:rgba(0,0,0,0.15);
+      margin:16px;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,0.1);
+    }
+
+    .sidebar-user-label{
+      font-size:0.75rem;
+      text-transform:uppercase;
+      letter-spacing:0.5px;
+      opacity:0.7;
+      margin-bottom:4px;
+    }
+
+    .sidebar-user-name{
+      font-size:1rem;
+      font-weight:700;
+    }
+
+    .sidebar-user-role{
+      font-size:0.85rem;
+      opacity:0.8;
+      margin-top:2px;
+    }
+
+    .sidebar-nav{
+      flex:1;
+      padding:16px 12px;
+      overflow-y:auto;
+    }
+
+    .sidebar-section{
+      margin-bottom:8px;
+    }
+
+    .sidebar-section-title{
+      font-size:0.7rem;
+      text-transform:uppercase;
+      letter-spacing:1px;
+      opacity:0.6;
+      padding:0 16px;
+      margin-bottom:8px;
+      font-weight:700;
+    }
+
+    .sidebar-link{
+      display:flex;
+      align-items:center;
+      gap:14px;
+      padding:14px 18px;
+      margin:4px 12px;
+      border-radius:14px;
+      color:rgba(255,255,255,0.9);
+      text-decoration:none;
+      font-weight:600;
+      font-size:0.95rem;
+      transition:all 0.2s ease;
+      position:relative;
+    }
+
+    .sidebar-link:hover{
+      background:rgba(255,255,255,0.1);
+      color:#fff;
+      transform:translateX(4px);
+    }
+
+    .sidebar-link.active{
+      background:rgba(255,255,255,0.2);
+      color:#fff;
       box-shadow:0 4px 12px rgba(0,0,0,0.15);
     }
-  }
 
-  @media (min-width: 992px){
-    .mobile-toggle{ display:none !important; }
-  }
-
-  @media (max-width: 576px){
-    .main-content{ padding:16px; }
-    .page-title{ font-size:1.5rem; }
-    .card-header-custom{ padding:20px; }
-    .card-body-custom{ padding:20px; }
-    .results-table thead th,
-    .results-table tbody td{ padding:10px 12px; }
-  }
-
-  @media (max-width: 991px) {
-    .sector-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+    .sidebar-link.active::before{
+      content:'';
+      position:absolute;
+      left:0;
+      top:50%;
+      transform:translateY(-50%);
+      width:4px;
+      height:24px;
+      background:#fff;
+      border-radius:0 4px 4px 0;
     }
-    .modal-table thead th,
-    .modal-table tbody td {
-      padding: 10px 12px;
-      font-size: 0.85rem;
-    }
-  }
 
-  @media (max-width: 767px) {
-    .sector-grid {
-      grid-template-columns: 1fr;
+    .sidebar-link i{
+      font-size:1.2rem;
+      width:24px;
+      text-align:center;
     }
-  }
-</style>
+
+    .sidebar-footer{
+      padding:20px 24px;
+      border-top:1px solid rgba(255,255,255,0.1);
+    }
+
+    .sidebar-logout{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      padding:14px;
+      background:rgba(255,255,255,0.1);
+      border:1px solid rgba(255,255,255,0.15);
+      border-radius:14px;
+      color:#fff;
+      text-decoration:none;
+      font-weight:600;
+      transition:all 0.2s ease;
+    }
+
+    .sidebar-logout:hover{
+      background:rgba(255,255,255,0.2);
+      color:#fff;
+    }
+
+    .main-content{
+      margin-left:var(--sidebar-width);
+      min-height:100vh;
+      padding:28px 32px 40px;
+    }
+
+    .page-header{
+      margin-bottom:28px;
+    }
+
+    .page-title{
+      font-size:1.85rem;
+      font-weight:800;
+      color:var(--text);
+      margin-bottom:6px;
+    }
+
+    .page-subtitle{
+      color:var(--muted);
+      font-size:1rem;
+      line-height:1.6;
+      margin-bottom:0;
+    }
+
+    .head-chip-row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:16px;
+    }
+
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 14px;
+      border-radius:999px;
+      background:var(--primary-soft);
+      color:var(--primary);
+      border:1px solid #efd3d9;
+      font-weight:700;
+      font-size:0.85rem;
+    }
+
+    .chip.soft{
+      background:#fff;
+      color:var(--text);
+      border:1px solid var(--border);
+    }
+
+    .info-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+      gap:20px;
+      margin-bottom:28px;
+    }
+
+    .info-item{
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius:18px;
+      padding:20px;
+      display:flex;
+      align-items:center;
+      gap:16px;
+      box-shadow:var(--shadow);
+    }
+
+    .info-icon{
+      width:52px;
+      height:52px;
+      border-radius:14px;
+      background:var(--primary-soft);
+      color:var(--primary);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:1.4rem;
+      flex-shrink:0;
+    }
+
+    .info-icon.success{
+      background:var(--success-bg);
+      color:var(--success-text);
+    }
+
+    .info-icon.warning{
+      background:var(--warning-bg);
+      color:var(--warning-text);
+    }
+
+    .info-label{
+      font-size:0.85rem;
+      color:var(--muted);
+      margin-bottom:2px;
+    }
+
+    .info-value{
+      font-size:1.15rem;
+      font-weight:800;
+      color:var(--text);
+    }
+
+    .content-card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:24px;
+      overflow:hidden;
+      box-shadow:var(--shadow);
+      margin-bottom:28px;
+    }
+
+    .card-header-custom{
+      background:linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color:#fff;
+      padding:24px 28px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      flex-wrap:wrap;
+      gap:12px;
+    }
+
+    .card-header-custom h2{
+      font-size:1.35rem;
+      font-weight:700;
+      margin:0;
+    }
+
+    .card-header-custom p{
+      margin:6px 0 0;
+      opacity:0.9;
+      font-size:0.95rem;
+    }
+
+    .card-body-custom{
+      padding:28px;
+    }
+
+    .filter-row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:12px;
+      margin-bottom:22px;
+      align-items:center;
+    }
+
+    .search-wrap{
+      position:relative;
+      flex:1;
+      min-width:200px;
+    }
+
+    .search-wrap i{
+      position:absolute;
+      left:16px;
+      top:50%;
+      transform:translateY(-50%);
+      color:#9aa3af;
+      font-size:1.05rem;
+      z-index:2;
+    }
+
+    .search-wrap input{
+      padding-left:46px;
+    }
+
+    .form-control,
+    .form-select{
+      min-height:48px;
+      border-radius:14px;
+      border:1px solid var(--border);
+      background:var(--input-bg);
+      padding:10px 16px;
+      color:var(--text);
+      font-size:0.95rem;
+      box-shadow:none;
+      transition:0.2s ease;
+    }
+
+    .form-control:focus,
+    .form-select:focus{
+      border-color:rgba(152,27,46,0.45);
+      background:#fff;
+      box-shadow:0 0 0 4px rgba(152,27,46,0.08);
+      outline:none;
+    }
+
+    .table-scroll-wrap{
+      width:100%;
+      overflow-x:auto;
+      border-radius:16px;
+    }
+
+    .table-responsive{
+      border-radius:16px;
+      overflow:auto;
+      border:1px solid var(--border);
+      background:#fff;
+    }
+
+    .preview-table,
+    .results-table{
+      width:100%;
+      border-collapse:collapse;
+      min-width:950px;
+      font-size:0.93rem;
+    }
+
+    .preview-table thead,
+    .results-table thead{
+      background:linear-gradient(90deg, #fdf3f5, #fef9fa);
+    }
+
+    .preview-table thead th,
+    .results-table thead th{
+      padding:14px 18px;
+      font-weight:700;
+      font-size:0.82rem;
+      text-transform:uppercase;
+      letter-spacing:0.5px;
+      color:var(--primary);
+      border-bottom:2px solid var(--danger-border);
+      white-space:nowrap;
+      text-align:left;
+    }
+
+    .preview-table tbody tr,
+    .results-table tbody tr{
+      border-bottom:1px solid #f1f3f6;
+      transition:background 0.15s ease;
+    }
+
+    .preview-table tbody tr:last-child,
+    .results-table tbody tr:last-child{
+      border-bottom:none;
+    }
+
+    .preview-table tbody tr:hover,
+    .results-table tbody tr:hover{
+      background:#fdf6f7;
+    }
+
+    .preview-table tbody td,
+    .results-table tbody td{
+      padding:14px 18px;
+      vertical-align:middle;
+      color:var(--text);
+    }
+
+    .faculty-cell{
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+
+    .faculty-avatar{
+      width:40px;
+      height:40px;
+      border-radius:12px;
+      background:var(--primary-soft);
+      color:var(--primary);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:1rem;
+      font-weight:700;
+      flex-shrink:0;
+      text-transform:uppercase;
+    }
+
+    .faculty-name{
+      font-weight:800;
+      color:var(--text);
+      line-height:1.25;
+    }
+
+    .faculty-sub{
+      color:var(--muted);
+      font-size:0.86rem;
+      margin-top:3px;
+    }
+
+    .badge-pill{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:32px;
+      padding:6px 12px;
+      border-radius:999px;
+      font-size:0.82rem;
+      font-weight:700;
+      white-space:nowrap;
+    }
+
+    .badge-soft-red{
+      background:var(--primary-soft);
+      color:var(--primary);
+      border:1px solid #efd3d9;
+    }
+
+    .evaluator-cell{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      color:var(--muted);
+      font-weight:600;
+    }
+
+    .score-num{
+      font-weight:800;
+      color:var(--primary);
+    }
+
+    .btn-icon{
+      width:42px;
+      height:42px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background:#fff;
+      color:var(--primary);
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      transition:0.2s ease;
+      cursor:pointer;
+    }
+
+    .btn-icon:hover{
+      background:var(--primary-soft);
+      border-color:#efd3d9;
+    }
+
+    .empty-state{
+      padding:40px 18px;
+      text-align:center;
+      color:var(--muted);
+    }
+
+    .empty-state i{
+      font-size:2rem;
+      display:block;
+      margin-bottom:10px;
+      color:#c1c7d0;
+    }
+
+    .modal-content{
+      border:none;
+      border-radius:24px;
+      overflow:hidden;
+      box-shadow:0 24px 60px rgba(15,23,42,0.16);
+    }
+
+    .modal-header{
+      border-bottom:1px solid var(--border);
+      background:linear-gradient(135deg, #fff, #fcf3f5);
+      padding:18px 22px;
+    }
+
+    .modal-title{
+      font-weight:800;
+      color:var(--text);
+      margin-bottom:4px;
+    }
+
+    .modal-body{
+      padding:22px;
+      max-height:80vh;
+      overflow-y:auto;
+    }
+
+    .modal-footer{
+      border-top:1px solid var(--border);
+      padding:16px 22px;
+    }
+
+    .sector-grid{
+      display:grid;
+      grid-template-columns:repeat(4, minmax(0, 1fr));
+      gap:12px;
+      margin-bottom:18px;
+    }
+
+    .sector-card{
+      border:1px solid var(--border);
+      background:#fff;
+      border-radius:18px;
+      padding:16px;
+    }
+
+    .sector-card h6{
+      margin:0 0 8px;
+      font-size:0.9rem;
+      font-weight:700;
+      color:var(--muted);
+      line-height:1.45;
+    }
+
+    .sector-card h4{
+      margin:0;
+      font-weight:800;
+      color:var(--text);
+    }
+
+    .grade-pill{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-width:72px;
+      padding:8px 12px;
+      border-radius:999px;
+      font-size:0.84rem;
+      font-weight:700;
+      background:#f9eff2;
+      color:var(--primary);
+      border:1px solid #efd3d9;
+    }
+
+    @media (max-width: 991px){
+      .sidebar{
+        position:relative;
+        width:100%;
+        height:auto;
+      }
+
+      .main-content{
+        margin-left:0;
+        padding:22px 16px 32px;
+      }
+
+      .sector-grid{
+        grid-template-columns:repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 576px){
+      .card-body-custom{
+        padding:18px;
+      }
+
+      .card-header-custom{
+        padding:18px;
+      }
+
+      .page-title{
+        font-size:1.55rem;
+      }
+
+      .sector-grid{
+        grid-template-columns:1fr;
+      }
+    }
+
+    .table-scroll-wrap{
+      width:100%;
+      max-height:420px;   /* adjust if you want taller/shorter */
+      overflow:auto;
+      border:1px solid var(--border);
+      border-radius:16px;
+      background:#fff;
+    }
+
+    .table-responsive{
+      overflow:visible;
+      border:none;
+      border-radius:0;
+      background:transparent;
+    }
+
+    .preview-table,
+    .results-table{
+      width:100%;
+      min-width:950px;
+      border-collapse:collapse;
+    }
+
+    /* Optional prettier scrollbar */
+    .table-scroll-wrap::-webkit-scrollbar{
+      width:10px;
+      height:10px;
+    }
+
+    .table-scroll-wrap::-webkit-scrollbar-thumb{
+      background:#c9cdd4;
+      border-radius:999px;
+    }
+
+    .table-scroll-wrap::-webkit-scrollbar-track{
+      background:#f3f4f6;
+      border-radius:999px;
+    }
+  </style>
 </head>
 <body>
 
-  <!-- Mobile Toggle -->
-  <button class="mobile-toggle" onclick="toggleSidebar()">
-    <i class="bi bi-list"></i>
-  </button>
-
-  <!-- Sidebar -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-brand">
         <div class="sidebar-brand-icon">
-          <i class="bi bi-mortarboard-fill"></i>
+          <i class="bi bi-person-badge-fill"></i>
         </div>
-        <span>Faculty Eval</span>
+        <div>Head Panel</div>
       </div>
     </div>
 
     <div class="sidebar-user">
       <div class="sidebar-user-label">Logged in as</div>
-      <div class="sidebar-user-name">Department Head</div>
-      <div class="sidebar-user-role">Head of Department</div>
+      <div class="sidebar-user-name">{{ logged_in_head.name|default:"Department Head" }}</div>
+      <div class="sidebar-user-role">{{ logged_in_head.department.name|default:"Head of Department" }}</div>
     </div>
 
     <nav class="sidebar-nav">
@@ -792,8 +722,8 @@
         </a>
 
         <a href="{% url 'head_add' %}" class="sidebar-link">
-          <i class="bi bi-person-plus-fill"></i>
-          <span>Add Faculty</span>
+          <i class="bi bi-person-fill"></i>
+          <span>Faculty Members</span>
         </a>
       </div>
 
@@ -808,22 +738,45 @@
     </nav>
 
     <div class="sidebar-footer">
-      <a href="{% url 'eval_login' %}" class="sidebar-logout">
+      <a href="{% url 'admin_login' %}" class="sidebar-logout">
         <i class="bi bi-box-arrow-left"></i>
         <span>Logout</span>
       </a>
     </div>
   </aside>
 
-  <!-- Main Content -->
   <main class="main-content">
-
     <div class="page-header">
       <h1 class="page-title">Department Results</h1>
-      <p class="page-subtitle">Monitor and review instructor evaluation scores for the current semester.</p>
+      <p class="page-subtitle">Monitor and review faculty evaluation scores for your department.</p>
+
+      <div class="head-chip-row">
+        <span class="chip">
+          <i class="bi bi-person-circle"></i>
+          {{ logged_in_head.name|default:"Department Head" }}
+        </span>
+
+        {% if logged_in_head.department %}
+        <span class="chip soft">
+          <i class="bi bi-building"></i>
+          {{ logged_in_head.department.name }}
+        </span>
+        {% endif %}
+
+        {% if open_schedule %}
+        <span class="chip soft">
+          <i class="bi bi-calendar-event"></i>
+          {{ open_schedule.title }}
+        </span>
+        {% else %}
+        <span class="chip soft">
+          <i class="bi bi-calendar-x"></i>
+          No active schedule
+        </span>
+        {% endif %}
+      </div>
     </div>
 
-    <!-- Top stat cards -->
     <div class="info-grid">
       <div class="info-item">
         <div class="info-icon">
@@ -831,7 +784,7 @@
         </div>
         <div>
           <div class="info-label">Total Instructors</div>
-          <div class="info-value">24</div>
+          <div class="info-value">{{ total_instructors|default:0 }}</div>
         </div>
       </div>
 
@@ -841,7 +794,7 @@
         </div>
         <div>
           <div class="info-label">Evaluations Complete</div>
-          <div class="info-value">18</div>
+          <div class="info-value">{{ evaluations_complete|default:0 }}</div>
         </div>
       </div>
 
@@ -851,7 +804,7 @@
         </div>
         <div>
           <div class="info-label">Pending Reviews</div>
-          <div class="info-value">6</div>
+          <div class="info-value">{{ pending_reviews|default:0 }}</div>
         </div>
       </div>
 
@@ -861,491 +814,210 @@
         </div>
         <div>
           <div class="info-label">Dept. Avg. Score</div>
-          <div class="info-value">87.4%</div>
+          <div class="info-value">{{ dept_avg_score|default:0 }}%</div>
         </div>
       </div>
     </div>
 
-    <!-- Results Table Card -->
     <div class="content-card">
       <div class="card-header-custom">
         <div>
           <h2><i class="bi bi-table me-2"></i>Instructor Evaluation Results</h2>
-          <p>Showing results for A.Y. 2024–2025 — 2nd Semester</p>
-        </div>
-        <div class="d-flex gap-2 flex-wrap">
+          <p>
+            {% if open_schedule %}
+              Showing results for {{ open_schedule.title }}.
+            {% else %}
+              Showing available department results.
+            {% endif %}
+          </p>
         </div>
       </div>
 
       <div class="card-body-custom">
-
-        <!-- Filters -->
         <div class="filter-row">
           <div class="search-wrap">
             <i class="bi bi-search"></i>
-            <input type="text" class="form-control" placeholder="Search faculty name or ID…" oninput="filterTable(this.value)">
-          </div>
-
-          <select class="form-select" style="max-width:180px;">
-            <option value="">All Positions</option>
-            <option>Instructor I</option>
-            <option>Instructor II</option>
-            <option>Instructor III</option>
-            <option>Asst. Professor</option>
-          </select>
-        </div>
-
-        <!-- Table -->
-        <div class="table-responsive">
-          <table class="results-table" id="resultsTable">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Instructor</th>
-                <th>Position</th>
-                <th>Evaluators</th>
-                <th>Score</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="tableBody">
-
-              <tr data-faculty-id="1">
-                <td class="text-muted" style="font-size:0.85rem;">01</td>
-                <td>
-                  <div class="faculty-cell">
-                    <div class="faculty-avatar">JR</div>
-                    <div>
-                      <div class="faculty-name">Juan Reyes</div>
-                      <div class="faculty-id">EMP-2021-004</div>
-                    </div>
-                  </div>
-                </td>
-                <td><span class="badge-pill badge-soft-red">Professor</span></td>
-                <td>
-                  <div class="evaluator-cell">
-                    <i class="bi bi-people-fill"></i>
-                    <span>32 evaluators</span>
-                  </div>
-                </td>
-                <td><span class="score-num" style="color:var(--success-text);font-size:1rem;">93%</span></td>
-                <td>
-                  <button class="btn-icon" title="View Details" onclick="openViewMore(1)"><i class="bi bi-eye"></i></button>
-                </td>
-              </tr>
-
-              <tr data-faculty-id="2">
-                <td class="text-muted" style="font-size:0.85rem;">02</td>
-                <td>
-                  <div class="faculty-cell">
-                    <div class="faculty-avatar">MC</div>
-                    <div>
-                      <div class="faculty-name">Maria Cruz</div>
-                      <div class="faculty-id">EMP-2019-011</div>
-                    </div>
-                  </div>
-                </td>
-                <td><span class="badge-pill badge-soft-red">Asst. Professor</span></td>
-                <td>
-                  <div class="evaluator-cell">
-                    <i class="bi bi-people-fill"></i>
-                    <span>28 evaluators</span>
-                  </div>
-                </td>
-                <td><span class="score-num" style="color:var(--success-text);font-size:1rem;">88%</span></td>
-                <td>
-                  <button class="btn-icon" title="View Details" onclick="openViewMore(2)"><i class="bi bi-eye"></i></button>
-                </td>
-              </tr>
-
-              <tr data-faculty-id="3">
-                <td class="text-muted" style="font-size:0.85rem;">03</td>
-                <td>
-                  <div class="faculty-cell">
-                    <div class="faculty-avatar">RL</div>
-                    <div>
-                      <div class="faculty-name">Roberto Lim</div>
-                      <div class="faculty-id">EMP-2022-007</div>
-                    </div>
-                  </div>
-                </td>
-                <td><span class="badge-pill badge-soft-red">Instructor</span></td>
-                <td>
-                  <div class="evaluator-cell">
-                    <i class="bi bi-people-fill"></i>
-                    <span>19 evaluators</span>
-                  </div>
-                </td>
-                <td><span class="score-num" style="color:var(--warning-text);font-size:1rem;">79%</span></td>
-                <td>
-                  <button class="btn-icon" title="View Details" onclick="openViewMore(3)"><i class="bi bi-eye"></i></button>
-                </td>
-              </tr>
-
-              <tr data-faculty-id="4">
-                <td class="text-muted" style="font-size:0.85rem;">04</td>
-                <td>
-                  <div class="faculty-cell">
-                    <div class="faculty-avatar">AS</div>
-                    <div>
-                      <div class="faculty-name">Ana Santos</div>
-                      <div class="faculty-id">EMP-2020-003</div>
-                    </div>
-                  </div>
-                </td>
-                <td><span class="badge-pill badge-soft-red">Assoc. Professor</span></td>
-                <td>
-                  <div class="evaluator-cell">
-                    <i class="bi bi-people-fill"></i>
-                    <span>24 evaluators</span>
-                  </div>
-                </td>
-                <td><span class="score-num" style="color:var(--danger-text);font-size:1rem;">68%</span></td>
-                <td>
-                  <button class="btn-icon" title="View Details" onclick="openViewMore(4)"><i class="bi bi-eye"></i></button>
-                </td>
-              </tr>
-
-              <tr data-faculty-id="5">
-                <td class="text-muted" style="font-size:0.85rem;">05</td>
-                <td>
-                  <div class="faculty-cell">
-                    <div class="faculty-avatar">PV</div>
-                    <div>
-                      <div class="faculty-name">Pedro Villanueva</div>
-                      <div class="faculty-id">EMP-2018-015</div>
-                    </div>
-                  </div>
-                </td>
-                <td><span class="badge-pill badge-soft-red">Professor</span></td>
-                <td>
-                  <div class="evaluator-cell">
-                    <i class="bi bi-people-fill"></i>
-                    <span>41 evaluators</span>
-                  </div>
-                </td>
-                <td><span class="score-num" style="color:var(--success-text);font-size:1rem;">95%</span></td>
-                <td>
-                  <button class="btn-icon" title="View Details" onclick="openViewMore(5)"><i class="bi bi-eye"></i></button>
-                </td>
-              </tr>
-
-              <tr data-faculty-id="6">
-                <td class="text-muted" style="font-size:0.85rem;">06</td>
-                <td>
-                  <div class="faculty-cell">
-                    <div class="faculty-avatar">LT</div>
-                    <div>
-                      <div class="faculty-name">Lorna Torres</div>
-                      <div class="faculty-id">EMP-2023-002</div>
-                    </div>
-                  </div>
-                </td>
-                <td><span class="badge-pill badge-soft-red">Instructor</span></td>
-                <td>
-                  <div class="evaluator-cell" style="color:var(--muted);">
-                    <i class="bi bi-people"></i>
-                    <span>0 evaluators</span>
-                  </div>
-                </td>
-                <td><span class="score-num" style="color:var(--muted);font-size:1rem;">—</span></td>
-                <td>
-                  <button class="btn-icon" title="View Details" onclick="openViewMore(6)" disabled style="opacity:0.5;cursor:not-allowed;"><i class="bi bi-eye"></i></button>
-                </td>
-              </tr>
-
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Summary row -->
-        <div class="summary-grid">
-          <div class="summary-item">
-            <div class="summary-item-label">Total Evaluators</div>
-            <div class="summary-item-value" style="color:var(--primary);">144</div>
-            <div class="summary-item-sub">across all instructors</div>
-          </div>
-          <div class="summary-item">
-            <div class="summary-item-label">Avg. Evaluators</div>
-            <div class="summary-item-value" style="color:var(--text);">28.8</div>
-            <div class="summary-item-sub">per instructor</div>
-          </div>
-          <div class="summary-item">
-            <div class="summary-item-label">Highest Score</div>
-            <div class="summary-item-value" style="color:var(--success-text);">95%</div>
-            <div class="summary-item-sub">Pedro Villanueva</div>
-          </div>
-          <div class="summary-item">
-            <div class="summary-item-label">Not Yet Evaluated</div>
-            <div class="summary-item-value" style="color:#3b5bdb;">1</div>
-            <div class="summary-item-sub">instructor pending</div>
+            <input
+              type="text"
+              class="form-control"
+              id="searchInput"
+              placeholder="Search faculty name, ID, email, or evaluator count..."
+              oninput="filterTable(this.value)"
+            >
           </div>
         </div>
 
-      </div><!-- /card-body -->
-    </div><!-- /content-card -->
-
-  </main>
-
-  <!-- View Details Modal -->
-  <div class="modal fade" id="viewMoreModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title"><i class="bi bi-person-lines-fill me-2"></i>Instructor Evaluation Details</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-
-        <div class="modal-body">
-          <div class="faculty-summary-box">
-            <h6 id="modalFacultyName">Faculty Name</h6>
-            <p id="modalFacultySubtitle">Detailed evaluator breakdown and average grades.</p>
-          </div>
-
-          <!-- Sector Averages -->
-          <div class="sector-grid">
-            <div class="sector-card">
-              <h6>Commitment</h6>
-              <h4 id="modalCommitmentAvg">0.00</h4>
-            </div>
-            <div class="sector-card">
-              <h6>Knowledge of Subject</h6>
-              <h4 id="modalKnowledgeAvg">0.00</h4>
-            </div>
-            <div class="sector-card">
-              <h6>Teaching for Independent Learning</h6>
-              <h4 id="modalTeachingAvg">0.00</h4>
-            </div>
-            <div class="sector-card">
-              <h6>Management of Learning</h6>
-              <h4 id="modalManagementAvg">0.00</h4>
-            </div>
-          </div>
-
-          <!-- Evaluators Table -->
-          <div class="content-card" style="box-shadow:none; padding:0; border:none;">
-            <h5 class="section-title mb-3"><i class="bi bi-people-fill me-2"></i>Evaluators Who Rated This Instructor</h5>
-
-            <div class="table-responsive">
-              <table class="modal-table align-middle">
-                <thead>
+        <div class="table-scroll-wrap">
+          <div class="table-responsive">
+            <table class="preview-table" id="previewTable">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Faculty Member</th>
+                  <th>Position</th>
+                  <th>Evaluators</th>
+                  <th>Score</th>
+                  <th>Details</th>
+                </tr>
+              </thead>
+              <tbody id="tableBody">
+                {% if results %}
+                  {% for item in results %}
                   <tr>
-                    <th style="min-width: 220px;">Evaluator Name</th>
-                    <th style="min-width: 130px;">Commitment</th>
-                    <th style="min-width: 170px;">Knowledge of Subject</th>
-                    <th style="min-width: 210px;">Teaching for Independent Learning</th>
-                    <th style="min-width: 170px;">Management of Learning</th>
-                    <th style="min-width: 140px;">Total Average</th>
+                    <td style="color:var(--muted);font-size:0.85rem;">
+                      {{ forloop.counter|stringformat:"02d" }}
+                    </td>
+                    <td>
+                      <div class="faculty-cell">
+                        <div class="faculty-avatar">{{ item.name|slice:":1"|upper }}</div>
+                        <div>
+                          <div class="faculty-name">{{ item.name }}</div>
+                          <div class="faculty-sub">
+                            {{ item.id_number|default:"No ID" }}
+                            {% if item.email %} • {{ item.email }}{% endif %}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <span class="badge-pill badge-soft-red">
+                        {{ item.position|default:"Faculty Member" }}
+                      </span>
+                    </td>
+                    <td>
+                      <div class="evaluator-cell">
+                        <i class="bi bi-people-fill"></i>
+                        <span>{{ item.evaluator_count|default:0 }} evaluator{{ item.evaluator_count|pluralize }}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <span class="score-num">{{ item.computed_rating|default:0 }}%</span>
+                    </td>
+                    <td>
+                      <button
+                        type="button"
+                        class="btn-icon"
+                        title="View Details"
+                        data-bs-toggle="modal"
+                        data-bs-target="#viewMoreModal{{ item.id }}">
+                        <i class="bi bi-eye"></i>
+                      </button>
+                    </td>
                   </tr>
-                </thead>
-                <tbody id="modalEvaluatorTableBody">
-                  <!-- Injected by JavaScript -->
-                </tbody>
-              </table>
-            </div>
+                  {% endfor %}
+                {% else %}
+                  <tr>
+                    <td colspan="6">
+                      <div class="empty-state">
+                        <i class="bi bi-bar-chart"></i>
+                        <p>No faculty evaluation results are available yet for your department.</p>
+                      </div>
+                    </td>
+                  </tr>
+                {% endif %}
+              </tbody>
+            </table>
           </div>
-        </div>
-
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline-custom" data-bs-dismiss="modal">Close</button>
         </div>
       </div>
     </div>
-  </div>
+
+    {% if results %}
+      {% for item in results %}
+      <div class="modal fade" id="viewMoreModal{{ item.id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <div>
+                <h5 class="modal-title">{{ item.name }}</h5>
+                <div class="text-muted small">
+                  {{ item.department|default:logged_in_head.department.name }} •
+                  {{ item.evaluator_count|default:0 }} evaluator{{ item.evaluator_count|pluralize }}
+                </div>
+              </div>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+              <div class="sector-grid">
+                <div class="sector-card">
+                  <h6>Average Score</h6>
+                  <h4>{{ item.average_score|default:0 }}</h4>
+                </div>
+                <div class="sector-card">
+                  <h6>Total Score</h6>
+                  <h4>{{ item.average_total_score|default:0 }}</h4>
+                </div>
+                <div class="sector-card">
+                  <h6>Computed Rating</h6>
+                  <h4>{{ item.computed_rating|default:0 }}%</h4>
+                </div>
+                <div class="sector-card">
+                  <h6>Evaluators</h6>
+                  <h4>{{ item.evaluator_count|default:0 }}</h4>
+                </div>
+              </div>
+
+              <div class="table-scroll-wrap">
+                <div class="table-responsive">
+                  <table class="results-table">
+                    <thead>
+                      <tr>
+                        <th>Evaluator</th>
+                        <th>Department</th>
+                        <th>Average Score</th>
+                        <th>Total Score</th>
+                        <th>Submitted At</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% if item.evaluators %}
+                        {% for ev in item.evaluators %}
+                        <tr>
+                          <td><strong>{{ ev.name }}</strong></td>
+                          <td>{{ ev.department|default:"—" }}</td>
+                          <td><span class="grade-pill">{{ ev.average_score|default:0 }}</span></td>
+                          <td><span class="grade-pill">{{ ev.total_score|default:0 }}</span></td>
+                          <td>
+                            {% if ev.submitted_at %}
+                              {{ ev.submitted_at|date:"M d, Y h:i A" }}
+                            {% else %}
+                              —
+                            {% endif %}
+                          </td>
+                        </tr>
+                        {% endfor %}
+                      {% else %}
+                        <tr>
+                          <td colspan="5" class="text-center text-muted">No evaluator breakdown available yet.</td>
+                        </tr>
+                      {% endif %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    {% endif %}
+  </main>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
   <script>
-    // Faculty data with evaluator breakdowns
-    const facultyData = [
-      {
-        id: 1,
-        name: "Juan Reyes",
-        employeeId: "EMP-2021-004",
-        position: "Professor",
-        department: "College of Engineering",
-        evaluators: [
-          { name: "Dr. Maria Santos", commitment: 4.9, knowledge: 4.8, teaching: 4.7, management: 4.8 },
-          { name: "Prof. Roberto Cruz", commitment: 4.8, knowledge: 4.9, teaching: 4.8, management: 4.7 },
-          { name: "Ms. Elena Ramos", commitment: 4.9, knowledge: 4.8, teaching: 4.9, management: 4.8 },
-          { name: "Mr. Jonas Dela Cruz", commitment: 4.7, knowledge: 4.8, teaching: 4.6, management: 4.7 },
-          { name: "Anne Lopez", commitment: 4.8, knowledge: 4.7, teaching: 4.8, management: 4.8 }
-        ]
-      },
-      {
-        id: 2,
-        name: "Maria Cruz",
-        employeeId: "EMP-2019-011",
-        position: "Asst. Professor",
-        department: "College of Education",
-        evaluators: [
-          { name: "Dr. Maria Santos", commitment: 4.7, knowledge: 4.8, teaching: 4.6, management: 4.7 },
-          { name: "Prof. Roberto Cruz", commitment: 4.6, knowledge: 4.7, teaching: 4.8, management: 4.6 },
-          { name: "Ms. Elena Ramos", commitment: 4.7, knowledge: 4.8, teaching: 4.7, management: 4.7 },
-          { name: "Mr. Jonas Dela Cruz", commitment: 4.6, knowledge: 4.7, teaching: 4.6, management: 4.6 }
-        ]
-      },
-      {
-        id: 3,
-        name: "Roberto Lim",
-        employeeId: "EMP-2022-007",
-        position: "Instructor",
-        department: "College of IT",
-        evaluators: [
-          { name: "Dr. Maria Santos", commitment: 3.5, knowledge: 3.8, teaching: 3.6, management: 3.7 },
-          { name: "Prof. Roberto Cruz", commitment: 3.4, knowledge: 3.7, teaching: 3.5, management: 3.6 },
-          { name: "Ms. Elena Ramos", commitment: 3.6, knowledge: 3.5, teaching: 3.7, management: 3.5 }
-        ]
-      },
-      {
-        id: 4,
-        name: "Ana Santos",
-        employeeId: "EMP-2020-003",
-        position: "Assoc. Professor",
-        department: "College of Arts",
-        evaluators: [
-          { name: "Dr. Maria Santos", commitment: 2.8, knowledge: 3.0, teaching: 2.9, management: 2.8 },
-          { name: "Prof. Roberto Cruz", commitment: 2.7, knowledge: 2.9, teaching: 2.8, management: 2.7 },
-          { name: "Ms. Elena Ramos", commitment: 2.9, knowledge: 2.8, teaching: 2.7, management: 2.9 }
-        ]
-      },
-      {
-        id: 5,
-        name: "Pedro Villanueva",
-        employeeId: "EMP-2018-015",
-        position: "Professor",
-        department: "College of Engineering",
-        evaluators: [
-          { name: "Dr. Maria Santos", commitment: 5.0, knowledge: 5.0, teaching: 5.0, management: 5.0 },
-          { name: "Prof. Roberto Cruz", commitment: 5.0, knowledge: 5.0, teaching: 5.0, management: 5.0 },
-          { name: "Ms. Elena Ramos", commitment: 5.0, knowledge: 5.0, teaching: 5.0, management: 5.0 },
-          { name: "Mr. Jonas Dela Cruz", commitment: 5.0, knowledge: 5.0, teaching: 5.0, management: 5.0 },
-          { name: "Anne Lopez", commitment: 5.0, knowledge: 5.0, teaching: 5.0, management: 5.0 }
-        ]
-      },
-      {
-        id: 6,
-        name: "Lorna Torres",
-        employeeId: "EMP-2023-002",
-        position: "Instructor",
-        department: "College of Business",
-        evaluators: []
-      }
-    ];
-
-    function toggleSidebar() {
-      document.getElementById('sidebar').classList.toggle('show');
-    }
-
-    document.addEventListener('click', function(e) {
-      const sidebar = document.getElementById('sidebar');
-      const toggle  = document.querySelector('.mobile-toggle');
-      if (window.innerWidth < 992) {
-        if (!sidebar.contains(e.target) && !toggle.contains(e.target)) {
-          sidebar.classList.remove('show');
-        }
-      }
-    });
-
     function filterTable(query) {
-      const q    = query.toLowerCase();
+      const q = String(query || '').toLowerCase().trim();
       const rows = document.querySelectorAll('#tableBody tr');
-      rows.forEach(r => {
-        r.style.display = r.textContent.toLowerCase().includes(q) ? '' : 'none';
+
+      rows.forEach((row) => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(q) ? '' : 'none';
       });
-    }
-
-    function computeAverages(evaluators) {
-      if (evaluators.length === 0) return null;
-      
-      const total = evaluators.length;
-      const commitment = evaluators.reduce((sum, item) => sum + item.commitment, 0) / total;
-      const knowledge = evaluators.reduce((sum, item) => sum + item.knowledge, 0) / total;
-      const teaching = evaluators.reduce((sum, item) => sum + item.teaching, 0) / total;
-      const management = evaluators.reduce((sum, item) => sum + item.management, 0) / total;
-
-      return {
-        commitment,
-        knowledge,
-        teaching,
-        management
-      };
-    }
-
-    function toFixedGrade(value) {
-      return Number(value).toFixed(2);
-    }
-
-    function openViewMore(id) {
-      const faculty = facultyData.find(item => item.id === id);
-      if (!faculty) return;
-
-      // Check if faculty has evaluators
-      if (faculty.evaluators.length === 0) {
-        showToast('No evaluation data available for this instructor.', 'warning');
-        return;
-      }
-
-      const avg = computeAverages(faculty.evaluators);
-
-      document.getElementById('modalFacultyName').textContent = faculty.name;
-      document.getElementById('modalFacultySubtitle').textContent =
-        `${faculty.position} • ${faculty.department} • ${faculty.evaluators.length} evaluator(s)`;
-
-      document.getElementById('modalCommitmentAvg').textContent = toFixedGrade(avg.commitment);
-      document.getElementById('modalKnowledgeAvg').textContent = toFixedGrade(avg.knowledge);
-      document.getElementById('modalTeachingAvg').textContent = toFixedGrade(avg.teaching);
-      document.getElementById('modalManagementAvg').textContent = toFixedGrade(avg.management);
-
-      const modalEvaluatorTableBody = document.getElementById('modalEvaluatorTableBody');
-      modalEvaluatorTableBody.innerHTML = faculty.evaluators.map(evaluator => {
-        const evaluatorOverall = (evaluator.commitment + evaluator.knowledge + evaluator.teaching + evaluator.management) / 4;
-
-        return `
-          <tr>
-            <td><strong>${evaluator.name}</strong></td>
-            <td><span class="grade-pill">${toFixedGrade(evaluator.commitment)}</span></td>
-            <td><span class="grade-pill">${toFixedGrade(evaluator.knowledge)}</span></td>
-            <td><span class="grade-pill">${toFixedGrade(evaluator.teaching)}</span></td>
-            <td><span class="grade-pill">${toFixedGrade(evaluator.management)}</span></td>
-            <td><span class="overall-pill">${toFixedGrade(evaluatorOverall)}</span></td>
-          </tr>
-        `;
-      }).join('');
-
-      new bootstrap.Modal(document.getElementById('viewMoreModal')).show();
-    }
-
-    /* ── Toast notification ── */
-    function showToast(msg, type) {
-      let toast = document.getElementById('appToast');
-      if (!toast) {
-        toast = document.createElement('div');
-        toast.id = 'appToast';
-        toast.style.cssText = `
-          position:fixed; bottom:28px; right:28px; z-index:9999;
-          padding:14px 20px; border-radius:16px; font-size:0.92rem;
-          font-weight:600; display:flex; align-items:center; gap:10px;
-          box-shadow:0 8px 24px rgba(0,0,0,0.12);
-          transition:opacity 0.3s ease; max-width:340px;
-        `;
-        document.body.appendChild(toast);
-      }
-
-      const styles = {
-        success: { bg:'var(--success-bg)', border:'var(--success-border)', color:'var(--success-text)', icon:'bi-check-circle-fill' },
-        warning: { bg:'var(--warning-bg)', border:'var(--warning-border)', color:'var(--warning-text)', icon:'bi-exclamation-triangle-fill' },
-        danger: { bg:'var(--danger-bg)', border:'var(--danger-border)', color:'var(--danger-text)', icon:'bi-x-circle-fill' }
-      };
-      const s = styles[type] || styles.success;
-      toast.style.background   = s.bg;
-      toast.style.border       = `1px solid ${s.border}`;
-      toast.style.color        = s.color;
-      toast.style.opacity      = '1';
-      toast.innerHTML          = `<i class="bi ${s.icon}"></i> ${msg}`;
-
-      clearTimeout(toast._timer);
-      toast._timer = setTimeout(() => { toast.style.opacity = '0'; }, 3500);
     }
   </script>
 </body>

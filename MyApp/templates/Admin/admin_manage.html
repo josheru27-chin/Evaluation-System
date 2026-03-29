@@ -280,9 +280,6 @@
                 <label class="form-label">Academic Year</label>
                 <select id="academicYear" name="academic_year" class="form-select" required>
                     <option value="">Select Academic Year</option>
-                    <option>2025 - 2026</option>
-                    <option>2026 - 2027</option>
-                    <option>2027 - 2028</option>
                 </select>
             </div>
 
@@ -566,5 +563,28 @@
 
     searchInput.addEventListener('input', filterTable);
     statusFilter.addEventListener('change', filterTable);
+
+
+
+
+    function generateAcademicYears() {
+    const select = document.getElementById("academicYear");
+    const currentYear = new Date().getFullYear();
+
+    for (let i = 0; i < 5; i++) {
+        const start = currentYear + i;
+        const end = start + 1;
+        const value = `${start} - ${end}`;
+
+        const option = document.createElement("option");
+        option.value = value;
+        option.textContent = value;
+
+        select.appendChild(option);
+    }
+}
+
+generateAcademicYears();
+
 </script>
 {% endblock %}

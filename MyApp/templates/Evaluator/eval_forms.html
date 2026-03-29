@@ -1483,19 +1483,33 @@ function isCurrentCategorySubmitted() {
       renderDashboard();
     }
 
+
     async function confirmAndSubmitCurrentEvaluateeAndProceed() {
       saveComments();
-      if (!getCurrentEvaluateeId()) return showInfoModal("No Evaluatee Selected", "Please select a person to evaluate first.");
-      if (!isCurrentEvaluateeComplete()) return showInfoModal("Incomplete Evaluation", "Please answer all questions before proceeding.");
-      if (isLiveLockedForCurrentEvaluatee()) return showInfoModal("Apply to All Is On", getLockedEvaluateeMessage());
+
+      if (!getCurrentEvaluateeId()) {
+        return showInfoModal("No Evaluatee Selected", "Please select a person to evaluate first.");
+      }
+
+      if (!isCurrentEvaluateeComplete()) {
+        return showInfoModal("Incomplete Evaluation", "Please answer all questions before proceeding.");
+      }
+
+      if (isLiveLockedForCurrentEvaluatee()) {
+        return showInfoModal("Apply to All Is On", getLockedEvaluateeMessage());
+      }
 
       const evaluateeId = getCurrentEvaluateeId();
       const csrftoken = getCookie("csrftoken");
       const activeId = getActiveLiveSourceId();
       const isLiveSource = !!activeId && String(activeId) === String(evaluateeId);
+
       if (isLiveSource) applyLiveCopy(currentCategory);
 
-      const targets = isLiveSource ? getCategoryEvaluatees(currentCategory).map(person => String(person.id)) : [String(evaluateeId)];
+      const targets = isLiveSource
+        ? getCategoryEvaluatees(currentCategory).map(person => String(person.id))
+        : [String(evaluateeId)];
+
       const submitBtn = document.getElementById("submitCategoryBtn");
       submitBtn.disabled = true;
       submitBtn.textContent = isLiveSource ? "Submitting All..." : "Saving...";
@@ -1503,6 +1517,7 @@ function isCurrentCategorySubmitted() {
       try {
         for (const targetId of targets) {
           ensureCategoryEvaluateePath(currentCategory, targetId);
+
           const payload = {
             category: currentCategory,
             evaluatee_id: targetId,
@@ -1520,19 +1535,48 @@ function isCurrentCategorySubmitted() {
           });
 
           const rawText = await response.text();
-          let data = JSON.parse(rawText);
+          const data = JSON.parse(rawText);
 
-          if (!response.ok || !data.success) throw new Error(data.message);
+          if (!response.ok || !data.success) {
+            throw new Error(data.message || "Something went wrong while saving.");
+          }
 
           evaluateeSubmissionStatus[currentCategory][String(targetId)] = "submitted";
         }
 
         markCategoryCompletedIfDone();
 
-        document.getElementById("formView").classList.add("hidden");
-        document.getElementById("dashboardView").classList.remove("hidden");
+        // APPLY TO ALL / SUBMIT ALL = balik dashboard
+        if (isLiveSource || areAllEvaluateesSubmitted(currentCategory)) {
+          document.getElementById("formView").classList.add("hidden");
+          document.getElementById("dashboardView").classList.remove("hidden");
+          window.location.reload();
+          return;
+        }
 
-        window.location.reload();
+        // INDIVIDUAL SUBMIT = stay sa forms, lipat sa next evaluatee
+        const nextPerson = getNextEvaluateeAfter(currentCategory, evaluateeId);
+
+        if (nextPerson) {
+          lastSelectedEvaluateeId = String(nextPerson.id);
+          currentSectionIndex = 0;
+
+          populateEvaluatees();
+          renderSectionStepper();
+          renderSection();
+          updateSubmitButtonState();
+          scrollFormToTop();
+
+          showInfoModal(
+            "Evaluation Saved",
+            `Saved successfully. You may now continue with <strong>${nextPerson.name}</strong>.`
+          );
+        } else {
+          // fallback kung wala nang next
+          document.getElementById("formView").classList.add("hidden");
+          document.getElementById("dashboardView").classList.remove("hidden");
+          window.location.reload();
+        }
 
       } catch (error) {
         showInfoModal("Save Failed", error.message || "Something went wrong while saving.");
@@ -1540,6 +1584,27 @@ function isCurrentCategorySubmitted() {
         updateSubmitButtonState();
       }
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     function copyCurrentEvaluationToOtherPeers() {
       const sourceId = getCurrentEvaluateeId();
