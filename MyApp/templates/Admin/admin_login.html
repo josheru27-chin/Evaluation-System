@@ -812,7 +812,6 @@
                         type="submit"
                         class="btn btn-send-link"
                         id="sendHeadLinkBtn"
-                        {% if portal_closed %}disabled{% endif %}
                     >
                         <i class="bi bi-send-fill me-2"></i>Send Secure Login Link
                     </button>
@@ -931,16 +930,7 @@
         }
 
         if (headLoginForm) {
-            headLoginForm.addEventListener('submit', function(e) {
-                if (portalClosed) {
-                    e.preventDefault();
-                    showSystemModal(
-                        'Portal Closed',
-                        'This portal is currently closed. Please wait for the announcement of faculty evaluation.',
-                        'warning'
-                    );
-                    return;
-                }
+            headLoginForm.addEventListener('submit', function(e) {}
 
                 const emailValue = headEmailInput.value.trim();
 

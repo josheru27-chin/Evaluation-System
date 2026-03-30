@@ -1,0 +1,132 @@
+{% extends "admin/admin_base.html" %}
+{% load static %}
+
+{% block title %}Past Evaluations | Admin{% endblock %}
+{% block page_title %}Past Evaluations{% endblock %}
+{% block page_subtitle %}View archived evaluation records by academic year and semester.{% endblock %}
+
+{% block content %}
+<div class="content-card mb-4">
+    <form method="GET" class="row g-3 align-items-end">
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">Select Evaluation Period</label>
+            <select name="schedule" class="form-select" onchange="this.form.submit()">
+                <option value="">Choose past evaluation period</option>
+                {% for sched in past_schedules %}
+                    <option value="{{ sched.id }}" {% if selected_schedule and sched.id == selected_schedule.id %}selected{% endif %}>
+                        {{ sched.academic_year }} - {{ sched.semester }} | {{ sched.title }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+    </form>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="mini-card">
+            <h6>Faculty Evaluations</h6>
+            <h3>{{ faculty_count }}</h3>
+            <small>Submitted faculty evaluations</small>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="mini-card">
+            <h6>Head Evaluations</h6>
+            <h3>{{ head_count }}</h3>
+            <small>Submitted head evaluations</small>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="mini-card">
+            <h6>Total Archived Records</h6>
+            <h3>{{ total_count }}</h3>
+            <small>All submitted records in this period</small>
+        </div>
+    </div>
+</div>
+
+{% if selected_schedule %}
+<div class="content-card mb-4">
+    <h5 class="mb-3">Selected Period</h5>
+    <p class="mb-1"><strong>Title:</strong> {{ selected_schedule.title }}</p>
+    <p class="mb-1"><strong>Academic Year:</strong> {{ selected_schedule.academic_year }}</p>
+    <p class="mb-1"><strong>Semester:</strong> {{ selected_schedule.semester }}</p>
+    <p class="mb-0"><strong>Duration:</strong> {{ selected_schedule.start_datetime }} to {{ selected_schedule.end_datetime }}</p>
+</div>
+
+<div class="content-card mb-4">
+    <h5 class="mb-3">Faculty Evaluation Records</h5>
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th>Evaluatee</th>
+                    <th>Department</th>
+                    <th>Evaluator</th>
+                    <th>Total Score</th>
+                    <th>Average</th>
+                    <th>Submitted At</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in faculty_evaluations %}
+                <tr>
+                    <td>{{ item.evaluatee_name }}</td>
+                    <td>{{ item.evaluatee_department }}</td>
+                    <td>{{ item.evaluator_name }}</td>
+                    <td>{{ item.total_score|default:"-" }}</td>
+                    <td>{{ item.average_score|default:"-" }}</td>
+                    <td>{{ item.submitted_at }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center text-muted">No faculty evaluation records found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="content-card">
+    <h5 class="mb-3">Head Evaluation Records</h5>
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th>Evaluatee</th>
+                    <th>Department</th>
+                    <th>Evaluator</th>
+                    <th>Total Score</th>
+                    <th>Average</th>
+                    <th>Submitted At</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in head_evaluations %}
+                <tr>
+                    <td>{{ item.evaluatee_name }}</td>
+                    <td>{{ item.evaluatee_department }}</td>
+                    <td>{{ item.evaluator_name }}</td>
+                    <td>{{ item.total_score|default:"-" }}</td>
+                    <td>{{ item.average_score|default:"-" }}</td>
+                    <td>{{ item.submitted_at }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center text-muted">No head evaluation records found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="content-card">
+    <div class="text-center text-muted py-5">
+        No past evaluation schedules found yet.
+    </div>
+</div>
+{% endif %}
+{% endblock %}

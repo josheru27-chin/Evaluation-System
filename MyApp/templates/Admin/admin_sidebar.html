@@ -26,8 +26,14 @@
         <span>Manage Evaluation</span>
     </a>
 
+    <a href="{% url 'admin_past_evaluations' %}" class="nav-link {% if active_page == 'past_evaluations' %}active{% endif %}">
+        <i class="bi bi-clock-history"></i>
+        <span>Evaluations</span>
+    </a>
+
     <a href="{% url 'admin_login' %}" class="nav-link">
         <i class="bi bi-box-arrow-right"></i>
         <span>Logout</span>
     </a>
+
 </nav>

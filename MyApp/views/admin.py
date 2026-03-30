@@ -13,6 +13,9 @@ from django.core.mail import EmailMultiAlternatives
 from django.core.signing import TimestampSigner
 from django.template.loader import render_to_string
 from django.urls import reverse
+from django.db.models import Count, Q
+from django.utils import timezone
+
 
 from ..models import (
     Department,
@@ -733,13 +736,6 @@ def admin_login(request):
         elif login_type == "head":
             email = (request.POST.get("email") or "").strip().lower()
 
-            if portal_closed:
-                request.session["login_modal"] = {
-                    "type": "warning",
-                    "message": "The evaluation portal is currently closed. Please wait for the next evaluation schedule."
-                }
-                return redirect("admin_login")
-
             if not email:
                 request.session["login_modal"] = {
                     "type": "danger",
@@ -840,3 +836,53 @@ def admin_login(request):
         },
     )
     return render(request, "admin/admin_login.html", context)
+
+
+def admin_past_evaluations(request):
+    now = timezone.localtime(timezone.now())
+    selected_schedule_id = request.GET.get("schedule")
+
+    past_schedules = (
+        EvaluationSchedule.objects
+        .filter(end_datetime__lt=now)
+        .order_by("-start_datetime", "-created_at")
+    )
+
+    selected_schedule = None
+    if selected_schedule_id:
+        selected_schedule = past_schedules.filter(id=selected_schedule_id).first()
+
+    if not selected_schedule:
+        selected_schedule = past_schedules.first()
+
+    faculty_evaluations = FacultyEvaluation.objects.none()
+    head_evaluations = HeadEvaluation.objects.none()
+
+    if selected_schedule:
+        faculty_evaluations = (
+            FacultyEvaluation.objects
+            .filter(schedule=selected_schedule, status="submitted")
+            .select_related("evaluatee_faculty", "evaluator_head", "schedule")
+            .prefetch_related("responses")
+            .order_by("-submitted_at")
+        )
+
+        head_evaluations = (
+            HeadEvaluation.objects
+            .filter(schedule=selected_schedule, status="submitted")
+            .select_related("evaluatee_head", "evaluator_head", "schedule")
+            .prefetch_related("responses")
+            .order_by("-submitted_at")
+        )
+
+    context = _admin_context("past_evaluations", {
+        "past_schedules": past_schedules,
+        "selected_schedule": selected_schedule,
+        "faculty_evaluations": faculty_evaluations,
+        "head_evaluations": head_evaluations,
+        "faculty_count": faculty_evaluations.count(),
+        "head_count": head_evaluations.count(),
+        "total_count": faculty_evaluations.count() + head_evaluations.count(),
+    })
+
+    return render(request, "admin/admin_past_evaluations.html", context)
