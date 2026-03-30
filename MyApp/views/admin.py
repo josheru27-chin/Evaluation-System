@@ -55,6 +55,18 @@ def _admin_context(active_page, extra=None):
     return context
 
 
+def _ordered_response_queryset(model):
+    return model.objects.annotate(
+        section_order=Case(
+            When(section_code="management_teaching_learning", then=0),
+            When(section_code="content_knowledge_pedagogy_technology", then=1),
+            When(section_code="commitment_transparency", then=2),
+            default=99,
+            output_field=IntegerField(),
+        )
+    ).order_by("section_order", "question_number")
+
+
 def _replace_faculty_from_department_sheet(ws, department, schedule):
     """
     Expected sheet format:
@@ -188,6 +200,44 @@ def _parse_datetime_local(value):
     return timezone.make_aware(naive_dt, timezone.get_current_timezone())
 
 
+def _get_latest_schedule_with_uploaded_data():
+    schedules = (
+        EvaluationSchedule.objects
+        .order_by("-start_datetime", "-created_at")
+    )
+
+    for schedule in schedules:
+        has_faculty = FacultyMember.objects.filter(schedule=schedule).exists()
+        has_heads = DepartmentHead.objects.filter(schedule=schedule).exists()
+
+        if has_faculty or has_heads:
+            return schedule
+
+    return None
+
+
+def _get_latest_schedule_with_submitted_evaluations():
+    schedules = (
+        EvaluationSchedule.objects
+        .order_by("-start_datetime", "-created_at")
+    )
+
+    for schedule in schedules:
+        has_faculty_eval = FacultyEvaluation.objects.filter(
+            schedule=schedule,
+            status="submitted"
+        ).exists()
+        has_head_eval = HeadEvaluation.objects.filter(
+            schedule=schedule,
+            status="submitted"
+        ).exists()
+
+        if has_faculty_eval or has_head_eval:
+            return schedule
+
+    return None
+
+
 def admin_department(request):
     if request.method == "POST" and request.FILES.get("excel_file"):
         schedule_id = request.POST.get("schedule_id")
@@ -286,8 +336,41 @@ def admin_department(request):
         )
         return redirect("admin_department")
 
-    departments = Department.objects.prefetch_related("faculty_members", "heads").order_by("name")
     schedules = EvaluationSchedule.objects.all().order_by("-start_datetime", "-created_at")
+    selected_schedule_id = request.GET.get("schedule")
+
+    display_schedule = None
+    if selected_schedule_id:
+        display_schedule = schedules.filter(id=selected_schedule_id).first()
+
+    if not display_schedule:
+        display_schedule = _get_open_schedule()
+
+    if not display_schedule:
+        display_schedule = _get_latest_schedule_with_uploaded_data()
+
+    if not display_schedule:
+        display_schedule = schedules.first()
+
+    if display_schedule:
+        departments = Department.objects.prefetch_related(
+            Prefetch(
+                "faculty_members",
+                queryset=FacultyMember.objects.filter(schedule=display_schedule).order_by("name"),
+            ),
+            Prefetch(
+                "heads",
+                queryset=DepartmentHead.objects.filter(schedule=display_schedule).order_by("name"),
+            ),
+        ).order_by("name")
+
+        total_faculty = FacultyMember.objects.filter(schedule=display_schedule).count()
+    else:
+        departments = Department.objects.prefetch_related(
+            Prefetch("faculty_members", queryset=FacultyMember.objects.none()),
+            Prefetch("heads", queryset=DepartmentHead.objects.none()),
+        ).order_by("name")
+        total_faculty = 0
 
     context = _admin_context(
         "department",
@@ -295,8 +378,9 @@ def admin_department(request):
             "departments": departments,
             "schedules": schedules,
             "total_departments": departments.count(),
-            "total_faculty": FacultyMember.objects.count(),
+            "total_faculty": total_faculty,
             "latest_department": departments.last(),
+            "current_schedule": display_schedule,
         },
     )
     return render(request, "admin/admin_department.html", context)
@@ -502,9 +586,44 @@ def delete_department(request, dept_id):
 
 
 def admin_results_summary(request):
+    schedules = EvaluationSchedule.objects.all().order_by("-start_datetime", "-created_at")
+    selected_schedule_id = request.GET.get("schedule")
+
+    selected_schedule = None
+    if selected_schedule_id:
+        selected_schedule = schedules.filter(id=selected_schedule_id).first()
+
+    if not selected_schedule:
+        selected_schedule = _get_latest_schedule_with_submitted_evaluations()
+
+    if not selected_schedule:
+        selected_schedule = _get_latest_schedule_with_uploaded_data()
+
+    results = []
+
+    if not selected_schedule:
+        context = _admin_context(
+            "results_summary",
+            {
+                "faculty_results": [],
+                "departments": [],
+                "total_faculty_count": 0,
+                "highest_average_grade": 0,
+                "lowest_average_grade": 0,
+                "overall_faculty_average": 0,
+                "selected_schedule": None,
+                "academic_years": [],
+                "semesters": [],
+                "selected_academic_year": "",
+                "selected_semester": "",
+                "schedules": schedules,
+            },
+        )
+        return render(request, "admin/admin_overall.html", context)
+
     faculty_evaluations = (
         FacultyEvaluation.objects
-        .filter(status="submitted")
+        .filter(status="submitted", schedule=selected_schedule)
         .select_related(
             "evaluatee_faculty__department",
             "evaluator_head__department",
@@ -516,12 +635,12 @@ def admin_results_summary(request):
                 queryset=_ordered_response_queryset(FacultyEvaluationResponse),
             )
         )
-        .order_by("evaluatee_name", "evaluator_name")
+        .order_by("evaluatee_name", "evaluator_name", "submitted_at")
     )
 
     head_evaluations = (
         HeadEvaluation.objects
-        .filter(status="submitted")
+        .filter(status="submitted", schedule=selected_schedule)
         .select_related(
             "evaluatee_head__department",
             "evaluator_head__department",
@@ -533,7 +652,7 @@ def admin_results_summary(request):
                 queryset=_ordered_response_queryset(HeadEvaluationResponse),
             )
         )
-        .order_by("evaluatee_name", "evaluator_name")
+        .order_by("evaluatee_name", "evaluator_name", "submitted_at")
     )
 
     grouped_results = {}
@@ -541,6 +660,7 @@ def admin_results_summary(request):
     def add_evaluation_to_group(
         grouped,
         result_type,
+        schedule_obj,
         target_id,
         target_name,
         target_department,
@@ -552,7 +672,14 @@ def admin_results_summary(request):
         submitted_at,
         responses,
     ):
-        group_key = f"{result_type}-{target_id}"
+        schedule_label = ""
+        schedule_key = "no-schedule"
+
+        if schedule_obj:
+            schedule_key = str(schedule_obj.id)
+            schedule_label = f"{schedule_obj.academic_year} | {schedule_obj.semester} | {schedule_obj.title}"
+
+        group_key = f"{result_type}-{schedule_key}-{target_id}"
 
         if group_key not in grouped:
             grouped[group_key] = {
@@ -560,6 +687,11 @@ def admin_results_summary(request):
                 "result_type": result_type,
                 "name": target_name,
                 "department": target_department,
+                "schedule_id": schedule_obj.id if schedule_obj else None,
+                "schedule_label": schedule_label,
+                "academic_year": schedule_obj.academic_year if schedule_obj else "",
+                "semester": schedule_obj.semester if schedule_obj else "",
+                "title": schedule_obj.title if schedule_obj else "",
                 "evaluators": [],
                 "section_values": defaultdict(list),
                 "total_scores": [],
@@ -575,12 +707,12 @@ def admin_results_summary(request):
             section_name = (response.section_name or "").strip() or "Unnamed Section"
 
             if section_key:
-                section_groups[section_key].append(response.rating)
+                section_groups[section_key].append(float(response.rating or 0))
 
             detailed_answers[section_name].append({
                 "question_number": response.question_number,
                 "question_text": response.question_text or f"Question {response.question_number}",
-                "rating": response.rating,
+                "rating": float(response.rating or 0),
             })
 
         evaluator_sections = {}
@@ -612,17 +744,27 @@ def admin_results_summary(request):
             grouped[group_key]["section_values"][section_key].append(value)
 
     for evaluation in faculty_evaluations:
-        if not evaluation.evaluatee_faculty:
-            continue
+        target_id = evaluation.evaluatee_faculty.id if evaluation.evaluatee_faculty else f"faculty-eval-{evaluation.id}"
+        target_name = (
+            evaluation.evaluatee_name
+            or (evaluation.evaluatee_faculty.name if evaluation.evaluatee_faculty else "Unknown Faculty")
+        )
+        target_department = (
+            evaluation.evaluatee_department
+            or (
+                evaluation.evaluatee_faculty.department.name
+                if evaluation.evaluatee_faculty and evaluation.evaluatee_faculty.department
+                else ""
+            )
+        )
 
         add_evaluation_to_group(
             grouped=grouped_results,
             result_type="faculty",
-            target_id=evaluation.evaluatee_faculty.id,
-            target_name=evaluation.evaluatee_name or evaluation.evaluatee_faculty.name,
-            target_department=evaluation.evaluatee_department or (
-                evaluation.evaluatee_faculty.department.name if evaluation.evaluatee_faculty.department else ""
-            ),
+            schedule_obj=evaluation.schedule,
+            target_id=target_id,
+            target_name=target_name,
+            target_department=target_department,
             evaluator_name=evaluation.evaluator_name,
             evaluator_department=evaluation.evaluator_department,
             average_score=evaluation.average_score,
@@ -633,17 +775,27 @@ def admin_results_summary(request):
         )
 
     for evaluation in head_evaluations:
-        if not evaluation.evaluatee_head:
-            continue
+        target_id = evaluation.evaluatee_head.id if evaluation.evaluatee_head else f"head-eval-{evaluation.id}"
+        target_name = (
+            evaluation.evaluatee_name
+            or (evaluation.evaluatee_head.name if evaluation.evaluatee_head else "Unknown Department Head")
+        )
+        target_department = (
+            evaluation.evaluatee_department
+            or (
+                evaluation.evaluatee_head.department.name
+                if evaluation.evaluatee_head and evaluation.evaluatee_head.department
+                else ""
+            )
+        )
 
         add_evaluation_to_group(
             grouped=grouped_results,
             result_type="head",
-            target_id=evaluation.evaluatee_head.id,
-            target_name=evaluation.evaluatee_name or evaluation.evaluatee_head.name,
-            target_department=evaluation.evaluatee_department or (
-                evaluation.evaluatee_head.department.name if evaluation.evaluatee_head.department else ""
-            ),
+            schedule_obj=evaluation.schedule,
+            target_id=target_id,
+            target_name=target_name,
+            target_department=target_department,
             evaluator_name=evaluation.evaluator_name,
             evaluator_department=evaluation.evaluator_department,
             average_score=evaluation.average_score,
@@ -652,8 +804,6 @@ def admin_results_summary(request):
             submitted_at=evaluation.submitted_at,
             responses=evaluation.responses.all(),
         )
-
-    results = []
 
     for _, item in grouped_results.items():
         section_averages = {}
@@ -669,6 +819,11 @@ def admin_results_summary(request):
             "result_type": item["result_type"],
             "name": item["name"],
             "department": item["department"],
+            "schedule_id": item["schedule_id"],
+            "schedule_label": item["schedule_label"],
+            "academic_year": item["academic_year"],
+            "semester": item["semester"],
+            "title": item["title"],
             "sections": section_averages,
             "overall": overall_average,
             "average_total_score": average_total_score,
@@ -677,10 +832,26 @@ def admin_results_summary(request):
             "evaluators": item["evaluators"],
         })
 
-    results.sort(key=lambda x: (x["result_type"], x["name"].lower()))
-
+    results.sort(key=lambda x: (x["result_type"], str(x["name"]).lower()))
     overall_list = [r["overall"] for r in results if r["overall"] > 0]
-    departments = list(Department.objects.order_by("name").values_list("name", flat=True))
+
+    departments = list(
+        Department.objects
+        .filter(faculty_members__schedule=selected_schedule)
+        .order_by("name")
+        .values_list("name", flat=True)
+        .distinct()
+    )
+
+    head_departments = list(
+        Department.objects
+        .filter(heads__schedule=selected_schedule)
+        .order_by("name")
+        .values_list("name", flat=True)
+        .distinct()
+    )
+
+    departments = sorted(set(departments + head_departments))
 
     context = _admin_context(
         "results_summary",
@@ -691,22 +862,16 @@ def admin_results_summary(request):
             "highest_average_grade": round(max(overall_list), 2) if overall_list else 0,
             "lowest_average_grade": round(min(overall_list), 2) if overall_list else 0,
             "overall_faculty_average": round(sum(overall_list) / len(overall_list), 2) if overall_list else 0,
+            "selected_schedule": selected_schedule,
+            "academic_years": [],
+            "semesters": [],
+            "selected_academic_year": "",
+            "selected_semester": "",
+            "schedules": schedules,
         },
     )
 
     return render(request, "admin/admin_overall.html", context)
-
-
-def _ordered_response_queryset(model):
-    return model.objects.annotate(
-        section_order=Case(
-            When(section_code="management_teaching_learning", then=0),
-            When(section_code="content_knowledge_pedagogy_technology", then=1),
-            When(section_code="commitment_transparency", then=2),
-            default=99,
-            output_field=IntegerField(),
-        )
-    ).order_by("section_order", "question_number")
 
 
 def admin_overall(request):
@@ -846,12 +1011,11 @@ def admin_login(request):
 
 
 def admin_past_evaluations(request):
-    now = timezone.localtime(timezone.now())
     selected_schedule_id = request.GET.get("schedule")
 
     past_schedules = (
         EvaluationSchedule.objects
-        .filter(end_datetime__lt=now)
+        .filter(end_datetime__lt=timezone.localtime(timezone.now()))
         .order_by("-start_datetime", "-created_at")
     )
 

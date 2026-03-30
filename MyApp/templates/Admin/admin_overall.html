@@ -38,6 +38,27 @@
         line-height: 1.7;
     }
 
+    .selected-period-card {
+        background: #fff;
+        border: 1px solid var(--border-soft);
+        border-radius: 18px;
+        padding: 18px;
+        margin-bottom: 24px;
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+    }
+
+    .selected-period-card h6 {
+        margin: 0 0 6px;
+        font-weight: 800;
+        color: var(--text-dark);
+    }
+
+    .selected-period-card p {
+        margin: 0;
+        color: var(--text-muted);
+        line-height: 1.6;
+    }
+
     .faculty-search-bar {
         display: flex;
         justify-content: space-between;
@@ -71,8 +92,8 @@
     }
 
     .filter-toolbar .form-select {
-        width: 150px;
-        min-width: 150px;
+        width: 160px;
+        min-width: 160px;
         border-radius: 14px;
         min-height: 46px;
         font-size: 0.92rem;
@@ -579,6 +600,18 @@
     </p>
 </div>
 
+{% if selected_schedule %}
+<div class="selected-period-card">
+    <h6><i class="bi bi-calendar2-range me-2"></i>Selected Evaluation Period</h6>
+    <p>
+        {{ selected_schedule.academic_year }} • {{ selected_schedule.semester }} • {{ selected_schedule.title }}<br>
+        <span class="small">
+            {{ selected_schedule.start_datetime|date:"M d, Y h:i A" }} to {{ selected_schedule.end_datetime|date:"M d, Y h:i A" }}
+        </span>
+    </p>
+</div>
+{% endif %}
+
 <div class="row g-4 mb-4">
     <div class="col-md-3">
         <div class="mini-stat">
@@ -649,12 +682,11 @@
                     <th style="min-width: 130px;">Total Average</th>
                     <th style="min-width: 240px;">Management of Teaching <br>and Learning</th>
                     <th style="min-width: 280px;">Content Knowledge, Pedagogy, <br>and Technology</th>
-                    <th style="min-width: 220px;">Commitment and <br> Transparency</th>
+                    <th style="min-width: 220px;">Commitment and <br>Transparency</th>
                     <th class="text-end" style="min-width: 180px;">Action</th>
                 </tr>
             </thead>
             <tbody id="facultyResultsBody">
-                <!-- Injected by JavaScript -->
             </tbody>
         </table>
     </div>
@@ -726,9 +758,7 @@
                                     <th style="min-width: 150px;">Computed Rating</th>
                                 </tr>
                             </thead>
-                            <tbody id="modalEvaluatorTableBody">
-                                <!-- Injected by JavaScript -->
-                            </tbody>
+                            <tbody id="modalEvaluatorTableBody"></tbody>
                         </table>
                     </div>
                 </div>
@@ -793,9 +823,8 @@
         "C. Commitment and Transparency": "commitment_transparency"
     };
 
-    const facultyResults = JSON.parse(
-        document.getElementById('faculty-results-data').textContent || '[]'
-    );
+    const facultyResultsElement = document.getElementById('faculty-results-data');
+    const facultyResults = facultyResultsElement ? JSON.parse(facultyResultsElement.textContent || '[]') : [];
 
     const facultyResultsBody = document.getElementById('facultyResultsBody');
     const facultySearchInput = document.getElementById('facultySearchInput');
@@ -868,16 +897,21 @@
             ? values.reduce((sum, value) => sum + value, 0) / values.length
             : 0;
 
-        document.getElementById('totalFacultyCount').textContent = total;
-        document.getElementById('highestAverageGrade').textContent = toFixedGrade(highest);
-        document.getElementById('lowestAverageGrade').textContent = toFixedGrade(lowest);
-        document.getElementById('overallFacultyAverage').textContent = toFixedGrade(average);
+        const totalFacultyCount = document.getElementById('totalFacultyCount');
+        const highestAverageGrade = document.getElementById('highestAverageGrade');
+        const lowestAverageGrade = document.getElementById('lowestAverageGrade');
+        const overallFacultyAverage = document.getElementById('overallFacultyAverage');
+
+        if (totalFacultyCount) totalFacultyCount.textContent = total;
+        if (highestAverageGrade) highestAverageGrade.textContent = toFixedGrade(highest);
+        if (lowestAverageGrade) lowestAverageGrade.textContent = toFixedGrade(lowest);
+        if (overallFacultyAverage) overallFacultyAverage.textContent = toFixedGrade(average);
     }
 
     function getFilteredResults() {
-        const keyword = facultySearchInput.value.trim().toLowerCase();
-        const selectedDepartment = departmentFilter.value;
-        const selectedType = resultTypeFilter.value;
+        const keyword = facultySearchInput ? facultySearchInput.value.trim().toLowerCase() : '';
+        const selectedDepartment = departmentFilter ? departmentFilter.value : 'all';
+        const selectedType = resultTypeFilter ? resultTypeFilter.value : 'all';
 
         return facultyResults.filter(item => {
             const matchesKeyword = String(item.name || '').toLowerCase().includes(keyword);
@@ -888,6 +922,8 @@
     }
 
     function renderFacultyTable() {
+        if (!facultyResultsBody) return;
+
         const filtered = getFilteredResults();
 
         if (!filtered.length) {
@@ -1530,9 +1566,17 @@
         URL.revokeObjectURL(url);
     }
 
-    facultySearchInput.addEventListener('input', renderFacultyTable);
-    departmentFilter.addEventListener('change', renderFacultyTable);
-    resultTypeFilter.addEventListener('change', renderFacultyTable);
+    if (facultySearchInput) {
+        facultySearchInput.addEventListener('input', renderFacultyTable);
+    }
+
+    if (departmentFilter) {
+        departmentFilter.addEventListener('change', renderFacultyTable);
+    }
+
+    if (resultTypeFilter) {
+        resultTypeFilter.addEventListener('change', renderFacultyTable);
+    }
 
     if (exportResultsBtn) {
         exportResultsBtn.addEventListener('click', exportResultsToCSV);
@@ -1557,5 +1601,7 @@
 
     window.openViewMore = openViewMore;
     window.printSinglePerson = printSinglePerson;
+    window.printBatchSummary = printBatchSummary;
+    window.exportResultsToCSV = exportResultsToCSV;
 </script>
 {% endblock %}
