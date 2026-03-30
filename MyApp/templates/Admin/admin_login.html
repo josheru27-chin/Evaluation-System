@@ -800,11 +800,10 @@
                                 placeholder="Enter your GSFE email address"
                                 value=""
                                 required
-                                {% if portal_closed %}disabled{% endif %}
                             >
                         </div>
                         <div class="helper-text">
-                            Example: yourname@email.com
+                            Example: yourname@gsfe.tupcavite.edu.ph
                         </div>
                     </div>
 
@@ -929,39 +928,39 @@
             });
         }
 
-        if (headLoginForm) {
-            headLoginForm.addEventListener('submit', function(e) {}
+       if (headLoginForm) {
+    headLoginForm.addEventListener('submit', function(e) {
+        const emailValue = headEmailInput.value.trim();
 
-                const emailValue = headEmailInput.value.trim();
-
-                if (!emailValue) {
-                    e.preventDefault();
-                    headEmailInput.focus();
-                    showSystemModal(
-                        'Email Required',
-                        'Please enter your GSFE email address first before requesting the secure login link.',
-                        'warning'
-                    );
-                    return;
-                }
-
-                if (!isValidEmail(emailValue)) {
-                    e.preventDefault();
-                    headEmailInput.focus();
-                    showSystemModal(
-                        'Invalid Email Address',
-                        'Please enter a valid GSFE email address before requesting the secure login link.',
-                        'danger'
-                    );
-                    return;
-                }
-
-                sessionStorage.removeItem('admin_login_modal_shown');
-
-                sendHeadLinkBtn.disabled = true;
-                sendHeadLinkBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Sending Link...';
-            });
+        if (!emailValue) {
+            e.preventDefault();
+            headEmailInput.focus();
+            showSystemModal(
+                'Email Required',
+                'Please enter your GSFE email address first before requesting the secure login link.',
+                'warning'
+            );
+            return;
         }
+
+        if (!isValidEmail(emailValue)) {
+            e.preventDefault();
+            headEmailInput.focus();
+            showSystemModal(
+                'Invalid Email Address',
+                'Please enter a valid GSFE email address before requesting the secure login link.',
+                'danger'
+            );
+            return;
+        }
+
+        sessionStorage.removeItem('admin_login_modal_shown');
+
+        sendHeadLinkBtn.disabled = true;
+        sendHeadLinkBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Sending Link...';
+    });
+}
+
 
         window.addEventListener('pageshow', function () {
             if (sendHeadLinkBtn && !portalClosed) {
