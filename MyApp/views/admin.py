@@ -13,9 +13,6 @@ from django.core.mail import EmailMultiAlternatives
 from django.core.signing import TimestampSigner
 from django.template.loader import render_to_string
 from django.urls import reverse
-from django.db.models import Count, Q
-from django.utils import timezone
-
 
 from ..models import (
     Department,
@@ -28,8 +25,9 @@ from ..models import (
     HeadEvaluationResponse,
 )
 
-LOGIN_LINK_MAX_AGE = 300  # 5 minutes
+LOGIN_LINK_MAX_AGE = 300
 LINK_SALT = "faculty-eval-login"
+
 
 def _get_open_schedule():
     now = timezone.localtime(timezone.now())
@@ -40,6 +38,7 @@ def _get_open_schedule():
         .first()
     )
 
+
 DEPARTMENT_MAP = {
     "DED": "Department of Industrial Education",
     "DIT": "Department of Industrial Technology",
@@ -49,10 +48,6 @@ DEPARTMENT_MAP = {
 }
 
 
-# =========================
-# HELPERS
-# =========================
-
 def _admin_context(active_page, extra=None):
     context = {"active_page": active_page}
     if extra:
@@ -60,12 +55,12 @@ def _admin_context(active_page, extra=None):
     return context
 
 
-def _replace_faculty_from_department_sheet(ws, department):
+def _replace_faculty_from_department_sheet(ws, department, schedule):
     """
     Expected sheet format:
     NAME | GSFE EMAIL
     """
-    FacultyMember.objects.filter(department=department).delete()
+    FacultyMember.objects.filter(schedule=schedule, department=department).delete()
 
     faculty_to_create = []
 
@@ -78,6 +73,7 @@ def _replace_faculty_from_department_sheet(ws, department):
 
         faculty_to_create.append(
             FacultyMember(
+                schedule=schedule,
                 department=department,
                 id_number="",
                 name=name,
@@ -89,7 +85,7 @@ def _replace_faculty_from_department_sheet(ws, department):
     return len(faculty_to_create)
 
 
-def _replace_faculty_from_uploaded_file(uploaded_file, department):
+def _replace_faculty_from_uploaded_file(uploaded_file, department, schedule):
     """
     Supports:
     - .xlsx
@@ -102,7 +98,7 @@ def _replace_faculty_from_uploaded_file(uploaded_file, department):
     """
     file_name = uploaded_file.name.lower()
 
-    FacultyMember.objects.filter(department=department).delete()
+    FacultyMember.objects.filter(schedule=schedule, department=department).delete()
     created_count = 0
 
     if file_name.endswith(".xlsx"):
@@ -139,6 +135,7 @@ def _replace_faculty_from_uploaded_file(uploaded_file, department):
 
             faculty_to_create.append(
                 FacultyMember(
+                    schedule=schedule,
                     department=department,
                     id_number=id_number,
                     name=name,
@@ -156,7 +153,10 @@ def _replace_faculty_from_uploaded_file(uploaded_file, department):
         faculty_to_create = []
 
         for row in reader:
-            normalized_row = {str(k).strip().upper(): (str(v).strip() if v else "") for k, v in row.items()}
+            normalized_row = {
+                str(k).strip().upper(): (str(v).strip() if v else "")
+                for k, v in row.items()
+            }
 
             id_number = normalized_row.get("ID NUMBER", "")
             name = normalized_row.get("NAME", "")
@@ -167,6 +167,7 @@ def _replace_faculty_from_uploaded_file(uploaded_file, department):
 
             faculty_to_create.append(
                 FacultyMember(
+                    schedule=schedule,
                     department=department,
                     id_number=id_number,
                     name=name,
@@ -181,21 +182,20 @@ def _replace_faculty_from_uploaded_file(uploaded_file, department):
 
 
 def _parse_datetime_local(value):
-    """
-    Parses datetime-local input like: 2026-03-25T08:30
-    """
     if not value:
         return None
     naive_dt = datetime.strptime(value, "%Y-%m-%dT%H:%M")
     return timezone.make_aware(naive_dt, timezone.get_current_timezone())
 
 
-# =========================
-# BASIC ADMIN PAGES
-# =========================
-
 def admin_department(request):
     if request.method == "POST" and request.FILES.get("excel_file"):
+        schedule_id = request.POST.get("schedule_id")
+        if not schedule_id:
+            messages.error(request, "Please select an evaluation schedule.")
+            return redirect("admin_department")
+
+        selected_schedule = get_object_or_404(EvaluationSchedule, id=schedule_id)
         excel_file = request.FILES["excel_file"]
 
         try:
@@ -227,7 +227,9 @@ def admin_department(request):
                 department.name = DEPARTMENT_MAP[code]
                 department.save()
 
-                imported_faculty += _replace_faculty_from_department_sheet(ws, department)
+                imported_faculty += _replace_faculty_from_department_sheet(
+                    ws, department, selected_schedule
+                )
 
             if "HEAD" in wb.sheetnames:
                 ws = wb["HEAD"]
@@ -264,7 +266,11 @@ def admin_department(request):
                         defaults={"name": dept_name},
                     )
 
+                    department.name = dept_name
+                    department.save()
+
                     DepartmentHead.objects.update_or_create(
+                        schedule=selected_schedule,
                         department=department,
                         defaults={
                             "name": head_name,
@@ -280,14 +286,16 @@ def admin_department(request):
         )
         return redirect("admin_department")
 
-    departments = Department.objects.prefetch_related("faculty_members", "head").order_by("name")
+    departments = Department.objects.prefetch_related("faculty_members", "heads").order_by("name")
+    schedules = EvaluationSchedule.objects.all().order_by("-start_datetime", "-created_at")
 
     context = _admin_context(
         "department",
         {
             "departments": departments,
+            "schedules": schedules,
             "total_departments": departments.count(),
-            "total_faculty": sum(dept.faculty_members.count() for dept in departments),
+            "total_faculty": FacultyMember.objects.count(),
             "latest_department": departments.last(),
         },
     )
@@ -364,10 +372,6 @@ def admin_manage(request):
     return render(request, "admin/admin_manage.html", context)
 
 
-# =========================
-# ADD DEPARTMENT
-# =========================
-
 def add_department(request):
     if request.method != "POST":
         return redirect("admin_department")
@@ -377,6 +381,13 @@ def add_department(request):
     head_name = (request.POST.get("head_name") or "").strip()
     head_email = (request.POST.get("head_email") or "").strip()
     faculty_file = request.FILES.get("faculty_file")
+    schedule_id = request.POST.get("schedule_id")
+
+    if not schedule_id:
+        messages.error(request, "Please select an evaluation schedule.")
+        return redirect("admin_department")
+
+    selected_schedule = get_object_or_404(EvaluationSchedule, id=schedule_id)
 
     if not code or not name:
         messages.error(request, "Department code and name are required.")
@@ -396,6 +407,7 @@ def add_department(request):
 
     if head_name:
         DepartmentHead.objects.update_or_create(
+            schedule=selected_schedule,
             department=department,
             defaults={
                 "name": head_name,
@@ -405,7 +417,9 @@ def add_department(request):
 
     if faculty_file:
         try:
-            count = _replace_faculty_from_uploaded_file(faculty_file, department)
+            count = _replace_faculty_from_uploaded_file(
+                faculty_file, department, selected_schedule
+            )
             messages.success(request, f"Department added successfully with {count} faculty members.")
         except Exception as e:
             messages.warning(request, f"Department added, but faculty file could not be processed: {str(e)}")
@@ -415,10 +429,6 @@ def add_department(request):
 
     return redirect("admin_department")
 
-
-# =========================
-# UPDATE DEPARTMENT
-# =========================
 
 def update_department(request, dept_id):
     if request.method != "POST":
@@ -431,6 +441,13 @@ def update_department(request, dept_id):
     head_name = (request.POST.get("head_name") or "").strip()
     head_email = (request.POST.get("head_email") or "").strip()
     faculty_file = request.FILES.get("faculty_file")
+    schedule_id = request.POST.get("schedule_id")
+
+    if not schedule_id:
+        messages.error(request, "Please select an evaluation schedule.")
+        return redirect("admin_department")
+
+    selected_schedule = get_object_or_404(EvaluationSchedule, id=schedule_id)
 
     if not code or not name:
         messages.error(request, "Department code and name are required.")
@@ -447,6 +464,7 @@ def update_department(request, dept_id):
 
     if head_name:
         DepartmentHead.objects.update_or_create(
+            schedule=selected_schedule,
             department=department,
             defaults={
                 "name": head_name,
@@ -454,11 +472,13 @@ def update_department(request, dept_id):
             },
         )
     else:
-        DepartmentHead.objects.filter(department=department).delete()
+        DepartmentHead.objects.filter(schedule=selected_schedule, department=department).delete()
 
     if faculty_file:
         try:
-            count = _replace_faculty_from_uploaded_file(faculty_file, department)
+            count = _replace_faculty_from_uploaded_file(
+                faculty_file, department, selected_schedule
+            )
             messages.success(request, f"Department updated successfully. Faculty list replaced with {count} records.")
         except Exception as e:
             messages.warning(request, f"Department updated, but faculty file could not be processed: {str(e)}")
@@ -468,10 +488,6 @@ def update_department(request, dept_id):
 
     return redirect("admin_department")
 
-
-# =========================
-# DELETE DEPARTMENT
-# =========================
 
 def delete_department(request, dept_id):
     if request.method != "POST":
@@ -484,11 +500,6 @@ def delete_department(request, dept_id):
     messages.success(request, f"Department '{department_name}' was deleted successfully.")
     return redirect("admin_department")
 
-
-
-
-
-##################### NANGEELAM AQ HERE  - JOCHELLE
 
 def admin_results_summary(request):
     faculty_evaluations = (
@@ -669,9 +680,7 @@ def admin_results_summary(request):
     results.sort(key=lambda x: (x["result_type"], x["name"].lower()))
 
     overall_list = [r["overall"] for r in results if r["overall"] > 0]
-    departments = list(
-        Department.objects.order_by("name").values_list("name", flat=True)
-    )
+    departments = list(Department.objects.order_by("name").values_list("name", flat=True))
 
     context = _admin_context(
         "results_summary",
@@ -700,10 +709,9 @@ def _ordered_response_queryset(model):
     ).order_by("section_order", "question_number")
 
 
-
-
 def admin_overall(request):
     return admin_results_summary(request)
+
 
 def admin_login(request):
     open_schedule = _get_open_schedule()
@@ -712,9 +720,6 @@ def admin_login(request):
     if request.method == "POST":
         login_type = (request.POST.get("login_type") or "").strip()
 
-        # =========================
-        # ADMIN LOGIN (frontend only for now)
-        # =========================
         if login_type == "admin":
             username = (request.POST.get("username") or "").strip()
             password = (request.POST.get("password") or "").strip()
@@ -726,13 +731,8 @@ def admin_login(request):
                 }
                 return redirect("admin_login")
 
-            # CURRENT BEHAVIOR:
-            # still frontend/demo only, redirects to admin dashboard page
             return redirect("admin_department")
 
-        # =========================
-        # DEPARTMENT HEAD LOGIN
-        # =========================
         elif login_type == "head":
             email = (request.POST.get("email") or "").strip().lower()
 
@@ -743,17 +743,24 @@ def admin_login(request):
                 }
                 return redirect("admin_login")
 
+            if not open_schedule:
+                request.session["login_modal"] = {
+                    "type": "warning",
+                    "message": "There is no open evaluation schedule right now."
+                }
+                return redirect("admin_login")
+
             head = (
                 DepartmentHead.objects
                 .select_related("department")
-                .filter(email__iexact=email)
+                .filter(schedule=open_schedule, email__iexact=email)
                 .first()
             )
 
             faculty = (
                 FacultyMember.objects
                 .select_related("department")
-                .filter(email__iexact=email)
+                .filter(schedule=open_schedule, email__iexact=email)
                 .first()
             )
 
@@ -777,7 +784,7 @@ def admin_login(request):
                 reverse("verify_head_login_link", args=[token])
             )
 
-            subject = "Faculty Evaluation Login Link"
+            subject = "Department Head Portal Login Link"
 
             context = {
                 "head": head,
@@ -788,13 +795,13 @@ def admin_login(request):
 
             text_body = (
                 f"Hello {head.name},\n\n"
-                f"Click the link below to access the Faculty Evaluation System:\n\n"
+                f"Click the link below to access the Department Head Portal:\n\n"
                 f"{verify_url}\n\n"
                 f"This link will expire in {LOGIN_LINK_MAX_AGE // 60} minutes.\n"
                 f"If you did not request this, please ignore this email."
             )
 
-            html_body = render_to_string("evaluator/email_login_link.html", context)
+            html_body = render_to_string("head/email_head_portal_link.html", context)
 
             try:
                 msg = EmailMultiAlternatives(
@@ -855,34 +862,187 @@ def admin_past_evaluations(request):
     if not selected_schedule:
         selected_schedule = past_schedules.first()
 
-    faculty_evaluations = FacultyEvaluation.objects.none()
-    head_evaluations = HeadEvaluation.objects.none()
+    faculty_history_results = []
+    head_history_results = []
 
     if selected_schedule:
         faculty_evaluations = (
             FacultyEvaluation.objects
             .filter(schedule=selected_schedule, status="submitted")
-            .select_related("evaluatee_faculty", "evaluator_head", "schedule")
-            .prefetch_related("responses")
-            .order_by("-submitted_at")
+            .select_related(
+                "evaluatee_faculty__department",
+                "evaluator_head__department",
+                "schedule",
+            )
+            .prefetch_related(
+                Prefetch(
+                    "responses",
+                    queryset=_ordered_response_queryset(FacultyEvaluationResponse),
+                )
+            )
+            .order_by("evaluatee_name", "evaluator_name")
         )
 
         head_evaluations = (
             HeadEvaluation.objects
             .filter(schedule=selected_schedule, status="submitted")
-            .select_related("evaluatee_head", "evaluator_head", "schedule")
-            .prefetch_related("responses")
-            .order_by("-submitted_at")
+            .select_related(
+                "evaluatee_head__department",
+                "evaluator_head__department",
+                "schedule",
+            )
+            .prefetch_related(
+                Prefetch(
+                    "responses",
+                    queryset=_ordered_response_queryset(HeadEvaluationResponse),
+                )
+            )
+            .order_by("evaluatee_name", "evaluator_name")
         )
+
+        grouped_faculty = {}
+        grouped_heads = {}
+
+        def add_to_group(grouped, group_key, target_id, target_name, target_department, evaluation):
+            if group_key not in grouped:
+                grouped[group_key] = {
+                    "id": target_id,
+                    "name": target_name,
+                    "department": target_department,
+                    "evaluators": [],
+                    "section_values": defaultdict(list),
+                    "overall_values": [],
+                    "total_scores": [],
+                    "computed_ratings": [],
+                }
+
+            section_groups = defaultdict(list)
+            detailed_answers = defaultdict(list)
+
+            for response in evaluation.responses.all():
+                section_key = (response.section_code or "").strip()
+                section_name = (response.section_name or "").strip() or "Unnamed Section"
+
+                if section_key:
+                    section_groups[section_key].append(response.rating)
+
+                detailed_answers[section_name].append({
+                    "question_number": response.question_number,
+                    "question_text": response.question_text or f"Question {response.question_number}",
+                    "rating": response.rating,
+                })
+
+            evaluator_sections = {}
+            for section_key, ratings in section_groups.items():
+                if ratings:
+                    evaluator_sections[section_key] = round(sum(ratings) / len(ratings), 2)
+
+            evaluator_total_score = round(float(evaluation.total_score or 0), 2)
+            evaluator_overall = round(float(evaluation.average_score or 0), 2)
+            evaluator_computed_rating = round((evaluator_total_score / 75) * 100, 2) if evaluator_total_score else 0
+
+            grouped[group_key]["evaluators"].append({
+                "evaluator_name": evaluation.evaluator_name or "Unknown Evaluator",
+                "evaluator_department": evaluation.evaluator_department or "",
+                "sections": evaluator_sections,
+                "overall": evaluator_overall,
+                "total_score": evaluator_total_score,
+                "computed_rating": evaluator_computed_rating,
+                "comments": evaluation.comments or "",
+                "submitted_at": evaluation.submitted_at.strftime("%Y-%m-%d %H:%M") if evaluation.submitted_at else "",
+                "detailed_answers": dict(detailed_answers),
+            })
+
+            grouped[group_key]["overall_values"].append(evaluator_overall)
+            grouped[group_key]["total_scores"].append(evaluator_total_score)
+            grouped[group_key]["computed_ratings"].append(evaluator_computed_rating)
+
+            for section_key, value in evaluator_sections.items():
+                grouped[group_key]["section_values"][section_key].append(value)
+
+        for evaluation in faculty_evaluations:
+            if not evaluation.evaluatee_faculty:
+                continue
+
+            add_to_group(
+                grouped=grouped_faculty,
+                group_key=f"faculty-{evaluation.evaluatee_faculty.id}",
+                target_id=evaluation.evaluatee_faculty.id,
+                target_name=evaluation.evaluatee_name or evaluation.evaluatee_faculty.name,
+                target_department=evaluation.evaluatee_department or (
+                    evaluation.evaluatee_faculty.department.name if evaluation.evaluatee_faculty.department else ""
+                ),
+                evaluation=evaluation,
+            )
+
+        for evaluation in head_evaluations:
+            if not evaluation.evaluatee_head:
+                continue
+
+            add_to_group(
+                grouped=grouped_heads,
+                group_key=f"head-{evaluation.evaluatee_head.id}",
+                target_id=evaluation.evaluatee_head.id,
+                target_name=evaluation.evaluatee_name or evaluation.evaluatee_head.name,
+                target_department=evaluation.evaluatee_department or (
+                    evaluation.evaluatee_head.department.name if evaluation.evaluatee_head.department else ""
+                ),
+                evaluation=evaluation,
+            )
+
+        for _, item in grouped_faculty.items():
+            section_averages = {}
+            for section_key, values in item["section_values"].items():
+                section_averages[section_key] = round(sum(values) / len(values), 2) if values else 0
+
+            overall_average = round(sum(item["overall_values"]) / len(item["overall_values"]), 2) if item["overall_values"] else 0
+            average_total_score = round(sum(item["total_scores"]) / len(item["total_scores"]), 2) if item["total_scores"] else 0
+            computed_rating = round(sum(item["computed_ratings"]) / len(item["computed_ratings"]), 2) if item["computed_ratings"] else 0
+
+            faculty_history_results.append({
+                "id": item["id"],
+                "name": item["name"],
+                "department": item["department"],
+                "sections": section_averages,
+                "overall": overall_average,
+                "average_total_score": average_total_score,
+                "computed_rating": computed_rating,
+                "evaluator_count": len(item["evaluators"]),
+                "evaluators": item["evaluators"],
+            })
+
+        for _, item in grouped_heads.items():
+            section_averages = {}
+            for section_key, values in item["section_values"].items():
+                section_averages[section_key] = round(sum(values) / len(values), 2) if values else 0
+
+            overall_average = round(sum(item["overall_values"]) / len(item["overall_values"]), 2) if item["overall_values"] else 0
+            average_total_score = round(sum(item["total_scores"]) / len(item["total_scores"]), 2) if item["total_scores"] else 0
+            computed_rating = round(sum(item["computed_ratings"]) / len(item["computed_ratings"]), 2) if item["computed_ratings"] else 0
+
+            head_history_results.append({
+                "id": item["id"],
+                "name": item["name"],
+                "department": item["department"],
+                "sections": section_averages,
+                "overall": overall_average,
+                "average_total_score": average_total_score,
+                "computed_rating": computed_rating,
+                "evaluator_count": len(item["evaluators"]),
+                "evaluators": item["evaluators"],
+            })
+
+        faculty_history_results.sort(key=lambda x: x["name"].lower())
+        head_history_results.sort(key=lambda x: x["name"].lower())
 
     context = _admin_context("past_evaluations", {
         "past_schedules": past_schedules,
         "selected_schedule": selected_schedule,
-        "faculty_evaluations": faculty_evaluations,
-        "head_evaluations": head_evaluations,
-        "faculty_count": faculty_evaluations.count(),
-        "head_count": head_evaluations.count(),
-        "total_count": faculty_evaluations.count() + head_evaluations.count(),
+        "faculty_history_results": faculty_history_results,
+        "head_history_results": head_history_results,
+        "faculty_count": len(faculty_history_results),
+        "head_count": len(head_history_results),
+        "total_count": len(faculty_history_results) + len(head_history_results),
     })
 
     return render(request, "admin/admin_past_evaluations.html", context)

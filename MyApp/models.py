@@ -11,36 +11,6 @@ class Department(models.Model):
         return self.name
 
 
-class FacultyMember(models.Model):
-    department = models.ForeignKey(
-        Department,
-        on_delete=models.CASCADE,
-        related_name="faculty_members"
-    )
-    id_number = models.CharField(max_length=100, blank=True, default="")
-    name = models.CharField(max_length=255)
-    email = models.EmailField(blank=True, default="")
-
-    def __str__(self):
-        return self.name
-
-
-class DepartmentHead(models.Model):
-    department = models.OneToOneField(
-        Department,
-        on_delete=models.CASCADE,
-        related_name="head"
-    )
-    name = models.CharField(max_length=255)
-    email = models.EmailField(blank=True, default="")
-    otp_code = models.CharField(max_length=6, blank=True, default="")
-    otp_created_at = models.DateTimeField(null=True, blank=True)
-    is_verified = models.BooleanField(default=False)
-
-    def __str__(self):
-        return f"{self.name} - {self.department.name}"
-
-
 class EvaluationSchedule(models.Model):
     title = models.CharField(max_length=255)
     academic_year = models.CharField(max_length=50)
@@ -68,6 +38,56 @@ class EvaluationSchedule(models.Model):
     def is_open_now(self):
         now = timezone.localtime(timezone.now())
         return self.start_datetime <= now <= self.end_datetime
+
+
+class FacultyMember(models.Model):
+    schedule = models.ForeignKey(
+        "EvaluationSchedule",
+        on_delete=models.CASCADE,
+        related_name="faculty_members",
+        null=True,
+        blank=True
+    )
+    department = models.ForeignKey(
+        Department,
+        on_delete=models.CASCADE,
+        related_name="faculty_members"
+    )
+    id_number = models.CharField(max_length=100, blank=True, default="")
+    name = models.CharField(max_length=255)
+    email = models.EmailField(blank=True, default="")
+
+    class Meta:
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
+
+
+class DepartmentHead(models.Model):
+    schedule = models.ForeignKey(
+        "EvaluationSchedule",
+        on_delete=models.CASCADE,
+        related_name="department_heads",
+        null=True,
+        blank=True
+    )
+    department = models.ForeignKey(
+        Department,
+        on_delete=models.CASCADE,
+        related_name="heads"
+    )
+    name = models.CharField(max_length=255)
+    email = models.EmailField(blank=True, default="")
+    otp_code = models.CharField(max_length=6, blank=True, default="")
+    otp_created_at = models.DateTimeField(null=True, blank=True)
+    is_verified = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ["department__name", "name"]
+
+    def __str__(self):
+        return f"{self.name} - {self.department.name}"
 
 
 # =========================

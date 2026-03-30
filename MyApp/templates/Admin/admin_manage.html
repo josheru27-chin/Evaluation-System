@@ -256,12 +256,6 @@
     </div>
 </div>
 
-{% if messages %}
-    {% for message in messages %}
-        <div class="alert alert-{{ message.tags }} mb-3">{{ message }}</div>
-    {% endfor %}
-{% endif %}
-
 <div class="schedule-form-card">
     <h5 class="section-title">Set Faculty Evaluation Period</h5>
 
@@ -305,7 +299,7 @@
 
             <div class="col-lg-8">
                 <label class="form-label">Instructions / Notes</label>
-                <textarea id="evaluationNotes" name="notes" rows="4" class="form-control" style="min-height: 130px;" placeholder="Add instructions, reminders, or admin notes for this faculty evaluation schedule..."></textarea>
+                <textarea id="evaluationNotes" name="notes" rows="4" class="form-control" style="min-height: 130px;" placeholder="Add instructions, reminders, or admin notes for this faculty evaluation schedule..." required></textarea>
                 <div class="muted-note">
                     The opening and closing date here will define the duration period of the faculty evaluation.
                 </div>
@@ -568,21 +562,26 @@
 
 
     function generateAcademicYears() {
-    const select = document.getElementById("academicYear");
-    const currentYear = new Date().getFullYear();
+        const select = document.getElementById("academicYear");
+        const currentYear = new Date().getFullYear();
 
-    for (let i = 0; i < 5; i++) {
-        const start = currentYear + i;
-        const end = start + 1;
-        const value = `${start} - ${end}`;
+        select.innerHTML = '<option value="">Select Academic Year</option>';
 
-        const option = document.createElement("option");
-        option.value = value;
-        option.textContent = value;
+        // START 1 YEAR BEFORE CURRENT (so 2025–2026 appears)
+        for (let i = -1; i < 4; i++) {
+            const start = currentYear + i;
+            const end = start + 1;
+            const value = `${start} - ${end}`;
 
-        select.appendChild(option);
+            const option = document.createElement("option");
+            option.value = value;
+            option.textContent = value;
+
+            select.appendChild(option);
+        }
     }
-}
+
+generateAcademicYears();
 
 generateAcademicYears();
 

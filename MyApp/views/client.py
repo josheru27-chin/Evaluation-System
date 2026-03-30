@@ -91,8 +91,6 @@ def _build_saved_state_for_head(schedule, logged_in_head):
     }
 
 
-
-
 def _build_dashboard_summary(schedule, logged_in_head, other_heads, department_faculty_members):
     head_saved_count = HeadEvaluation.objects.filter(
         schedule=schedule, evaluator_head=logged_in_head, status="submitted"
@@ -150,14 +148,14 @@ def eval_login(request):
         head = (
             DepartmentHead.objects
             .select_related("department")
-            .filter(email__iexact=email)
+            .filter(schedule=open_schedule, email__iexact=email)
             .first()
         )
 
         faculty = (
             FacultyMember.objects
             .select_related("department")
-            .filter(email__iexact=email)
+            .filter(schedule=open_schedule, email__iexact=email)
             .first()
         )
 
@@ -237,6 +235,7 @@ def eval_login(request):
     }
     return render(request, "evaluator/eval_login.html", context)
 
+
 def verify_login_link(request, token):
     open_schedule = get_open_schedule()
 
@@ -259,7 +258,7 @@ def verify_login_link(request, token):
     logged_in_head = (
         DepartmentHead.objects
         .select_related("department")
-        .filter(id=head_id)
+        .filter(id=head_id, schedule=open_schedule)
         .first()
     )
 
@@ -296,7 +295,7 @@ def eval_forms(request):
     logged_in_head = (
         DepartmentHead.objects
         .select_related("department")
-        .filter(id=head_id, department_id=department_id)
+        .filter(id=head_id, department_id=department_id, schedule=open_schedule)
         .first()
     )
 
@@ -307,13 +306,13 @@ def eval_forms(request):
 
     department_faculty_members = (
         FacultyMember.objects
-        .filter(department_id=logged_in_head.department_id)
+        .filter(schedule=open_schedule, department_id=logged_in_head.department_id)
         .order_by("name")
     )
 
     other_heads = (
         DepartmentHead.objects
-        .select_related("department")
+        .filter(schedule=open_schedule)
         .exclude(id=logged_in_head.id)
         .order_by("name")
     )
@@ -332,20 +331,6 @@ def eval_forms(request):
         "dashboard_summary_json": dashboard_summary,
     }
 
-
-    #print("========== DEBUG ==========")
-    #print("OPEN SCHEDULE ID:", open_schedule.id if open_schedule else None)
-    #print("LOGGED IN HEAD ID:", logged_in_head.id)
-
-    count = HeadEvaluation.objects.filter(
-        schedule=open_schedule,
-        evaluator_head=logged_in_head,
-        status="submitted"
-    ).count()
-
-    #print("HEAD COUNT:", count)
-    #print("===========================")
-    
     return render(request, "evaluator/eval_forms.html", context)
 
 
@@ -372,7 +357,7 @@ def save_evaluation(request):
     logged_in_head = (
         DepartmentHead.objects
         .select_related("department")
-        .filter(id=head_id, department_id=department_id)
+        .filter(id=head_id, department_id=department_id, schedule=open_schedule)
         .first()
     )
 
@@ -413,20 +398,13 @@ def save_evaluation(request):
     db_category = "head" if category == "head_peer" else "faculty"
 
     if category == "head_peer":
-        #print("===== HEAD SAVE DEBUG =====")
-        #print("LOGGED IN HEAD ID:", logged_in_head.id)
-        #print("RECEIVED EVALUATEE ID:", evaluatee_id)
-
         evaluatee_head = (
             DepartmentHead.objects
             .select_related("department")
-            .filter(id=evaluatee_id)
+            .filter(id=evaluatee_id, schedule=open_schedule)
             .exclude(id=logged_in_head.id)
             .first()
         )
-
-        print("FOUND EVALUATEE HEAD:", evaluatee_head.name if evaluatee_head else None)
-        print("===========================")
 
         if not evaluatee_head:
             return JsonResponse({
@@ -435,28 +413,22 @@ def save_evaluation(request):
             }, status=404)
 
     elif category == "faculty":
-        #print("===== FACULTY SAVE DEBUG =====")
-        #print("LOGGED IN HEAD ID:", logged_in_head.id)
-        #print("RECEIVED EVALUATEE ID:", evaluatee_id)
-
         evaluatee_faculty = (
             FacultyMember.objects
             .select_related("department")
-            .filter(id=evaluatee_id, department_id=logged_in_head.department_id)
+            .filter(
+                id=evaluatee_id,
+                schedule=open_schedule,
+                department_id=logged_in_head.department_id
+            )
             .first()
         )
-
-        print("FOUND EVALUATEE FACULTY:", evaluatee_faculty.name if evaluatee_faculty else None)
-        print("==============================")
 
         if not evaluatee_faculty:
             return JsonResponse({
                 "success": False,
                 "message": "Selected faculty was not found."
             }, status=404)
-
-
-
 
     cleaned_answers = []
 
@@ -493,7 +465,7 @@ def save_evaluation(request):
             "success": False,
             "message": "No answers were found to save."
         }, status=400)
-        
+
     if db_category == "head":
         evaluatee_name = evaluatee_head.name
         evaluatee_department = evaluatee_head.department.name
@@ -606,6 +578,12 @@ def eval_logout(request):
 
 
 def verify_head_login_link(request, token):
+    open_schedule = get_open_schedule()
+
+    if not open_schedule:
+        messages.error(request, "The department head portal is currently closed.")
+        return redirect("admin_login")
+
     signer = TimestampSigner(salt=LINK_SALT)
 
     try:
@@ -621,7 +599,7 @@ def verify_head_login_link(request, token):
     logged_in_head = (
         DepartmentHead.objects
         .select_related("department")
-        .filter(id=head_id)
+        .filter(id=head_id, schedule=open_schedule)
         .first()
     )
 

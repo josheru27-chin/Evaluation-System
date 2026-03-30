@@ -2,12 +2,215 @@
 {% load static %}
 
 {% block title %}Past Evaluations | Admin{% endblock %}
-{% block page_title %}Past Evaluations{% endblock %}
+{% block page_title %}Evaluation History{% endblock %}
 {% block page_subtitle %}View archived evaluation records by academic year and semester.{% endblock %}
 
+{% block extra_css %}
+<style>
+    .mini-card {
+        border: 1px solid var(--border-soft);
+        border-radius: 18px;
+        background: #fff;
+        padding: 18px;
+        height: 100%;
+    }
+
+    .mini-card h6 {
+        margin: 0 0 8px;
+        color: var(--text-muted);
+        font-size: 0.92rem;
+        font-weight: 700;
+    }
+
+    .mini-card h3 {
+        margin: 0;
+        font-weight: 800;
+        color: var(--text-dark);
+    }
+
+    .mini-card small {
+        display: block;
+        margin-top: 6px;
+        color: var(--text-muted);
+    }
+
+    .history-top-card {
+        border: 1px solid var(--border-soft);
+        border-radius: 22px;
+        background: linear-gradient(135deg, #fff, #fcf3f5);
+        padding: 22px;
+        margin-bottom: 24px;
+    }
+
+    .history-top-card h5 {
+        margin: 0 0 8px;
+        font-weight: 800;
+        color: var(--text-dark);
+    }
+
+    .history-top-card p {
+        margin: 0;
+        color: var(--text-muted);
+        line-height: 1.6;
+    }
+
+    .history-table-wrap {
+        border: 1px solid var(--border-soft);
+        border-radius: 18px;
+        overflow: auto;
+        background: #fff;
+        max-height: 520px;
+    }
+
+    .history-table-wrap table {
+        margin-bottom: 0;
+        min-width: 980px;
+    }
+
+    .history-table-wrap thead th {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background: #fff;
+        white-space: nowrap;
+        box-shadow: inset 0 -1px 0 var(--border-soft);
+    }
+
+    .history-table-wrap::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+
+    .history-table-wrap::-webkit-scrollbar-thumb {
+        background: #cfd6df;
+        border-radius: 999px;
+    }
+
+    .history-table-wrap::-webkit-scrollbar-track {
+        background: #f7f8fb;
+    }
+
+    .history-pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 78px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        font-size: 0.84rem;
+        font-weight: 700;
+        background: #f9eff2;
+        color: var(--primary-red);
+        border: 1px solid #efd3d9;
+    }
+
+    .history-name {
+        font-weight: 800;
+        color: var(--text-dark);
+    }
+
+    .history-sub {
+        color: var(--text-muted);
+        font-size: 0.88rem;
+        margin-top: 3px;
+    }
+
+    .modal-content {
+        border: none;
+        border-radius: 24px;
+        overflow: hidden;
+        box-shadow: 0 24px 60px rgba(15, 23, 42, 0.16);
+    }
+
+    .modal-header {
+        border-bottom: 1px solid var(--border-soft);
+        background: linear-gradient(135deg, #fff, #fcf3f5);
+        padding: 18px 22px;
+    }
+
+    .modal-title {
+        font-weight: 800;
+        color: var(--text-dark);
+    }
+
+    .modal-body {
+        padding: 22px;
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+        margin-bottom: 18px;
+    }
+
+    .summary-card {
+        border: 1px solid var(--border-soft);
+        background: #fff;
+        border-radius: 18px;
+        padding: 16px;
+    }
+
+    .summary-card h6 {
+        margin: 0 0 8px;
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        line-height: 1.45;
+    }
+
+    .summary-card h4 {
+        margin: 0;
+        font-weight: 800;
+        color: var(--text-dark);
+    }
+
+    .detail-block {
+        border: 1px solid var(--border-soft);
+        border-radius: 18px;
+        background: #fff;
+        padding: 16px;
+        margin-bottom: 16px;
+    }
+
+    .detail-block h6 {
+        font-weight: 800;
+        margin-bottom: 6px;
+        color: var(--text-dark);
+    }
+
+    .comment-box {
+        background: #fff8fa;
+        border: 1px solid #f1dfe5;
+        border-radius: 14px;
+        padding: 12px 14px;
+        margin-top: 12px;
+    }
+
+    @media (max-width: 991px) {
+        .summary-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 576px) {
+        .summary-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
+<div class="history-top-card">
+    <h5>Archived Evaluation Results</h5>
+    <p>Review submitted faculty and department head evaluations by past academic year and semester, including evaluator-by-evaluator detailed scores.</p>
+</div>
+
 <div class="content-card mb-4">
-    <form method="GET" class="row g-3 align-items-end">
+    <form method="GET" class="row g-3 align-items-end p-4">
         <div class="col-md-6">
             <label class="form-label fw-semibold">Select Evaluation Period</label>
             <select name="schedule" class="form-select" onchange="this.form.submit()">
@@ -27,101 +230,288 @@
         <div class="mini-card">
             <h6>Faculty Evaluations</h6>
             <h3>{{ faculty_count }}</h3>
-            <small>Submitted faculty evaluations</small>
+            <small>Submitted faculty evaluation summaries</small>
         </div>
     </div>
     <div class="col-md-4">
         <div class="mini-card">
             <h6>Head Evaluations</h6>
             <h3>{{ head_count }}</h3>
-            <small>Submitted head evaluations</small>
+            <small>Submitted department head evaluation summaries</small>
         </div>
     </div>
     <div class="col-md-4">
         <div class="mini-card">
             <h6>Total Archived Records</h6>
             <h3>{{ total_count }}</h3>
-            <small>All submitted records in this period</small>
+            <small>All grouped archived records in this period</small>
         </div>
     </div>
 </div>
 
 {% if selected_schedule %}
 <div class="content-card mb-4">
-    <h5 class="mb-3">Selected Period</h5>
-    <p class="mb-1"><strong>Title:</strong> {{ selected_schedule.title }}</p>
-    <p class="mb-1"><strong>Academic Year:</strong> {{ selected_schedule.academic_year }}</p>
-    <p class="mb-1"><strong>Semester:</strong> {{ selected_schedule.semester }}</p>
-    <p class="mb-0"><strong>Duration:</strong> {{ selected_schedule.start_datetime }} to {{ selected_schedule.end_datetime }}</p>
+    <div class="p-4">
+        <h5 class="mb-3">Selected Period</h5>
+        <p class="mb-1"><strong>Title:</strong> {{ selected_schedule.title }}</p>
+        <p class="mb-1"><strong>Academic Year:</strong> {{ selected_schedule.academic_year }}</p>
+        <p class="mb-1"><strong>Semester:</strong> {{ selected_schedule.semester }}</p>
+        <p class="mb-0"><strong>Duration:</strong> {{ selected_schedule.start_datetime }} to {{ selected_schedule.end_datetime }}</p>
+    </div>
 </div>
 
 <div class="content-card mb-4">
-    <h5 class="mb-3">Faculty Evaluation Records</h5>
-    <div class="table-responsive">
-        <table class="table align-middle">
-            <thead>
-                <tr>
-                    <th>Evaluatee</th>
-                    <th>Department</th>
-                    <th>Evaluator</th>
-                    <th>Total Score</th>
-                    <th>Average</th>
-                    <th>Submitted At</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in faculty_evaluations %}
-                <tr>
-                    <td>{{ item.evaluatee_name }}</td>
-                    <td>{{ item.evaluatee_department }}</td>
-                    <td>{{ item.evaluator_name }}</td>
-                    <td>{{ item.total_score|default:"-" }}</td>
-                    <td>{{ item.average_score|default:"-" }}</td>
-                    <td>{{ item.submitted_at }}</td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="6" class="text-center text-muted">No faculty evaluation records found.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <div class="p-4">
+        <h5 class="mb-3">Faculty Evaluation Records</h5>
+        <div class="history-table-wrap">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th>Evaluatee</th>
+                        <th>Department</th>
+                        <th>Evaluators</th>
+                        <th>Average Total Score</th>
+                        <th>Total Average</th>
+                        <th>Computed Rating</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in faculty_history_results %}
+                    <tr>
+                        <td>
+                            <div class="history-name">{{ item.name }}</div>
+                            <div class="history-sub">Faculty Member</div>
+                        </td>
+                        <td>{{ item.department }}</td>
+                        <td>{{ item.evaluator_count }}</td>
+                        <td><span class="history-pill">{{ item.average_total_score }}</span></td>
+                        <td><span class="history-pill">{{ item.overall }}</span></td>
+                        <td><span class="history-pill">{{ item.computed_rating }}%</span></td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#facultyHistoryModal{{ forloop.counter }}">
+                                View Details
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted">No faculty evaluation records found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
 <div class="content-card">
-    <h5 class="mb-3">Head Evaluation Records</h5>
-    <div class="table-responsive">
-        <table class="table align-middle">
-            <thead>
-                <tr>
-                    <th>Evaluatee</th>
-                    <th>Department</th>
-                    <th>Evaluator</th>
-                    <th>Total Score</th>
-                    <th>Average</th>
-                    <th>Submitted At</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in head_evaluations %}
-                <tr>
-                    <td>{{ item.evaluatee_name }}</td>
-                    <td>{{ item.evaluatee_department }}</td>
-                    <td>{{ item.evaluator_name }}</td>
-                    <td>{{ item.total_score|default:"-" }}</td>
-                    <td>{{ item.average_score|default:"-" }}</td>
-                    <td>{{ item.submitted_at }}</td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="6" class="text-center text-muted">No head evaluation records found.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <div class="p-4">
+        <h5 class="mb-3">Head Evaluation Records</h5>
+        <div class="history-table-wrap">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th>Evaluatee</th>
+                        <th>Department</th>
+                        <th>Evaluators</th>
+                        <th>Average Total Score</th>
+                        <th>Total Average</th>
+                        <th>Computed Rating</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in head_history_results %}
+                    <tr>
+                        <td>
+                            <div class="history-name">{{ item.name }}</div>
+                            <div class="history-sub">Department Head</div>
+                        </td>
+                        <td>{{ item.department }}</td>
+                        <td>{{ item.evaluator_count }}</td>
+                        <td><span class="history-pill">{{ item.average_total_score }}</span></td>
+                        <td><span class="history-pill">{{ item.overall }}</span></td>
+                        <td><span class="history-pill">{{ item.computed_rating }}%</span></td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#headHistoryModal{{ forloop.counter }}">
+                                View Details
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted">No head evaluation records found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
+
+{% for item in faculty_history_results %}
+<div class="modal fade" id="facultyHistoryModal{{ forloop.counter }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <h5 class="modal-title">{{ item.name }} - Faculty Evaluation Details</h5>
+                    <div class="text-muted small">{{ item.department }} • {{ item.evaluator_count }} evaluator{{ item.evaluator_count|pluralize }}</div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="summary-grid">
+                    <div class="summary-card">
+                        <h6>Management of Teaching and Learning</h6>
+                        <h4>{{ item.sections.management_teaching_learning|default:"0.00" }}</h4>
+                    </div>
+                    <div class="summary-card">
+                        <h6>Content Knowledge, Pedagogy, and Technology</h6>
+                        <h4>{{ item.sections.content_knowledge_pedagogy_technology|default:"0.00" }}</h4>
+                    </div>
+                    <div class="summary-card">
+                        <h6>Commitment and Transparency</h6>
+                        <h4>{{ item.sections.commitment_transparency|default:"0.00" }}</h4>
+                    </div>
+                    <div class="summary-card">
+                        <h6>Computed Rating</h6>
+                        <h4>{{ item.computed_rating }}%</h4>
+                    </div>
+                </div>
+
+                {% for evaluator in item.evaluators %}
+                <div class="detail-block">
+                    <h6 class="mb-1">{{ evaluator.evaluator_name }}</h6>
+                    <p class="text-muted mb-2">{{ evaluator.evaluator_department|default:"—" }}</p>
+                    <p class="mb-1"><strong>Total Score:</strong> {{ evaluator.total_score }}</p>
+                    <p class="mb-1"><strong>Total Average:</strong> {{ evaluator.overall }}</p>
+                    <p class="mb-2"><strong>Computed Rating:</strong> {{ evaluator.computed_rating }}%</p>
+
+                    {% if evaluator.comments %}
+                    <div class="comment-box">
+                        <strong>Comments:</strong><br>
+                        {{ evaluator.comments }}
+                    </div>
+                    {% endif %}
+
+                    {% for section_name, answers in evaluator.detailed_answers.items %}
+                    <div class="mt-3">
+                        <h6>{{ section_name }}</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-bordered align-middle">
+                                <thead>
+                                    <tr>
+                                        <th style="width:90px;">No.</th>
+                                        <th>Question</th>
+                                        <th style="width:120px;">Rating</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for answer in answers %}
+                                    <tr>
+                                        <td>Q{{ answer.question_number }}</td>
+                                        <td>{{ answer.question_text }}</td>
+                                        <td>{{ answer.rating }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% empty %}
+                <div class="text-muted">No evaluator details available.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+{% for item in head_history_results %}
+<div class="modal fade" id="headHistoryModal{{ forloop.counter }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <h5 class="modal-title">{{ item.name }} - Head Evaluation Details</h5>
+                    <div class="text-muted small">{{ item.department }} • {{ item.evaluator_count }} evaluator{{ item.evaluator_count|pluralize }}</div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="summary-grid">
+                    <div class="summary-card">
+                        <h6>Management of Teaching and Learning</h6>
+                        <h4>{{ item.sections.management_teaching_learning|default:"0.00" }}</h4>
+                    </div>
+                    <div class="summary-card">
+                        <h6>Content Knowledge, Pedagogy, and Technology</h6>
+                        <h4>{{ item.sections.content_knowledge_pedagogy_technology|default:"0.00" }}</h4>
+                    </div>
+                    <div class="summary-card">
+                        <h6>Commitment and Transparency</h6>
+                        <h4>{{ item.sections.commitment_transparency|default:"0.00" }}</h4>
+                    </div>
+                    <div class="summary-card">
+                        <h6>Computed Rating</h6>
+                        <h4>{{ item.computed_rating }}%</h4>
+                    </div>
+                </div>
+
+                {% for evaluator in item.evaluators %}
+                <div class="detail-block">
+                    <h6 class="mb-1">{{ evaluator.evaluator_name }}</h6>
+                    <p class="text-muted mb-2">{{ evaluator.evaluator_department|default:"—" }}</p>
+                    <p class="mb-1"><strong>Total Score:</strong> {{ evaluator.total_score }}</p>
+                    <p class="mb-1"><strong>Total Average:</strong> {{ evaluator.overall }}</p>
+                    <p class="mb-2"><strong>Computed Rating:</strong> {{ evaluator.computed_rating }}%</p>
+
+                    {% if evaluator.comments %}
+                    <div class="comment-box">
+                        <strong>Comments:</strong><br>
+                        {{ evaluator.comments }}
+                    </div>
+                    {% endif %}
+
+                    {% for section_name, answers in evaluator.detailed_answers.items %}
+                    <div class="mt-3">
+                        <h6>{{ section_name }}</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-bordered align-middle">
+                                <thead>
+                                    <tr>
+                                        <th style="width:90px;">No.</th>
+                                        <th>Question</th>
+                                        <th style="width:120px;">Rating</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for answer in answers %}
+                                    <tr>
+                                        <td>Q{{ answer.question_number }}</td>
+                                        <td>{{ answer.question_text }}</td>
+                                        <td>{{ answer.rating }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% empty %}
+                <div class="text-muted">No evaluator details available.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
 {% else %}
 <div class="content-card">
     <div class="text-center text-muted py-5">

@@ -701,33 +701,31 @@
                         <i class="bi bi-shield-lock-fill"></i>
                         Secure Email Link Access
                     </div>
-
-                    <h1 class="brand-title"> Evaluation Form</h1>
+                    <h1 class="brand-title">Evaluation Form</h1>
                     <p class="brand-subtitle">
-                        Access the evaluation portal securely using your email and a secure login link.
-                        This helps ensure that only authorized department heads can proceed to the evaluation form.
+                        Securely access the evaluation portal using your registered email and login link.
                     </p>
 
                     <ul class="brand-points">
                         <li>
                             <i class="bi bi-envelope-check-fill"></i>
                             <div>
-                                <strong>Email-based verification</strong>
-                                <span>A secure login link is sent directly to your registered email address.</span>
+                              <strong>GSFE Email Verifcation</strong>
+                                <span>Your secure login link will be sent to your gsfe email.</span>
                             </div>
                         </li>
                         <li>
                             <i class="bi bi-clock-history"></i>
                             <div>
-                                <strong>Time-limited login link</strong>
-                                <span>Each link is valid only for a short period for better account protection.</span>
+                               <strong>Limited-time access</strong>
+                                <span>The login link expires after a short time for security.</span>
                             </div>
                         </li>
                         <li>
                             <i class="bi bi-ui-checks-grid"></i>
                             <div>
-                                <strong>Simple and user-friendly access</strong>
-                                <span>No OTP typing needed. Just open your email and click the secure link.</span>
+                                <strong>Quick access</strong>
+                                <span>No OTP needed. Open your email and click the link.</span>
                             </div>
                         </li>
                     </ul>
@@ -735,8 +733,7 @@
 
                 <div class="brand-bottom">
                     <p class="brand-footer-note">
-                        Please use the same email address assigned for your evaluation access. After clicking the secure email link,
-                        you will be redirected to the evaluation form.
+                        Use your assigned email address to receive your secure login link.
                     </p>
                 </div>
             </section>
@@ -752,30 +749,17 @@
 
                     <div class="login-header">
                         <h2>Login</h2>
-                        <p>
-                            Enter your gsfe address and we will send a secure login link to access the evaluation form.
-                        </p>
                     </div>
 
                     {% if open_schedule %}
                     <div class="schedule-box">
-                        <h6><i class="bi bi-calendar2-check me-2"></i>Evaluation Schedule is Active</h6>
+                        <h6><i class="bi bi-calendar2-check me-2"></i>Evaluation is Now Open</h6>
                         <p>
                             <strong>{{ open_schedule.title }}</strong><br>
                             Open until {{ open_schedule.end_datetime|date:"M d, Y h:i A" }}
                         </p>
                     </div>
                     {% endif %}
-
-                    <div class="info-box">
-                        <i class="bi bi-info-circle-fill"></i>
-                        <div>
-                            <span class="title">Important Reminder</span>
-                            <div class="desc">
-                                Make sure your email address is correct before requesting the secure login link. The email will be sent there.
-                            </div>
-                        </div>
-                    </div>
 
                     <form method="POST" id="magicLinkLoginForm" novalidate>
                         {% csrf_token %}
@@ -790,16 +774,13 @@
                                     class="form-control"
                                     id="email"
                                     name="email"
-                                    placeholder="Enter your email address"
+                                    placeholder="Enter your gsfe email address"
                                     value=""
                                     required
                                     {% if portal_closed %}disabled{% endif %}
                                 >
                             </div>
 
-                            <div class="helper-text">
-                                Example: yourname@email.com
-                            </div>
                         </div>
 
                         <button
@@ -808,13 +789,13 @@
                             class="btn btn-main"
                             {% if portal_closed %}disabled{% endif %}
                         >
-                            <i class="bi bi-send-fill me-2"></i>Send Secure Login Link
+                            <i class="bi bi-send-fill me-2"></i>Send
                         </button>
                     </form>
 
                     <div class="footer-note">
                         <i class="bi bi-lock-fill"></i>
-                        Your secure email link is used only for secure access to the evaluation system.
+                        This link is for secure access only.
                     </div>
                 </div>
             </section>
@@ -934,7 +915,7 @@
     window.addEventListener('pageshow', function () {
         if (sendLinkBtn && !portalClosed) {
             sendLinkBtn.disabled = false;
-            sendLinkBtn.innerHTML = '<i class="bi bi-send-fill me-2"></i>Send Secure Login Link';
+            sendLinkBtn.innerHTML = '<i class="bi bi-send-fill me-2"></i>Send';
         }
     });
 

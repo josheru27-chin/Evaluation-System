@@ -391,22 +391,25 @@
 
     .table-scroll-wrap{
       width:100%;
-      overflow-x:auto;
+      max-height:420px;
+      overflow:auto;
+      border:1px solid var(--border);
       border-radius:16px;
+      background:#fff;
     }
 
     .table-responsive{
-      border-radius:16px;
-      overflow:auto;
-      border:1px solid var(--border);
-      background:#fff;
+      overflow:visible;
+      border:none;
+      border-radius:0;
+      background:transparent;
     }
 
     .preview-table,
     .results-table{
       width:100%;
-      border-collapse:collapse;
       min-width:950px;
+      border-collapse:collapse;
       font-size:0.93rem;
     }
 
@@ -619,6 +622,27 @@
       border:1px solid #efd3d9;
     }
 
+    .detail-block{
+      border:1px solid var(--border);
+      border-radius:18px;
+      padding:16px;
+      background:#fff;
+      margin-bottom:16px;
+    }
+
+    .detail-block h6{
+      font-weight:800;
+      margin-bottom:6px;
+    }
+
+    .comment-box{
+      background:#fff8fa;
+      border:1px solid #f1dfe5;
+      border-radius:14px;
+      padding:12px 14px;
+      margin-top:12px;
+    }
+
     @media (max-width: 991px){
       .sidebar{
         position:relative;
@@ -654,30 +678,6 @@
       }
     }
 
-    .table-scroll-wrap{
-      width:100%;
-      max-height:420px;   /* adjust if you want taller/shorter */
-      overflow:auto;
-      border:1px solid var(--border);
-      border-radius:16px;
-      background:#fff;
-    }
-
-    .table-responsive{
-      overflow:visible;
-      border:none;
-      border-radius:0;
-      background:transparent;
-    }
-
-    .preview-table,
-    .results-table{
-      width:100%;
-      min-width:950px;
-      border-collapse:collapse;
-    }
-
-    /* Optional prettier scrollbar */
     .table-scroll-wrap::-webkit-scrollbar{
       width:10px;
       height:10px;
@@ -724,6 +724,11 @@
         <a href="{% url 'head_add' %}" class="sidebar-link">
           <i class="bi bi-person-fill"></i>
           <span>Faculty Members</span>
+        </a>
+
+        <a href="{% url 'head_past_evaluations' %}" class="sidebar-link">
+          <i class="bi bi-clock-history"></i>
+          <span>Past Evaluations</span>
         </a>
       </div>
 
@@ -925,7 +930,7 @@
     {% if results %}
       {% for item in results %}
       <div class="modal fade" id="viewMoreModal{{ item.id }}" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
           <div class="modal-content">
             <div class="modal-header">
               <div>
@@ -941,61 +946,67 @@
             <div class="modal-body">
               <div class="sector-grid">
                 <div class="sector-card">
-                  <h6>Average Score</h6>
-                  <h4>{{ item.average_score|default:0 }}</h4>
+                  <h6>Management of Teaching and Learning</h6>
+                  <h4>{{ item.sections.management_teaching_learning|default:"0.00" }}</h4>
                 </div>
                 <div class="sector-card">
-                  <h6>Total Score</h6>
-                  <h4>{{ item.average_total_score|default:0 }}</h4>
+                  <h6>Content Knowledge, Pedagogy, and Technology</h6>
+                  <h4>{{ item.sections.content_knowledge_pedagogy_technology|default:"0.00" }}</h4>
+                </div>
+                <div class="sector-card">
+                  <h6>Commitment and Transparency</h6>
+                  <h4>{{ item.sections.commitment_transparency|default:"0.00" }}</h4>
                 </div>
                 <div class="sector-card">
                   <h6>Computed Rating</h6>
                   <h4>{{ item.computed_rating|default:0 }}%</h4>
                 </div>
-                <div class="sector-card">
-                  <h6>Evaluators</h6>
-                  <h4>{{ item.evaluator_count|default:0 }}</h4>
-                </div>
               </div>
 
-              <div class="table-scroll-wrap">
-                <div class="table-responsive">
-                  <table class="results-table">
-                    <thead>
-                      <tr>
-                        <th>Evaluator</th>
-                        <th>Department</th>
-                        <th>Average Score</th>
-                        <th>Total Score</th>
-                        <th>Submitted At</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {% if item.evaluators %}
-                        {% for ev in item.evaluators %}
+              {% for ev in item.evaluators %}
+              <div class="detail-block">
+                <h6 class="mb-1">{{ ev.name }}</h6>
+                <p class="text-muted mb-2">{{ ev.department|default:"—" }}</p>
+                <p class="mb-1"><strong>Total Score:</strong> {{ ev.total_score }}</p>
+                <p class="mb-1"><strong>Total Average:</strong> {{ ev.average_score }}</p>
+                <p class="mb-2"><strong>Computed Rating:</strong> {{ ev.computed_rating }}%</p>
+
+                {% if ev.comments %}
+                <div class="comment-box">
+                  <strong>Comments:</strong><br>
+                  {{ ev.comments }}
+                </div>
+                {% endif %}
+
+                {% for section_name, answers in ev.detailed_answers.items %}
+                <div class="mt-3">
+                  <h6>{{ section_name }}</h6>
+                  <div class="table-responsive">
+                    <table class="table table-sm table-bordered align-middle">
+                      <thead>
                         <tr>
-                          <td><strong>{{ ev.name }}</strong></td>
-                          <td>{{ ev.department|default:"—" }}</td>
-                          <td><span class="grade-pill">{{ ev.average_score|default:0 }}</span></td>
-                          <td><span class="grade-pill">{{ ev.total_score|default:0 }}</span></td>
-                          <td>
-                            {% if ev.submitted_at %}
-                              {{ ev.submitted_at|date:"M d, Y h:i A" }}
-                            {% else %}
-                              —
-                            {% endif %}
-                          </td>
+                          <th style="width:90px;">No.</th>
+                          <th>Question</th>
+                          <th style="width:120px;">Rating</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for answer in answers %}
+                        <tr>
+                          <td>Q{{ answer.question_number }}</td>
+                          <td>{{ answer.question_text }}</td>
+                          <td>{{ answer.rating }}</td>
                         </tr>
                         {% endfor %}
-                      {% else %}
-                        <tr>
-                          <td colspan="5" class="text-center text-muted">No evaluator breakdown available yet.</td>
-                        </tr>
-                      {% endif %}
-                    </tbody>
-                  </table>
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
+                {% endfor %}
               </div>
+              {% empty %}
+              <div class="text-muted">No evaluator details available.</div>
+              {% endfor %}
             </div>
 
             <div class="modal-footer">

@@ -15,6 +15,7 @@ urlpatterns = [
     path('dashboard/results-summary/', views.admin_results_summary, name='admin_results_summary'),
     path('dashboard/manage/', views.admin_manage, name='admin_manage'),
     path('dashboard/past-evaluations/', views.admin_past_evaluations, name='admin_past_evaluations'),
+    path('head/past-evaluations/', views.head_past_evaluations, name='head_past_evaluations'),
 
     # Department actions
     path('dashboard/department/add/', views.add_department, name='add_department'),
@@ -25,4 +26,5 @@ urlpatterns = [
     path('head/add/', views.head_add, name='head_add'),
     path('head/monitor/', views.head_monitor, name='head_monitor'),
     path('verify-head-login-link/<str:token>/',views.verify_head_login_link,name='verify_head_login_link'),
+    
 ]

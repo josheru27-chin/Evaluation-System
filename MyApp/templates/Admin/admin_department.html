@@ -303,6 +303,17 @@
     <form method="POST" enctype="multipart/form-data" action="{% url 'admin_department' %}">
         {% csrf_token %}
         <div class="row g-3 align-items-end">
+            <div class="mb-lg-4">
+                <label class="form-label">Evaluation Schedule</label>
+                <select name="schedule_id" class="form-select" required>
+                    <option value="">Select schedule</option>
+                    {% for sched in schedules %}
+                        <option value="{{ sched.id }}">
+                            {{ sched.academic_year }} - {{ sched.semester }} | {{ sched.title }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
             <div class="col-lg-8">
                 <label class="form-label fw-semibold">Upload Excel Workbook</label>
                 <input type="file" name="excel_file" class="form-control" accept=".xlsx" required>
@@ -310,10 +321,13 @@
                     Upload one workbook with sheets: <strong>DED, DIT, DLA, DOE, DMS, HEAD</strong>.
                 </div>
             </div>
-            <div class="col-lg-4">
+            <div class="col-lg-4 ">
                 <button type="submit" class="btn btn-red w-100">
                     <i class="bi bi-upload me-1"></i> Import Workbook
                 </button>
+                <div class="form-hint text-light">
+                    Upload one workbook with sheets: <strong>DED, DIT, DLA, DOE, DMS, HEAD</strong>.
+                </div>
             </div>
         </div>
     </form>
@@ -382,7 +396,7 @@
                 <tr
                     class="department-row"
                     data-department="{{ dept.name|lower }} {{ dept.code|lower }}"
-                    data-head="{% if dept.head %}{{ dept.head.name|lower }} {{ dept.head.email|default:''|lower }}{% endif %}"
+                    data-head="{% with dept_head=dept.heads.all|first %}{% if dept_head %}{{ dept_head.name|lower }} {{ dept_head.email|default:''|lower }}{% endif %}{% endwith %}"
                     data-faculty="{% for faculty in dept.faculty_members.all %}{{ faculty.name|lower }} {{ faculty.email|default:''|lower }} {% endfor %}"
                 >
                     <td>
@@ -393,11 +407,13 @@
                     </td>
 
                     <td>
-                        {% if dept.head %}
-                            <span class="head-badge">{{ dept.head.name }}</span>
+                    {% with dept_head=dept.heads.all|first %}
+                        {% if dept_head %}
+                            <span class="head-badge">{{ dept_head.name }}</span>
                         {% else %}
                             <span class="text-muted">No head assigned</span>
                         {% endif %}
+                    {% endwith %}
                     </td>
 
                     <td>
@@ -420,6 +436,7 @@
 
                     <td class="text-end">
                         <div class="action-stack">
+                        {% with dept_head=dept.heads.all|first %}
                             <button
                                 type="button"
                                 class="btn-icon-soft edit-department-btn"
@@ -429,11 +446,13 @@
                                 data-id="{{ dept.id }}"
                                 data-code="{{ dept.code }}"
                                 data-name="{{ dept.name }}"
-                                data-head-name="{% if dept.head %}{{ dept.head.name }}{% endif %}"
-                                data-head-email="{% if dept.head %}{{ dept.head.email|default:'' }}{% endif %}"
+                               
+                                data-head-name="{% if dept_head %}{{ dept_head.name }}{% endif %}"
+                                data-head-email="{% if dept_head %}{{ dept_head.email|default:'' }}{% endif %}"
                             >
                                 <i class="bi bi-pencil-square"></i>
                             </button>
+                        {% endwith %}
 
                             <button
                                 type="button"
@@ -476,6 +495,7 @@
 <div class="modal fade" id="addDepartmentModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
+
             <form method="POST" action="{% url 'add_department' %}" enctype="multipart/form-data">
                 {% csrf_token %}
                 <div class="modal-header">
@@ -503,6 +523,18 @@
                         <div class="col-md-6">
                             <label class="form-label">Head Faculty Email</label>
                             <input type="email" class="form-control" name="head_email" placeholder="Enter head faculty email">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Evaluation Schedule</label>
+                            <select name="schedule_id" class="form-select" required>
+                                <option value="">Select schedule</option>
+                                {% for sched in schedules %}
+                                    <option value="{{ sched.id }}">
+                                        {{ sched.academic_year }} - {{ sched.semester }} | {{ sched.title }}
+                                    </option>
+                                {% endfor %}
+                            </select>
                         </div>
 
                         <div class="col-12">
@@ -533,6 +565,7 @@
 <div class="modal fade" id="editDepartmentModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
+
             <form method="POST" id="editDepartmentForm" action="" enctype="multipart/form-data">
                 {% csrf_token %}
                 <div class="modal-header">
@@ -562,6 +595,18 @@
                         <div class="col-md-6">
                             <label class="form-label">Head Faculty Email</label>
                             <input type="email" class="form-control" name="head_email" id="editHeadFacultyEmail">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Evaluation Schedule</label>
+                            <select name="schedule_id" class="form-select" required>
+                                <option value="">Select schedule</option>
+                                {% for sched in schedules %}
+                                    <option value="{{ sched.id }}">
+                                        {{ sched.academic_year }} - {{ sched.semester }} | {{ sched.title }}
+                                    </option>
+                                {% endfor %}
+                            </select>
                         </div>
 
                         <div class="col-12">
@@ -632,11 +677,13 @@
                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
                     <span class="head-badge">
                         Head:
-                        {% if dept.head %}
-                            {{ dept.head.name }}
-                        {% else %}
-                            Not assigned
-                        {% endif %}
+                        {% with dept_head=dept.heads.all|first %}
+                            {% if dept_head %}
+                                {{ dept_head.name }}
+                            {% else %}
+                                Not assigned
+                            {% endif %}
+                        {% endwith %}
                     </span>
 
                     <span class="faculty-chip">
