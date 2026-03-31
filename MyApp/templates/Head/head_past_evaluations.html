@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Results | Head Dashboard</title>
+  <title>Past Evaluations | Head Dashboard</title>
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
@@ -32,9 +32,7 @@
       --sidebar-width:280px;
     }
 
-    *{
-      box-sizing:border-box;
-    }
+    *{ box-sizing:border-box; }
 
     body{
       margin:0;
@@ -404,28 +402,18 @@
       background:#fff;
     }
 
-    .table-responsive{
-      overflow:visible;
-      border:none;
-      border-radius:0;
-      background:transparent;
-    }
-
-    .preview-table,
-    .results-table{
+    .preview-table{
       width:100%;
       min-width:950px;
       border-collapse:collapse;
       font-size:0.93rem;
     }
 
-    .preview-table thead,
-    .results-table thead{
+    .preview-table thead{
       background:linear-gradient(90deg, #fdf3f5, #fef9fa);
     }
 
-    .preview-table thead th,
-    .results-table thead th{
+    .preview-table thead th{
       padding:14px 18px;
       font-weight:700;
       font-size:0.82rem;
@@ -441,24 +429,20 @@
       z-index:2;
     }
 
-    .preview-table tbody tr,
-    .results-table tbody tr{
+    .preview-table tbody tr{
       border-bottom:1px solid #f1f3f6;
       transition:background 0.15s ease;
     }
 
-    .preview-table tbody tr:last-child,
-    .results-table tbody tr:last-child{
+    .preview-table tbody tr:last-child{
       border-bottom:none;
     }
 
-    .preview-table tbody tr:hover,
-    .results-table tbody tr:hover{
+    .preview-table tbody tr:hover{
       background:#fdf6f7;
     }
 
-    .preview-table tbody td,
-    .results-table tbody td{
+    .preview-table tbody td{
       padding:14px 18px;
       vertical-align:middle;
       color:var(--text);
@@ -692,10 +676,6 @@
       margin-top:12px;
     }
 
-    .no-print{
-      display:inline-flex;
-    }
-
     @media (max-width: 991px){
       .sidebar{
         position:relative;
@@ -772,12 +752,13 @@
       <div class="sidebar-section">
         <div class="sidebar-section-title">Main Menu</div>
 
-        <a href="{% url 'head_monitor' %}" class="sidebar-link active">
+        <a href="{% url 'head_monitor' %}" class="sidebar-link">
           <i class="bi bi-graph-up-arrow"></i>
           <span>Results</span>
         </a>
 
-        <a href="{% url 'head_past_evaluations' %}" class="sidebar-link">
+
+        <a href="{% url 'head_past_evaluations' %}" class="sidebar-link active">
           <i class="bi bi-clock-history"></i>
           <span>Past Evaluations</span>
         </a>
@@ -803,8 +784,8 @@
 
   <main class="main-content">
     <div class="page-header">
-      <h1 class="page-title">Department Results</h1>
-      <p class="page-subtitle">Monitor and review faculty evaluation scores for your department.</p>
+      <h1 class="page-title">Past Evaluations</h1>
+      <p class="page-subtitle">Review previous faculty evaluation results under your department.</p>
 
       <div class="head-chip-row">
         <span class="chip">
@@ -824,15 +805,10 @@
           <i class="bi bi-calendar-event"></i>
           {{ selected_schedule.title }}
         </span>
-        {% elif open_schedule %}
-        <span class="chip schedule">
-          <i class="bi bi-calendar-event"></i>
-          {{ open_schedule.title }}
-        </span>
         {% else %}
         <span class="chip soft">
           <i class="bi bi-calendar-x"></i>
-          No schedule available
+          No past schedule available
         </span>
         {% endif %}
       </div>
@@ -883,14 +859,12 @@
     <div class="content-card">
       <div class="card-header-custom">
         <div>
-          <h2><i class="bi bi-table me-2"></i>Instructor Evaluation Results</h2>
+          <h2><i class="bi bi-clock-history me-2"></i>Archived Evaluation Results</h2>
           <p>
             {% if selected_schedule %}
-              Showing results for {{ selected_schedule.title }}.
-            {% elif open_schedule %}
-              Showing results for {{ open_schedule.title }}.
+              Showing past results for {{ selected_schedule.title }}.
             {% else %}
-              Showing available department results.
+              No past evaluation records are available for your department.
             {% endif %}
           </p>
         </div>
@@ -898,89 +872,98 @@
 
       <div class="card-body-custom">
         <div class="filter-row">
-          <div class="search-wrap">
-            <i class="bi bi-search"></i>
-            <input
-              type="text"
-              class="form-control"
-              id="searchInput"
-              placeholder="Search faculty name, ID, email, or evaluator count..."
-              oninput="filterTable(this.value)"
-            >
-          </div>
+          <form method="get" class="d-flex flex-wrap gap-2 w-100">
+            <select name="schedule" class="form-select" style="max-width:360px;" onchange="this.form.submit()">
+              <option value="">Select past schedule</option>
+              {% for sched in past_schedules %}
+                <option value="{{ sched.id }}" {% if selected_schedule and sched.id == selected_schedule.id %}selected{% endif %}>
+                  {{ sched.academic_year }} - {{ sched.semester }} | {{ sched.title }}
+                </option>
+              {% endfor %}
+            </select>
+
+            <div class="search-wrap">
+              <i class="bi bi-search"></i>
+              <input
+                type="text"
+                class="form-control"
+                id="searchInput"
+                placeholder="Search faculty name, ID, email, or evaluator count..."
+                oninput="filterTable(this.value)"
+              >
+            </div>
+          </form>
         </div>
 
         <div class="table-scroll-wrap">
-          <div class="table-responsive">
-            <table class="preview-table" id="previewTable">
-              <thead>
+          <table class="preview-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Faculty Member</th>
+                <th>Position</th>
+                <th>Evaluators</th>
+                <th>Score</th>
+                <th>Details</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody">
+              {% if results %}
+                {% for item in results %}
                 <tr>
-                  <th>#</th>
-                  <th>Faculty Member</th>
-                  <th>Position</th>
-                  <th>Evaluators</th>
-                  <th>Score</th>
-                  <th>Details</th>
-                </tr>
-              </thead>
-              <tbody id="tableBody">
-                {% if results %}
-                  {% for item in results %}
-                  <tr>
-                    <td style="color:var(--muted);font-size:0.85rem;">
-                      {{ forloop.counter|stringformat:"02d" }}
-                    </td>
-                    <td>
-                      <div class="faculty-cell">
-                        <div class="faculty-avatar">{{ item.name|slice:":1"|upper }}</div>
-                        <div>
-                          <div class="faculty-name">{{ item.name }}</div>
-                          <div class="faculty-sub">
-                            {{ item.id_number|default:"No ID" }}
-                            {% if item.email %} • {{ item.email }}{% endif %}
-                          </div>
+                  <td style="color:var(--muted);font-size:0.85rem;">
+                    {{ forloop.counter|stringformat:"02d" }}
+                  </td>
+                  <td>
+                    <div class="faculty-cell">
+                      <div class="faculty-avatar">{{ item.name|slice:":1"|upper }}</div>
+                      <div>
+                        <div class="faculty-name">{{ item.name }}</div>
+                        <div class="faculty-sub">
+                          {{ item.id_number|default:"No ID" }}
+                          {% if item.email %} • {{ item.email }}{% endif %}
                         </div>
                       </div>
-                    </td>
-                    <td>
-                      <span class="badge-pill badge-soft-red">
-                        {{ item.position|default:"Faculty Member" }}
-                      </span>
-                    </td>
-                    <td>
-                      <div class="evaluator-cell">
-                        <i class="bi bi-people-fill"></i>
-                        <span>{{ item.evaluator_count|default:0 }} evaluator{{ item.evaluator_count|pluralize }}</span>
-                      </div>
-                    </td>
-                    <td>
-                      <span class="score-num">{{ item.computed_rating|default:0 }}%</span>
-                    </td>
-                    <td>
-                      <button
-                        type="button"
-                        class="btn-icon"
-                        title="View Details"
-                        data-bs-toggle="modal"
-                        data-bs-target="#viewMoreModal{{ item.id }}">
-                        <i class="bi bi-eye"></i>
-                      </button>
-                    </td>
-                  </tr>
-                  {% endfor %}
-                {% else %}
-                  <tr>
-                    <td colspan="6">
-                      <div class="empty-state">
-                        <i class="bi bi-bar-chart"></i>
-                        <p>No faculty evaluation results are available yet for your department.</p>
-                      </div>
-                    </td>
-                  </tr>
-                {% endif %}
-              </tbody>
-            </table>
-          </div>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="badge-pill badge-soft-red">
+                      {{ item.position|default:"Faculty Member" }}
+                    </span>
+                  </td>
+                  <td>
+                    <div class="evaluator-cell">
+                      <i class="bi bi-people-fill"></i>
+                      <span>{{ item.evaluator_count|default:0 }} evaluator{{ item.evaluator_count|pluralize }}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="score-num">{{ item.computed_rating|default:0 }}%</span>
+                  </td>
+                  <td>
+                    <button
+                      type="button"
+                      class="btn-icon"
+                      title="View Details"
+                      data-bs-toggle="modal"
+                      data-bs-target="#viewMoreModal{{ item.id }}">
+                      <i class="bi bi-eye"></i>
+                    </button>
+                  </td>
+                </tr>
+                {% endfor %}
+              {% else %}
+                <tr>
+                  <td colspan="6">
+                    <div class="empty-state">
+                      <i class="bi bi-archive"></i>
+                      <p>No past evaluation results found for the selected schedule.</p>
+                    </div>
+                  </td>
+                </tr>
+              {% endif %}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -998,8 +981,6 @@
                   {{ item.evaluator_count|default:0 }} evaluator{{ item.evaluator_count|pluralize }}
                   {% if selected_schedule %}
                     • {{ selected_schedule.academic_year }} • {{ selected_schedule.semester }}
-                  {% elif open_schedule %}
-                    • {{ open_schedule.academic_year }} • {{ open_schedule.semester }}
                   {% endif %}
                 </div>
               </div>

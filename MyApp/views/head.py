@@ -48,6 +48,47 @@ def _get_logged_in_head(request):
     )
 
 
+def _get_latest_schedule_for_head_dashboard(logged_in_head):
+    """
+    Dashboard priority:
+    1. Current open schedule for the head's department, if any
+    2. Latest schedule that has faculty for the head's department
+    3. Latest schedule that has department-head record for that department
+    """
+    open_schedule = (
+        EvaluationSchedule.objects
+        .filter(
+            start_datetime__lte=timezone.localtime(timezone.now()),
+            end_datetime__gte=timezone.localtime(timezone.now()),
+            faculty_members__department=logged_in_head.department,
+        )
+        .distinct()
+        .order_by("start_datetime")
+        .first()
+    )
+    if open_schedule:
+        return open_schedule
+
+    latest_faculty_schedule = (
+        EvaluationSchedule.objects
+        .filter(faculty_members__department=logged_in_head.department)
+        .distinct()
+        .order_by("-start_datetime", "-created_at")
+        .first()
+    )
+    if latest_faculty_schedule:
+        return latest_faculty_schedule
+
+    latest_head_schedule = (
+        EvaluationSchedule.objects
+        .filter(department_heads__department=logged_in_head.department)
+        .distinct()
+        .order_by("-start_datetime", "-created_at")
+        .first()
+    )
+    return latest_head_schedule
+
+
 def _ordered_response_queryset(model):
     return model.objects.annotate(
         section_order=Case(
@@ -71,7 +112,11 @@ def _build_head_results_for_schedule(logged_in_head, schedule):
 
     evaluations = (
         FacultyEvaluation.objects
-        .filter(schedule=schedule, evaluatee_faculty_id__in=faculty_ids, status="submitted")
+        .filter(
+            schedule=schedule,
+            evaluatee_faculty_id__in=faculty_ids,
+            status="submitted"
+        )
         .select_related("evaluatee_faculty", "evaluator_head", "schedule")
         .prefetch_related(
             Prefetch(
@@ -153,7 +198,12 @@ def _build_head_results_for_schedule(logged_in_head, schedule):
         average_total_score = round(sum(item["total_scores"]) / evaluator_count, 2) if item and evaluator_count else 0
         computed_rating = round(sum(item["computed_ratings"]) / evaluator_count, 2) if item and evaluator_count else 0
 
-        section_averages = {}
+        section_averages = {
+            "management_teaching_learning": 0,
+            "content_knowledge_pedagogy_technology": 0,
+            "commitment_transparency": 0,
+        }
+
         if item:
             for section_key, values in item["section_values"].items():
                 section_averages[section_key] = round(sum(values) / len(values), 2) if values else 0
@@ -179,10 +229,12 @@ def _build_head_results_for_schedule(logged_in_head, schedule):
 
     total_instructors = len(faculty_members)
     pending_reviews = max(total_instructors - completed_count, 0)
+
+    rated_results = [r for r in results if r["evaluator_count"] > 0]
     dept_avg_score = round(
-        sum(r["computed_rating"] for r in results) / len([r for r in results if r["evaluator_count"] > 0]),
+        sum(r["computed_rating"] for r in rated_results) / len(rated_results),
         2
-    ) if any(r["evaluator_count"] > 0 for r in results) else 0
+    ) if rated_results else 0
 
     return {
         "results": results,
@@ -283,18 +335,25 @@ def head_monitor(request):
     logged_in_head = _get_logged_in_head(request)
     if not logged_in_head:
         messages.error(request, "Please log in first.")
-        return redirect("eval_login")
+        return redirect("admin_login")
 
-    open_schedule = _get_open_schedule()
-    if not open_schedule:
-        messages.error(request, "No open evaluation schedule.")
-        return redirect("eval_login")
+    selected_schedule = _get_latest_schedule_for_head_dashboard(logged_in_head)
 
-    summary = _build_head_results_for_schedule(logged_in_head, open_schedule)
+    summary = {
+        "results": [],
+        "total_instructors": 0,
+        "evaluations_complete": 0,
+        "pending_reviews": 0,
+        "dept_avg_score": 0,
+    }
+
+    if selected_schedule:
+        summary = _build_head_results_for_schedule(logged_in_head, selected_schedule)
 
     context = {
         "logged_in_head": logged_in_head,
-        "open_schedule": open_schedule,
+        "open_schedule": _get_open_schedule(),
+        "selected_schedule": selected_schedule,
         **summary,
     }
     return render(request, "head/head_monitor.html", context)
@@ -307,10 +366,15 @@ def head_past_evaluations(request):
         return redirect("admin_login")
 
     selected_schedule_id = request.GET.get("schedule")
+    now = timezone.localtime(timezone.now())
 
     past_schedules = (
         EvaluationSchedule.objects
-        .filter(end_datetime__lt=timezone.localtime(timezone.now()))
+        .filter(
+            end_datetime__lt=now,
+            faculty_members__department=logged_in_head.department,
+        )
+        .distinct()
         .order_by("-start_datetime", "-created_at")
     )
 
@@ -342,12 +406,6 @@ def head_past_evaluations(request):
 
 
 def verify_head_login_link(request, token):
-    open_schedule = _get_open_schedule()
-
-    if not open_schedule:
-        messages.error(request, "The department head portal is currently closed.")
-        return redirect("admin_login")
-
     signer = TimestampSigner(salt=LINK_SALT)
 
     try:
@@ -362,8 +420,8 @@ def verify_head_login_link(request, token):
 
     logged_in_head = (
         DepartmentHead.objects
-        .select_related("department")
-        .filter(id=head_id, schedule=open_schedule)
+        .select_related("department", "schedule")
+        .filter(id=head_id)
         .first()
     )
 

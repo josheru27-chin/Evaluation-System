@@ -26,5 +26,6 @@ urlpatterns = [
     path('head/add/', views.head_add, name='head_add'),
     path('head/monitor/', views.head_monitor, name='head_monitor'),
     path('verify-head-login-link/<str:token>/',views.verify_head_login_link,name='verify_head_login_link'),
+    path('head/past-evaluations/', views.head_past_evaluations, name='head_past_evaluations'),
     
 ]

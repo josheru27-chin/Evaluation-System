@@ -908,26 +908,82 @@ def admin_login(request):
                 }
                 return redirect("admin_login")
 
-            if not open_schedule:
-                request.session["login_modal"] = {
-                    "type": "warning",
-                    "message": "There is no open evaluation schedule right now."
-                }
-                return redirect("admin_login")
-
             head = (
                 DepartmentHead.objects
-                .select_related("department")
-                .filter(schedule=open_schedule, email__iexact=email)
+                .select_related("department", "schedule")
+                .filter(email__iexact=email)
+                .order_by("-schedule__start_datetime", "-id")
                 .first()
             )
 
             faculty = (
                 FacultyMember.objects
-                .select_related("department")
-                .filter(schedule=open_schedule, email__iexact=email)
+                .select_related("department", "schedule")
+                .filter(email__iexact=email)
+                .order_by("-schedule__start_datetime", "-id")
                 .first()
             )
+
+            if not head:
+                if faculty:
+                    request.session["login_modal"] = {
+                        "type": "danger",
+                        "message": "This account is registered as faculty only. Faculty members are not allowed to access the department head portal."
+                    }
+                else:
+                    request.session["login_modal"] = {
+                        "type": "danger",
+                        "message": "This email is not registered as a department head in the evaluation system."
+                    }
+                return redirect("admin_login")
+
+            signer = TimestampSigner(salt=LINK_SALT)
+            token = signer.sign(str(head.id))
+
+            verify_url = request.build_absolute_uri(
+                reverse("verify_head_login_link", args=[token])
+            )
+
+            subject = "Department Head Portal Login Link"
+
+            context = {
+                "head": head,
+                "verify_url": verify_url,
+                "expires_minutes": LOGIN_LINK_MAX_AGE // 60,
+                "open_schedule": open_schedule,
+            }
+
+            text_body = (
+                f"Hello {head.name},\n\n"
+                f"Click the link below to access the Department Head Portal:\n\n"
+                f"{verify_url}\n\n"
+                f"This link will expire in {LOGIN_LINK_MAX_AGE // 60} minutes.\n"
+                f"If you did not request this, please ignore this email."
+            )
+
+            html_body = render_to_string("head/email_head_portal_link.html", context)
+
+            try:
+                msg = EmailMultiAlternatives(
+                    subject=subject,
+                    body=text_body,
+                    from_email=getattr(settings, "DEFAULT_FROM_EMAIL", None),
+                    to=[head.email],
+                )
+                msg.attach_alternative(html_body, "text/html")
+                msg.send()
+
+                request.session["login_modal"] = {
+                    "type": "success",
+                    "message": f"A secure login link has been sent to {head.email}."
+                }
+            except Exception:
+                request.session["login_modal"] = {
+                    "type": "danger",
+                    "message": "The login link could not be sent. Please check your email settings."
+                }
+
+            return redirect("admin_login")
 
             if not head:
                 if faculty:
