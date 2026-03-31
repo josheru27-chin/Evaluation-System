@@ -1275,17 +1275,46 @@
                     letter-spacing: 0.3px;
                 }
 
-                .signature-table td {
-                    height: 70px;
-                    vertical-align: bottom;
-                }
 
-                .signature-line {
-                    border-top: 1px solid #000;
-                    padding-top: 4px;
-                    text-align: center;
-                    font-size: 10pt;
-                }
+
+            .signature-table td {
+                padding: 4px 8px;
+                vertical-align: middle;
+            }
+
+            .compact-signature-table td {
+                height: auto !important;
+            }
+
+            .compact-signature-table tr:first-child td {
+                height: 42px !important;
+                padding-top: 10px !important;
+                padding-bottom: 4px !important;
+                vertical-align: bottom !important;
+            }
+
+            .compact-signature-table tr:not(:first-child) td {
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
+}
+
+.signature-cell {
+    text-align: center !important;
+}
+
+.signature-line {
+    display: block;
+    width: 100%;
+    border-top: 1px solid #000;
+    padding-top: 4px;
+    text-align: center !important;
+    font-size: 10pt;
+    line-height: 1.2;
+    box-sizing: border-box;
+}
+
+
+
 
                 .page-break {
                     page-break-before: always;
@@ -1570,17 +1599,16 @@
         return content;
     }
 
-    function buildSignatureTable(evaluatorName = '', evaluatorDepartment = '', submittedAt = '', comments = '') {
+function buildSignatureTable(evaluatorName = '', evaluatorDepartment = '', submittedAt = '', comments = '') {
     return `
         <div class="subsection-title">Other Comments and Suggestions</div>
         <div class="comment-box-print">${comments ? escapeHtml(comments) : '&nbsp;'}</div>
 
-        <table class="signature-table">
+        <table class="signature-table compact-signature-table">
             <tbody>
                 <tr>
-                    <td style="width: 50%; height: 70px; vertical-align: bottom;">
-                        <div style="height: 24px;"></div>
-                        <div class="signature-line"></div>
+                    <td style="width: 50%;" class="signature-cell"><br><br>
+                        <div class="signature-line">Signature of Supervisor</div>
                     </td>
                     <td style="width: 50%;"></td>
                 </tr>
