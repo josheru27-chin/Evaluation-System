@@ -1009,7 +1009,6 @@ def admin_login(request):
     )
     return render(request, "admin/admin_login.html", context)
 
-
 def admin_past_evaluations(request):
     selected_schedule_id = request.GET.get("schedule")
 
@@ -1028,6 +1027,7 @@ def admin_past_evaluations(request):
 
     faculty_history_results = []
     head_history_results = []
+    history_results = []
 
     if selected_schedule:
         faculty_evaluations = (
@@ -1044,7 +1044,7 @@ def admin_past_evaluations(request):
                     queryset=_ordered_response_queryset(FacultyEvaluationResponse),
                 )
             )
-            .order_by("evaluatee_name", "evaluator_name")
+            .order_by("evaluatee_name", "evaluator_name", "submitted_at")
         )
 
         head_evaluations = (
@@ -1061,18 +1061,46 @@ def admin_past_evaluations(request):
                     queryset=_ordered_response_queryset(HeadEvaluationResponse),
                 )
             )
-            .order_by("evaluatee_name", "evaluator_name")
+            .order_by("evaluatee_name", "evaluator_name", "submitted_at")
         )
 
         grouped_faculty = {}
         grouped_heads = {}
 
-        def add_to_group(grouped, group_key, target_id, target_name, target_department, evaluation):
+        def add_to_group(
+            grouped,
+            result_type,
+            schedule_obj,
+            group_key,
+            target_id,
+            target_name,
+            target_department,
+            evaluation,
+        ):
+            schedule_label = ""
+            schedule_id_value = None
+            academic_year = ""
+            semester = ""
+            title = ""
+
+            if schedule_obj:
+                schedule_id_value = schedule_obj.id
+                academic_year = schedule_obj.academic_year or ""
+                semester = schedule_obj.semester or ""
+                title = schedule_obj.title or ""
+                schedule_label = f"{academic_year} | {semester} | {title}"
+
             if group_key not in grouped:
                 grouped[group_key] = {
                     "id": target_id,
+                    "result_type": result_type,
                     "name": target_name,
                     "department": target_department,
+                    "schedule_id": schedule_id_value,
+                    "schedule_label": schedule_label,
+                    "academic_year": academic_year,
+                    "semester": semester,
+                    "title": title,
                     "evaluators": [],
                     "section_values": defaultdict(list),
                     "overall_values": [],
@@ -1086,14 +1114,15 @@ def admin_past_evaluations(request):
             for response in evaluation.responses.all():
                 section_key = (response.section_code or "").strip()
                 section_name = (response.section_name or "").strip() or "Unnamed Section"
+                rating_value = float(response.rating or 0)
 
                 if section_key:
-                    section_groups[section_key].append(response.rating)
+                    section_groups[section_key].append(rating_value)
 
                 detailed_answers[section_name].append({
                     "question_number": response.question_number,
                     "question_text": response.question_text or f"Question {response.question_number}",
-                    "rating": response.rating,
+                    "rating": rating_value,
                 })
 
             evaluator_sections = {}
@@ -1125,32 +1154,54 @@ def admin_past_evaluations(request):
                 grouped[group_key]["section_values"][section_key].append(value)
 
         for evaluation in faculty_evaluations:
-            if not evaluation.evaluatee_faculty:
-                continue
+            target_id = evaluation.evaluatee_faculty.id if evaluation.evaluatee_faculty else f"faculty-eval-{evaluation.id}"
+            target_name = (
+                evaluation.evaluatee_name
+                or (evaluation.evaluatee_faculty.name if evaluation.evaluatee_faculty else "Unknown Faculty")
+            )
+            target_department = (
+                evaluation.evaluatee_department
+                or (
+                    evaluation.evaluatee_faculty.department.name
+                    if evaluation.evaluatee_faculty and evaluation.evaluatee_faculty.department
+                    else ""
+                )
+            )
 
             add_to_group(
                 grouped=grouped_faculty,
-                group_key=f"faculty-{evaluation.evaluatee_faculty.id}",
-                target_id=evaluation.evaluatee_faculty.id,
-                target_name=evaluation.evaluatee_name or evaluation.evaluatee_faculty.name,
-                target_department=evaluation.evaluatee_department or (
-                    evaluation.evaluatee_faculty.department.name if evaluation.evaluatee_faculty.department else ""
-                ),
+                result_type="faculty",
+                schedule_obj=evaluation.schedule,
+                group_key=f"faculty-{selected_schedule.id}-{target_id}",
+                target_id=target_id,
+                target_name=target_name,
+                target_department=target_department,
                 evaluation=evaluation,
             )
 
         for evaluation in head_evaluations:
-            if not evaluation.evaluatee_head:
-                continue
+            target_id = evaluation.evaluatee_head.id if evaluation.evaluatee_head else f"head-eval-{evaluation.id}"
+            target_name = (
+                evaluation.evaluatee_name
+                or (evaluation.evaluatee_head.name if evaluation.evaluatee_head else "Unknown Department Head")
+            )
+            target_department = (
+                evaluation.evaluatee_department
+                or (
+                    evaluation.evaluatee_head.department.name
+                    if evaluation.evaluatee_head and evaluation.evaluatee_head.department
+                    else ""
+                )
+            )
 
             add_to_group(
                 grouped=grouped_heads,
-                group_key=f"head-{evaluation.evaluatee_head.id}",
-                target_id=evaluation.evaluatee_head.id,
-                target_name=evaluation.evaluatee_name or evaluation.evaluatee_head.name,
-                target_department=evaluation.evaluatee_department or (
-                    evaluation.evaluatee_head.department.name if evaluation.evaluatee_head.department else ""
-                ),
+                result_type="head",
+                schedule_obj=evaluation.schedule,
+                group_key=f"head-{selected_schedule.id}-{target_id}",
+                target_id=target_id,
+                target_name=target_name,
+                target_department=target_department,
                 evaluation=evaluation,
             )
 
@@ -1165,8 +1216,14 @@ def admin_past_evaluations(request):
 
             faculty_history_results.append({
                 "id": item["id"],
+                "result_type": item["result_type"],
                 "name": item["name"],
                 "department": item["department"],
+                "schedule_id": item["schedule_id"],
+                "schedule_label": item["schedule_label"],
+                "academic_year": item["academic_year"],
+                "semester": item["semester"],
+                "title": item["title"],
                 "sections": section_averages,
                 "overall": overall_average,
                 "average_total_score": average_total_score,
@@ -1186,8 +1243,14 @@ def admin_past_evaluations(request):
 
             head_history_results.append({
                 "id": item["id"],
+                "result_type": item["result_type"],
                 "name": item["name"],
                 "department": item["department"],
+                "schedule_id": item["schedule_id"],
+                "schedule_label": item["schedule_label"],
+                "academic_year": item["academic_year"],
+                "semester": item["semester"],
+                "title": item["title"],
                 "sections": section_averages,
                 "overall": overall_average,
                 "average_total_score": average_total_score,
@@ -1196,17 +1259,21 @@ def admin_past_evaluations(request):
                 "evaluators": item["evaluators"],
             })
 
-        faculty_history_results.sort(key=lambda x: x["name"].lower())
-        head_history_results.sort(key=lambda x: x["name"].lower())
+        faculty_history_results.sort(key=lambda x: str(x["name"]).lower())
+        head_history_results.sort(key=lambda x: str(x["name"]).lower())
+
+        history_results = faculty_history_results + head_history_results
+        history_results.sort(key=lambda x: (x["result_type"], str(x["name"]).lower()))
 
     context = _admin_context("past_evaluations", {
         "past_schedules": past_schedules,
         "selected_schedule": selected_schedule,
         "faculty_history_results": faculty_history_results,
         "head_history_results": head_history_results,
+        "history_results": history_results,
         "faculty_count": len(faculty_history_results),
         "head_count": len(head_history_results),
-        "total_count": len(faculty_history_results) + len(head_history_results),
+        "total_count": len(history_results),
     })
 
     return render(request, "admin/admin_past_evaluations.html", context)

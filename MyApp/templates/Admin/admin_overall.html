@@ -778,12 +778,11 @@
 
 {{ faculty_results|default:"[]"|json_script:"faculty-results-data" }}
 {% endblock %}
-
 {% block extra_js %}
 <script>
     const questionBankByCode = {
         management_teaching_learning: {
-            title: "Management of Teaching and Learning",
+            title: "A. Management of Teaching and Learning",
             questions: {
                 1: "Comes to class on time.",
                 2: "Submits updated syllabus, grade sheets, and other required reports on time.",
@@ -794,7 +793,7 @@
             }
         },
         content_knowledge_pedagogy_technology: {
-            title: "Content Knowledge, Pedagogy, and Technology",
+            title: "B. Content Knowledge, Pedagogy, and Technology",
             questions: {
                 1: "Demonstrates extensive and broad knowledge of the subject or course.",
                 2: "Simplifies complex ideas in the lesson for ease of understanding.",
@@ -804,7 +803,7 @@
             }
         },
         commitment_transparency: {
-            title: "Commitment and Transparency",
+            title: "C. Commitment and Transparency",
             questions: {
                 1: "Recognizes and values the unique diversity and individual differences among students.",
                 2: "Assists students with their learning challenges during consultation hours.",
@@ -821,6 +820,30 @@
         "A. Management of Teaching and Learning": "management_teaching_learning",
         "B. Content Knowledge, Pedagogy, and Technology": "content_knowledge_pedagogy_technology",
         "C. Commitment and Transparency": "commitment_transparency"
+    };
+
+    const sectionContinuousNumberMap = {
+        management_teaching_learning: { 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6 },
+        content_knowledge_pedagogy_technology: { 1: 7, 2: 8, 3: 9, 4: 10, 5: 11 },
+        commitment_transparency: { 1: 12, 2: 13, 3: 14, 4: 15 }
+    };
+
+    const questionTextByContinuousNumber = {
+        1: "Comes to class on time.",
+        2: "Submits updated syllabus, grade sheets, and other required reports on time.",
+        3: "Maximizes the allocated time or learning hours effectively.",
+        4: "Provides appropriate learning activities that facilitate students' critical thinking and creativity.",
+        5: "Guides students to learn on their own, reflect on new ideas and experiences, and make decisions in accomplishing given tasks.",
+        6: "Communicates constructive feedback to students for their academic growth.",
+        7: "Demonstrates extensive and broad knowledge of the subject or course.",
+        8: "Simplifies complex ideas in the lesson for ease of understanding.",
+        9: "Integrates contemporary issues and developments in the discipline and/or daily life activities in the syllabus.",
+        10: "Promotes active learning and student engagement by using appropriate teaching and learning resources including ICT tools and platforms.",
+        11: "Uses appropriate assessments such as projects, exams, quizzes, and assignments aligned with the learning outcomes.",
+        12: "Recognizes and values the unique diversity and individual differences among students.",
+        13: "Assists students with their learning challenges during consultation hours.",
+        14: "Provides immediate feedback on student outputs and performance.",
+        15: "Provides transparent and clear criteria in rating student performance."
     };
 
     const facultyResultsElement = document.getElementById('faculty-results-data');
@@ -865,15 +888,33 @@
         return '';
     }
 
+    function getContinuousQuestionNumber(sectionName, questionNumber) {
+        const sectionCode = normalizeSectionCode(sectionName);
+        const localNumber = Number(questionNumber);
+
+        if (sectionCode && sectionContinuousNumberMap[sectionCode]) {
+            return sectionContinuousNumberMap[sectionCode][localNumber] || localNumber;
+        }
+
+        return localNumber;
+    }
+
     function getQuestionText(sectionName, questionNumber, fallbackText = '') {
+        const sectionCode = normalizeSectionCode(sectionName);
+        const localNumber = Number(questionNumber);
+
+        if (sectionCode && sectionContinuousNumberMap[sectionCode]) {
+            const continuousNumber = sectionContinuousNumberMap[sectionCode][localNumber];
+            if (continuousNumber && questionTextByContinuousNumber[continuousNumber]) {
+                return questionTextByContinuousNumber[continuousNumber];
+            }
+        }
+
         if (fallbackText && !/^Question\s+\d+$/i.test(String(fallbackText).trim())) {
             return fallbackText;
         }
 
-        const sectionCode = normalizeSectionCode(sectionName);
-        if (!sectionCode) return fallbackText || `Question ${questionNumber}`;
-
-        return questionBankByCode?.[sectionCode]?.questions?.[questionNumber] || fallbackText || `Question ${questionNumber}`;
+        return fallbackText || `Question ${questionNumber}`;
     }
 
     function escapeHtml(value) {
@@ -1032,12 +1073,12 @@
                 </tr>
             `).join('');
 
-            detailContainer.innerHTML = item.evaluators.map((evaluator, index) => {
+            detailContainer.innerHTML = item.evaluators.map((evaluator) => {
                 const detailedAnswers = evaluator.detailed_answers || {};
                 const sectionBlocks = Object.entries(detailedAnswers).map(([sectionName, answers]) => `
                     <div class="question-section-card">
                         <div class="question-section-header">
-                            ${escapeHtml(sectionName)}
+                            ${escapeHtml(prettifySectionTitle(sectionName))}
                         </div>
                         <div class="question-table-wrap">
                             <table class="table table-sm align-middle mb-0">
@@ -1049,13 +1090,16 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    ${answers.map(answer => `
-                                        <tr>
-                                            <td><span class="question-no-badge">Q${answer.question_number}</span></td>
-                                            <td>${escapeHtml(getQuestionText(sectionName, answer.question_number, answer.question_text))}</td>
-                                            <td><span class="grade-pill">${toFixedGrade(answer.rating)}</span></td>
-                                        </tr>
-                                    `).join('')}
+                                    ${answers
+                                        .slice()
+                                        .sort((a, b) => getContinuousQuestionNumber(sectionName, a.question_number) - getContinuousQuestionNumber(sectionName, b.question_number))
+                                        .map(answer => `
+                                            <tr>
+                                                <td><span class="question-no-badge">${getContinuousQuestionNumber(sectionName, answer.question_number)}</span></td>
+                                                <td>${escapeHtml(getQuestionText(sectionName, answer.question_number, answer.question_text))}</td>
+                                                <td><span class="grade-pill">${toFixedGrade(answer.rating)}</span></td>
+                                            </tr>
+                                        `).join('')}
                                 </tbody>
                             </table>
                         </div>
@@ -1069,10 +1113,6 @@
                                 <h6>${escapeHtml(evaluator.evaluator_name || 'Unknown Evaluator')}</h6>
                                 <div class="detail-meta">${escapeHtml(evaluator.evaluator_department || 'No Department')}</div>
                             </div>
-                            <span class="type-badge">
-                                <i class="bi bi-person-check"></i>
-                                Evaluator ${index + 1}
-                            </span>
                         </div>
 
                         <div class="detail-score-grid">
@@ -1111,7 +1151,7 @@
             <style>
                 @page {
                     size: A4;
-                    margin: 18mm 14mm 18mm 14mm;
+                    margin: 16mm 14mm 16mm 14mm;
                 }
 
                 body {
@@ -1139,54 +1179,15 @@
                     margin: 0 0 4px;
                     font-weight: 700;
                     text-transform: uppercase;
+                    color: #5f1020;
+                    letter-spacing: 0.5px;
                 }
 
                 .doc-header h2 {
                     font-size: 12pt;
                     margin: 0;
                     font-weight: 400;
-                }
-
-                .doc-subheader {
-                    display: flex;
-                    justify-content: space-between;
-                    gap: 16px;
-                    margin: 12px 0 18px;
-                    flex-wrap: wrap;
-                }
-
-                .doc-subheader .meta-group {
-                    flex: 1 1 260px;
-                }
-
-                .doc-label {
-                    font-weight: 700;
-                }
-
-                .summary-grid {
-                    display: grid;
-                    grid-template-columns: repeat(2, minmax(0, 1fr));
-                    gap: 10px;
-                    margin: 14px 0 18px;
-                }
-
-                .summary-box {
-                    border: 1px solid #cfd6df;
-                    padding: 10px 12px;
-                    border-radius: 6px;
-                    background: #fafafa;
-                }
-
-                .summary-box .small {
-                    display: block;
-                    font-size: 10pt;
-                    color: #4b5563;
-                    margin-bottom: 4px;
-                }
-
-                .summary-box .big {
-                    font-size: 13pt;
-                    font-weight: 700;
+                    color: #374151;
                 }
 
                 .section-title {
@@ -1194,6 +1195,22 @@
                     font-weight: 700;
                     margin: 18px 0 10px;
                     color: #7f1d2d;
+                }
+
+                .subsection-title {
+                    font-size: 12pt;
+                    font-weight: 700;
+                    margin: 16px 0 8px;
+                    color: #5f1020;
+                }
+
+                .instruction-box {
+                    border: 1px solid #d7dce3;
+                    background: #fafafa;
+                    border-radius: 8px;
+                    padding: 10px 12px;
+                    margin: 8px 0 16px;
+                    font-size: 10.5pt;
                 }
 
                 table {
@@ -1206,39 +1223,72 @@
                     border: 1px solid #bfc8d4;
                     padding: 7px 8px;
                     vertical-align: top;
-                    font-size: 10.8pt;
+                    font-size: 10.6pt;
                 }
 
                 th {
                     background: #f3f4f6;
                     font-weight: 700;
                     text-align: left;
+                    color: #1f2937;
                 }
 
-                .person-block,
-                .evaluator-block {
-                    border: 1px solid #d5dbe4;
-                    border-radius: 8px;
-                    padding: 12px;
-                    margin-bottom: 16px;
-                    page-break-inside: avoid;
-                }
-
-                .evaluator-title {
-                    font-size: 12pt;
+                .section-row td {
+                    background: #f8e9ee;
                     font-weight: 700;
-                    margin-bottom: 6px;
+                    color: #5f1020;
                 }
 
-                .muted {
-                    color: #4b5563;
+                .rating-scale-table th,
+                .rating-scale-table td {
+                    text-align: left;
+                    font-size: 10.1pt;
                 }
 
-                .comment-box {
+                .rating-score-col {
+                    width: 90px;
+                    text-align: center;
+                    font-weight: 700;
+                }
+
+                .comment-box-print {
                     border-left: 4px solid #7f1d2d;
                     background: #faf5f6;
                     padding: 10px 12px;
                     margin: 10px 0 12px;
+                    min-height: 52px;
+                    white-space: pre-wrap;
+                }
+
+                .computed-rating-row th,
+                .computed-rating-row td {
+                    background: #fff2a8 !important;
+                    font-weight: 800;
+                    color: #5f1020;
+                    font-size: 11.2pt;
+                    border-color: #d4b84a !important;
+                }
+
+                .computed-rating-value {
+                    font-size: 13pt !important;
+                    font-weight: 800 !important;
+                    letter-spacing: 0.3px;
+                }
+
+                .signature-table td {
+                    height: 70px;
+                    vertical-align: bottom;
+                }
+
+                .signature-line {
+                    border-top: 1px solid #000;
+                    padding-top: 4px;
+                    text-align: center;
+                    font-size: 10pt;
+                }
+
+                .page-break {
+                    page-break-before: always;
                 }
 
                 .footer-note {
@@ -1248,146 +1298,455 @@
                     text-align: right;
                 }
 
-                .page-break {
-                    page-break-before: always;
+                .faculty-info-card {
+                    border: 1px solid #cfd6df;
+                    border-radius: 10px;
+                    overflow: hidden;
+                    margin-bottom: 16px;
+                }
+
+                .faculty-info-header {
+                    background: #f7ecef;
+                    color: #5f1020;
+                    font-weight: 700;
+                    padding: 10px 12px;
+                    border-bottom: 1px solid #cfd6df;
+                }
+
+                .faculty-info-grid {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                }
+
+                .faculty-info-item {
+                    padding: 10px 12px;
+                    border-right: 1px solid #e5e7eb;
+                    border-bottom: 1px solid #e5e7eb;
+                }
+
+                .faculty-info-item:nth-child(2n) {
+                    border-right: none;
+                }
+
+                .faculty-info-label {
+                    font-size: 9.6pt;
+                    color: #6b7280;
+                    font-weight: 700;
+                    margin-bottom: 4px;
+                }
+
+                .faculty-info-value {
+                    font-size: 10.8pt;
+                    color: #111827;
+                    font-weight: 600;
+                    min-height: 18px;
                 }
             </style>
         `;
     }
 
-    function buildSinglePersonPrintHtml(item) {
-        const evaluatorRows = (item.evaluators || []).map(evaluator => `
-            <tr>
-                <td>${escapeHtml(evaluator.evaluator_name || 'Unknown Evaluator')}</td>
-                <td>${escapeHtml(evaluator.evaluator_department || '')}</td>
-                <td>${toFixedGrade(getSection(evaluator, 'management_teaching_learning'))}</td>
-                <td>${toFixedGrade(getSection(evaluator, 'content_knowledge_pedagogy_technology'))}</td>
-                <td>${toFixedGrade(getSection(evaluator, 'commitment_transparency'))}</td>
-                <td>${toFixedGrade(evaluator.total_score)}</td>
-                <td>${toFixedGrade(evaluator.overall)}</td>
-                <td>${toFixedGrade(evaluator.computed_rating)}%</td>
-            </tr>
-        `).join('');
+    function prettifySectionTitle(sectionName = '') {
+        const code = normalizeSectionCode(sectionName);
 
-        const detailedBlocks = (item.evaluators || []).map((evaluator, index) => {
-            const detailedAnswers = evaluator.detailed_answers || {};
-            const sections = Object.entries(detailedAnswers).map(([sectionName, answers]) => `
-                <div style="margin-top:12px;">
-                    <div class="section-title" style="font-size:11.5pt; margin-top:12px;">${escapeHtml(sectionName)}</div>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th style="width:70px;">No.</th>
-                                <th>Question</th>
-                                <th style="width:90px;">Rating</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${answers.map(answer => `
-                                <tr>
-                                    <td>Q${answer.question_number}</td>
-                                    <td>${escapeHtml(getQuestionText(sectionName, answer.question_number, answer.question_text))}</td>
-                                    <td>${toFixedGrade(answer.rating)}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>
-            `).join('');
+        if (code === 'management_teaching_learning') {
+            return 'A. Management of Teaching and Learning';
+        }
+        if (code === 'content_knowledge_pedagogy_technology') {
+            return 'B. Content Knowledge, Pedagogy, and Technology';
+        }
+        if (code === 'commitment_transparency') {
+            return 'C. Commitment and Transparency';
+        }
 
-            return `
-                <div class="evaluator-block">
-                    <div class="evaluator-title">Evaluator ${index + 1}: ${escapeHtml(evaluator.evaluator_name || 'Unknown Evaluator')}</div>
-                    <div class="muted"><strong>Department:</strong> ${escapeHtml(evaluator.evaluator_department || 'No Department')}</div>
-                    <div style="margin-top:8px;">
-                        <strong>Total Score:</strong> ${toFixedGrade(evaluator.total_score)} &nbsp;&nbsp;|&nbsp;&nbsp;
-                        <strong>Total Average:</strong> ${toFixedGrade(evaluator.overall)} &nbsp;&nbsp;|&nbsp;&nbsp;
-                        <strong>Computed Rating:</strong> ${toFixedGrade(evaluator.computed_rating)}%
+        return String(sectionName || '').replace(/_/g, ' ');
+    }
+
+    function evaluatorTypeLabel() {
+        return 'Supervisor';
+    }
+
+    function evaluateeTypeLabel(item) {
+        return item.result_type === 'head' ? 'Department Head' : 'Faculty';
+    }
+
+    function getOrderedSectionsForPrint() {
+        return [
+            'management_teaching_learning',
+            'content_knowledge_pedagogy_technology',
+            'commitment_transparency'
+        ];
+    }
+
+    function buildRatingScaleTable() {
+        return `
+            <div class="subsection-title">Rating Scale</div>
+            <table class="rating-scale-table">
+                <thead>
+                    <tr>
+                        <th style="width: 70px;">Scale</th>
+                        <th style="width: 220px;">Qualitative Description</th>
+                        <th>Operational Definition and Scale</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="rating-score-col">5</td>
+                        <td>Always manifested</td>
+                        <td>Evident in nearly all relevant situations (91–100% of instances).</td>
+                    </tr>
+                    <tr>
+                        <td class="rating-score-col">4</td>
+                        <td>Often manifested</td>
+                        <td>Evident most of the time, with occasional lapses (61–90%).</td>
+                    </tr>
+                    <tr>
+                        <td class="rating-score-col">3</td>
+                        <td>Sometimes manifested</td>
+                        <td>Evident about half the time (31–60%).</td>
+                    </tr>
+                    <tr>
+                        <td class="rating-score-col">2</td>
+                        <td>Seldom manifested</td>
+                        <td>Infrequently demonstrated; rarely evident in relevant situations (11–30%).</td>
+                    </tr>
+                    <tr>
+                        <td class="rating-score-col">1</td>
+                        <td>Never/Rarely manifested</td>
+                        <td>Seldom demonstrated; almost never evident, with only isolated cases (0–10%).</td>
+                    </tr>
+                </tbody>
+            </table>
+        `;
+    }
+
+    function getSuggestedMeans(questionNumber) {
+        const means = {
+            1: 'Daily time record; Faculty schedule and timetable; Informal interview with students',
+            2: 'Documents submission log; Submission receipts or acknowledgment emails',
+            3: 'Class schedules and timetables; LMS logs; Informal interview with students',
+            4: 'Course syllabus; Learning plan; Classroom observation',
+            5: 'Informal interview with students; LMS logs; Course syllabus; Learning plan; Student work samples',
+            6: 'Classroom observation; LMS logs; Informal interview with students; Faculty consultation log; Graded student work with feedback',
+            7: 'Faculty consultation log; Informal interview with students; Emails or official correspondence; LMS logs',
+            8: 'Course syllabus; Learning plan; IMs developed by the faculty; Informal interview with students; Mentorship or thesis/dissertation advisory records',
+            9: 'Learning plan; Course syllabus; Classroom observation; Informal interview with students; Lecture notes and presentations; LMS logs',
+            10: 'Course syllabus; Learning plan; Classroom observation; Informal interview with students; LMS logs; Multimedia lecture materials',
+            11: 'Course syllabus; Learning plan; Assessment tools and rubrics; Exam and quiz samples; Graded student work samples; LMS records',
+            12: 'Course syllabus; Learning plan; IMs developed by the faculty; Classroom observation; Informal interview with students',
+            13: 'Faculty consultation log; Advisory records; LMS logs; Emails or official correspondence',
+            14: 'Graded student work samples; Assessment tools and rubrics; Informal interview with students; LMS logs; Emails or official correspondence',
+            15: 'Faculty consultation log; Advising reports; Course syllabus; Assessment tools and rubrics; Informal interview with students; LMS records; Grade sheets and records'
+        };
+        return means[Number(questionNumber)] || '-';
+    }
+
+    function buildFacultyInfoBlock(item, evaluator = null) {
+        const evaluatorType = evaluatorTypeLabel();
+
+        return `
+            <div class="faculty-info-card">
+                <div class="faculty-info-header">Faculty Information</div>
+                <div class="faculty-info-grid">
+                    <div class="faculty-info-item">
+                        <div class="faculty-info-label">Academic Year</div>
+                        <div class="faculty-info-value">${escapeHtml(item.academic_year || '-')}</div>
+                    </div>
+                    <div class="faculty-info-item">
+                        <div class="faculty-info-label">Semester</div>
+                        <div class="faculty-info-value">${escapeHtml(item.semester || '-')}</div>
                     </div>
 
-                    ${evaluator.comments ? `
-                        <div class="comment-box">
-                            <strong>Comment:</strong><br>
-                            ${escapeHtml(evaluator.comments)}
-                        </div>
-                    ` : ''}
+                    <div class="faculty-info-item">
+                        <div class="faculty-info-label">Name of Evaluatee</div>
+                        <div class="faculty-info-value">${escapeHtml(item.name || '-')}</div>
+                    </div>
+                    <div class="faculty-info-item">
+                        <div class="faculty-info-label">Type</div>
+                        <div class="faculty-info-value">${escapeHtml(evaluateeTypeLabel(item))}</div>
+                    </div>
 
-                    ${sections || '<div class="muted" style="margin-top:8px;">No detailed answers available.</div>'}
+                    <div class="faculty-info-item">
+                        <div class="faculty-info-label">Department</div>
+                        <div class="faculty-info-value">${escapeHtml(item.department || '-')}</div>
+                    </div>
+                    <div class="faculty-info-item">
+                        <div class="faculty-info-label">Schedule Title</div>
+                        <div class="faculty-info-value">${escapeHtml(item.title || '-')}</div>
+                    </div>
+
+                    <div class="faculty-info-item">
+                        <div class="faculty-info-label">Evaluator Name</div>
+                        <div class="faculty-info-value">${escapeHtml(evaluator?.evaluator_name || '-')}</div>
+                    </div>
+                    <div class="faculty-info-item">
+                        <div class="faculty-info-label">Evaluator Type</div>
+                        <div class="faculty-info-value">${escapeHtml(evaluator ? evaluatorType : '-')}</div>
+                    </div>
+
+                    <div class="faculty-info-item">
+                        <div class="faculty-info-label">Evaluator Department</div>
+                        <div class="faculty-info-value">${escapeHtml(evaluator?.evaluator_department || '-')}</div>
+                    </div>
+                    <div class="faculty-info-item">
+                        <div class="faculty-info-label">Date Submitted</div>
+                        <div class="faculty-info-value">${escapeHtml(evaluator?.submitted_at || '-')}</div>
+                    </div>
                 </div>
+            </div>
+        `;
+    }
+
+    function buildDetailedSectionTables(evaluator) {
+        const detailedAnswers = evaluator.detailed_answers || {};
+        const orderedSections = getOrderedSectionsForPrint();
+
+        let content = `
+            <div class="subsection-title">Instruction</div>
+            <div class="instruction-box">
+                Carefully read each benchmark statement and rate the faculty member based on the appropriate rating scale.
+                The Suggested Means for Verification column may serve as a guide in conducting an objective assessment.
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 43%;">Benchmark Statements</th>
+                        <th style="width: 42%;">Suggested Means for Verification</th>
+                        <th style="width: 15%;">Rating</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        orderedSections.forEach(sectionCode => {
+            const foundEntry = Object.entries(detailedAnswers).find(
+                ([sectionName]) => normalizeSectionCode(sectionName) === sectionCode
+            );
+
+            const sectionTitle = prettifySectionTitle(sectionCode);
+
+            content += `
+                <tr class="section-row">
+                    <td colspan="3">${escapeHtml(sectionTitle)}</td>
+                </tr>
             `;
-        }).join('');
+
+            if (!foundEntry) {
+                content += `
+                    <tr>
+                        <td colspan="2">No detailed answers available.</td>
+                        <td class="rating-score-col">-</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            const [rawSectionName, sectionAnswers] = foundEntry;
+
+            const sortedAnswers = [...sectionAnswers].sort(
+                (a, b) => getContinuousQuestionNumber(rawSectionName, a.question_number) - getContinuousQuestionNumber(rawSectionName, b.question_number)
+            );
+
+            sortedAnswers.forEach(answer => {
+                const continuousNumber = getContinuousQuestionNumber(rawSectionName, answer.question_number);
+                const questionText = getQuestionText(rawSectionName, answer.question_number, answer.question_text);
+                const suggestedMeans = getSuggestedMeans(continuousNumber);
+
+                content += `
+                    <tr>
+                        <td><strong>${continuousNumber}.</strong> ${escapeHtml(questionText)}</td>
+                        <td>${escapeHtml(suggestedMeans)}</td>
+                        <td class="rating-score-col">${toFixedGrade(answer.rating)}</td>
+                    </tr>
+                `;
+            });
+        });
+
+        content += `
+                </tbody>
+            </table>
+        `;
+
+        return content;
+    }
+
+    function buildSignatureTable(evaluatorName = '', evaluatorDepartment = '', submittedAt = '', comments = '') {
+    return `
+        <div class="subsection-title">Other Comments and Suggestions</div>
+        <div class="comment-box-print">${comments ? escapeHtml(comments) : '&nbsp;'}</div>
+
+        <table class="signature-table">
+            <tbody>
+                <tr>
+                    <td style="width: 50%; height: 70px; vertical-align: bottom;">
+                        <div style="height: 24px;"></div>
+                        <div class="signature-line"></div>
+                    </td>
+                    <td style="width: 50%;"></td>
+                </tr>
+                <tr>
+                    <td colspan="2"><strong>Name of Supervisor:</strong> ${escapeHtml(evaluatorName || '')}</td>
+                </tr>
+                <tr>
+                    <td colspan="2"><strong>Designation:</strong> ${escapeHtml(evaluatorDepartment || '')}</td>
+                </tr>
+                <tr>
+                    <td colspan="2"><strong>Date:</strong> ${escapeHtml(submittedAt || '')}</td>
+                </tr>
+            </tbody>
+        </table>
+    `;
+}
+
+function buildBatchSignatories(item) {
+    const evaluatorNames = (item.evaluators || [])
+        .map(e => e.evaluator_name || '')
+        .filter(Boolean);
+
+    const evaluatorDepartments = (item.evaluators || [])
+        .map(e => e.evaluator_department || '')
+        .filter(Boolean);
+
+    const combinedEvaluatorNames = evaluatorNames.length ? evaluatorNames.join(', ') : '-';
+    const combinedEvaluatorDepartments = evaluatorDepartments.length
+        ? [...new Set(evaluatorDepartments)].join(', ')
+        : '-';
+
+    return `
+        <div class="subsection-title">Signatories</div>
+        <table class="signature-table">
+            <tbody>
+                <tr>
+                    <td style="width: 50%;">
+                        <div class="signature-line">Signature of Supervisor</div>
+                    </td>
+                    <td style="width: 50%;">
+                        <div class="signature-line">Signature of Evaluatee</div>
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>Name of Supervisor:</strong> ${escapeHtml(combinedEvaluatorNames)}</td>
+                    <td><strong>Name of Evaluatee:</strong> ${escapeHtml(item.name || '-')}</td>
+                </tr>
+                <tr>
+                    <td><strong>Designation:</strong> ${escapeHtml(combinedEvaluatorDepartments)}</td>
+                    <td><strong>Department:</strong> ${escapeHtml(item.department || '-')}</td>
+                </tr>
+                <tr>
+                    <td colspan="2"><strong>Date:</strong> ____________________________</td>
+                </tr>
+            </tbody>
+        </table>
+    `;
+}
+
+
+
+
+    
+    function buildSinglePersonPrintHtml(item) {
+        const evaluatorPages = (item.evaluators || []).map((evaluator, index) => `
+            <div class="${index > 0 ? 'page-break' : ''}">
+                <div class="doc-header">
+                    <h1>Evaluation Summary Report</h1>
+                    <h2>Supervisor's Evaluation of Faculty</h2>
+                </div>
+
+                ${buildFacultyInfoBlock(item, evaluator)}
+
+                ${buildRatingScaleTable()}
+
+                <div class="subsection-title">Summary</div>
+                <table>
+                    <tbody>
+                        <tr>
+                            <th style="width: 70%;">A. Management of Teaching and Learning</th>
+                            <td class="rating-score-col">${toFixedGrade(getSection(evaluator, 'management_teaching_learning'))}</td>
+                        </tr>
+                        <tr>
+                            <th>B. Content Knowledge, Pedagogy, and Technology</th>
+                            <td class="rating-score-col">${toFixedGrade(getSection(evaluator, 'content_knowledge_pedagogy_technology'))}</td>
+                        </tr>
+                        <tr>
+                            <th>C. Commitment and Transparency</th>
+                            <td class="rating-score-col">${toFixedGrade(getSection(evaluator, 'commitment_transparency'))}</td>
+                        </tr>
+                        <tr>
+                            <th>Total Score</th>
+                            <td class="rating-score-col">${toFixedGrade(evaluator.total_score)}</td>
+                        </tr>
+                        <tr>
+                            <th>Total Average</th>
+                            <td class="rating-score-col">${toFixedGrade(evaluator.overall)}</td>
+                        </tr>
+                        <tr class="computed-rating-row">
+                            <th>Computed Rating</th>
+                            <td class="rating-score-col computed-rating-value">${toFixedGrade(evaluator.computed_rating)}%</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                ${buildDetailedSectionTables(evaluator)}
+
+                ${buildSignatureTable(
+                    evaluator.evaluator_name || '',
+                    evaluator.evaluator_department || '',
+                    evaluator.submitted_at || '',
+                    evaluator.comments || ''
+                )}
+            </div>
+        `).join('');
 
         return `
             <html>
             <head>
-                <title>Evaluation Summary - ${escapeHtml(item.name || 'Evaluatee')}</title>
+                <title>Evaluation Summary Report - ${escapeHtml(item.name || 'Evaluatee')}</title>
                 ${buildDocumentStyles()}
             </head>
             <body>
                 <div class="doc-shell">
-                    <div class="doc-header">
-                        <h1>Faculty Evaluation Summary Report</h1>
-                        <h2>Generated from Faculty Evaluation Results and Summary</h2>
-                    </div>
+                    ${evaluatorPages || `
+                        <div class="doc-header">
+                            <h1>Evaluation Summary Report</h1>
+                            <h2>Supervisor's Evaluation of Faculty</h2>
+                        </div>
 
-                    <div class="doc-subheader">
-                        <div class="meta-group">
-                            <div><span class="doc-label">Evaluatee:</span> ${escapeHtml(item.name || 'Unnamed')}</div>
-                            <div><span class="doc-label">Type:</span> ${escapeHtml(formatTypeLabel(item.result_type))}</div>
-                            <div><span class="doc-label">Department:</span> ${escapeHtml(item.department || 'No Department')}</div>
-                        </div>
-                        <div class="meta-group">
-                            <div><span class="doc-label">Evaluator Count:</span> ${item.evaluator_count || 0}</div>
-                            <div><span class="doc-label">Average Total Score:</span> ${toFixedGrade(item.average_total_score)}</div>
-                            <div><span class="doc-label">Computed Rating:</span> ${toFixedGrade(item.computed_rating)}%</div>
-                        </div>
-                    </div>
+                        ${buildFacultyInfoBlock(item, null)}
 
-                    <div class="section-title">Overall Summary</div>
-                    <div class="summary-grid">
-                        <div class="summary-box">
-                            <span class="small">Management of Teaching and Learning</span>
-                            <span class="big">${toFixedGrade(getSection(item, 'management_teaching_learning'))}</span>
-                        </div>
-                        <div class="summary-box">
-                            <span class="small">Content Knowledge, Pedagogy, and Technology</span>
-                            <span class="big">${toFixedGrade(getSection(item, 'content_knowledge_pedagogy_technology'))}</span>
-                        </div>
-                        <div class="summary-box">
-                            <span class="small">Commitment and Transparency</span>
-                            <span class="big">${toFixedGrade(getSection(item, 'commitment_transparency'))}</span>
-                        </div>
-                        <div class="summary-box">
-                            <span class="small">Total Average Grade</span>
-                            <span class="big">${toFixedGrade(item.overall)}</span>
-                        </div>
-                    </div>
+                        ${buildRatingScaleTable()}
 
-                    <div class="section-title">Evaluator Summary Table</div>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Evaluator Name</th>
-                                <th>Department</th>
-                                <th>Management</th>
-                                <th>Content Knowledge</th>
-                                <th>Commitment</th>
-                                <th>Total Score</th>
-                                <th>Total Average</th>
-                                <th>Computed Rating</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${evaluatorRows || '<tr><td colspan="8">No evaluator records found.</td></tr>'}
-                        </tbody>
-                    </table>
+                        <div class="subsection-title">Summary</div>
+                        <table>
+                            <tbody>
+                                <tr>
+                                    <th style="width: 70%;">A. Management of Teaching and Learning</th>
+                                    <td class="rating-score-col">${toFixedGrade(getSection(item, 'management_teaching_learning'))}</td>
+                                </tr>
+                                <tr>
+                                    <th>B. Content Knowledge, Pedagogy, and Technology</th>
+                                    <td class="rating-score-col">${toFixedGrade(getSection(item, 'content_knowledge_pedagogy_technology'))}</td>
+                                </tr>
+                                <tr>
+                                    <th>C. Commitment and Transparency</th>
+                                    <td class="rating-score-col">${toFixedGrade(getSection(item, 'commitment_transparency'))}</td>
+                                </tr>
+                                <tr>
+                                    <th>Total Score</th>
+                                    <td class="rating-score-col">${toFixedGrade(item.average_total_score)}</td>
+                                </tr>
+                                <tr>
+                                    <th>Total Average</th>
+                                    <td class="rating-score-col">${toFixedGrade(item.overall)}</td>
+                                </tr>
+                                <tr class="computed-rating-row">
+                                    <th>Computed Rating</th>
+                                    <td class="rating-score-col computed-rating-value">${toFixedGrade(item.computed_rating)}%</td>
+                                </tr>
+                            </tbody>
+                        </table>
 
-                    <div class="section-title">Detailed Answers Per Evaluator</div>
-                    ${detailedBlocks || '<div class="muted">No detailed answers found.</div>'}
-
-                    <div class="footer-note">
-                        Generated on ${new Date().toLocaleString()}
-                    </div>
+                        ${buildSignatureTable('', '', '', '')}
+                    `}
                 </div>
             </body>
             </html>
@@ -1395,73 +1754,118 @@
     }
 
     function buildBatchPrintHtml(items) {
-        const cards = items.map((item, index) => `
-            <div class="person-block ${index > 0 ? 'page-break' : ''}">
-                <div class="doc-header" style="margin-bottom:14px;">
-                    <h1 style="font-size:16pt;">Faculty Evaluation Summary Report</h1>
-                    <h2 style="font-size:11pt;">Batch Printing - Current Filtered Results</h2>
-                </div>
+        const cards = items.map((item, index) => {
+            const evaluatorRows = (item.evaluators || []).map(evaluator => `
+                <tr>
+                    <td>${escapeHtml(evaluator.evaluator_name || '-')}</td>
+                    <td>${escapeHtml(evaluator.evaluator_department || '-')}</td>
+                    <td>${escapeHtml(evaluatorTypeLabel())}</td>
+                    <td class="rating-score-col">${toFixedGrade(evaluator.total_score)}</td>
+                    <td class="rating-score-col">${toFixedGrade(evaluator.overall)}</td>
+                    <td class="rating-score-col">${toFixedGrade(evaluator.computed_rating)}%</td>
+                </tr>
+            `).join('');
 
-                <div class="doc-subheader">
-                    <div class="meta-group">
-                        <div><span class="doc-label">Evaluatee:</span> ${escapeHtml(item.name || 'Unnamed')}</div>
-                        <div><span class="doc-label">Type:</span> ${escapeHtml(formatTypeLabel(item.result_type))}</div>
-                        <div><span class="doc-label">Department:</span> ${escapeHtml(item.department || 'No Department')}</div>
-                    </div>
-                    <div class="meta-group">
-                        <div><span class="doc-label">Evaluator Count:</span> ${item.evaluator_count || 0}</div>
-                        <div><span class="doc-label">Average Total Score:</span> ${toFixedGrade(item.average_total_score)}</div>
-                        <div><span class="doc-label">Computed Rating:</span> ${toFixedGrade(item.computed_rating)}%</div>
-                    </div>
-                </div>
+            const commentRows = (item.evaluators || []).map(evaluator => `
+                <tr>
+                    <td style="width:24%;"><strong>${escapeHtml(evaluator.evaluator_name || '-')}</strong></td>
+                    <td>${evaluator.comments ? escapeHtml(evaluator.comments) : '-'}</td>
+                </tr>
+            `).join('');
 
-                <div class="summary-grid">
-                    <div class="summary-box">
-                        <span class="small">Management of Teaching and Learning</span>
-                        <span class="big">${toFixedGrade(getSection(item, 'management_teaching_learning'))}</span>
+            return `
+                <div class="${index > 0 ? 'page-break' : ''}">
+                    <div class="doc-header">
+                        <h1>Evaluation Summary Report</h1>
+                        <h2>Supervisor's Evaluation of Faculty</h2>
                     </div>
-                    <div class="summary-box">
-                        <span class="small">Content Knowledge, Pedagogy, and Technology</span>
-                        <span class="big">${toFixedGrade(getSection(item, 'content_knowledge_pedagogy_technology'))}</span>
-                    </div>
-                    <div class="summary-box">
-                        <span class="small">Commitment and Transparency</span>
-                        <span class="big">${toFixedGrade(getSection(item, 'commitment_transparency'))}</span>
-                    </div>
-                    <div class="summary-box">
-                        <span class="small">Total Average Grade</span>
-                        <span class="big">${toFixedGrade(item.overall)}</span>
-                    </div>
-                </div>
 
-                <table>
-                    <tbody>
-                        <tr>
-                            <th style="width:45%;">Average Total Score</th>
-                            <td>${toFixedGrade(item.average_total_score)}</td>
-                        </tr>
-                        <tr>
-                            <th>Computed Rating</th>
-                            <td>${toFixedGrade(item.computed_rating)}%</td>
-                        </tr>
-                        <tr>
-                            <th>Evaluator Count</th>
-                            <td>${item.evaluator_count || 0}</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        `).join('');
+                    ${buildFacultyInfoBlock(item, null)}
+
+                    ${buildRatingScaleTable()}
+
+                    <div class="subsection-title">Summary</div>
+                    <table>
+                        <tbody>
+                            <tr>
+                                <th style="width: 70%;">A. Management of Teaching and Learning</th>
+                                <td class="rating-score-col">${toFixedGrade(getSection(item, 'management_teaching_learning'))}</td>
+                            </tr>
+                            <tr>
+                                <th>B. Content Knowledge, Pedagogy, and Technology</th>
+                                <td class="rating-score-col">${toFixedGrade(getSection(item, 'content_knowledge_pedagogy_technology'))}</td>
+                            </tr>
+                            <tr>
+                                <th>C. Commitment and Transparency</th>
+                                <td class="rating-score-col">${toFixedGrade(getSection(item, 'commitment_transparency'))}</td>
+                            </tr>
+                            <tr>
+                                <th>Total Score</th>
+                                <td class="rating-score-col">${toFixedGrade(item.average_total_score)}</td>
+                            </tr>
+                            <tr>
+                                <th>Total Average</th>
+                                <td class="rating-score-col">${toFixedGrade(item.overall)}</td>
+                            </tr>
+                            <tr class="computed-rating-row">
+                                <th>Computed Rating</th>
+                                <td class="rating-score-col computed-rating-value">${toFixedGrade(item.computed_rating)}%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="subsection-title">Evaluator Summary</div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Evaluator Name</th>
+                                <th>Evaluator Department</th>
+                                <th>Evaluator Type</th>
+                                <th>Total Score</th>
+                                <th>Total Average</th>
+                                <th>Computed Rating</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${evaluatorRows || `
+                                <tr>
+                                    <td colspan="6" style="text-align:center;">No evaluator records found.</td>
+                                </tr>
+                            `}
+                        </tbody>
+                    </table>
+
+                  <div class="subsection-title">Comments and Suggestions</div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width:24%;">Evaluator</th>
+                                <th>Comments</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${commentRows || `
+                                <tr>
+                                    <td colspan="2" style="text-align:center;">No comments available.</td>
+                                </tr>
+                            `}
+                        </tbody>
+                    </table>
+
+                    ${buildBatchSignatories(item)}
+                </div>
+            `;
+        }).join('');
 
         return `
             <html>
             <head>
-                <title>Batch Evaluation Summary Report</title>
+                <title>Evaluation Summary Report</title>
                 ${buildDocumentStyles()}
             </head>
             <body>
                 <div class="doc-shell">
-                    ${cards || '<div class="muted">No results available to print.</div>'}
+                    ${cards || '<div>No results available to print.</div>'}
                     <div class="footer-note">
                         Generated on ${new Date().toLocaleString()}
                     </div>

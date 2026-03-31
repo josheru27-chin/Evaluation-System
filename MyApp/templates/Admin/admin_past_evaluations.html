@@ -5,114 +5,321 @@
 {% block page_title %}Evaluation History{% endblock %}
 {% block page_subtitle %}View archived evaluation records by academic year and semester.{% endblock %}
 
+{% block topbar_actions %}{% endblock %}
+
 {% block extra_css %}
 <style>
-    .mini-card {
+    .results-hero {
+        background: linear-gradient(135deg, #fff, #fcf3f5);
+        border: 1px solid #f2dde2;
+        border-radius: 22px;
+        padding: 22px;
+        margin-bottom: 24px;
+    }
+
+    .results-hero h5 {
+        margin: 0 0 8px;
+        font-weight: 800;
+        color: var(--text-dark);
+    }
+
+    .results-hero p {
+        margin: 0;
+        color: var(--text-muted);
+        line-height: 1.7;
+    }
+
+    .selected-period-card {
+        background: #fff;
         border: 1px solid var(--border-soft);
         border-radius: 18px;
+        padding: 18px;
+        margin-bottom: 24px;
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+    }
+
+    .selected-period-card h6 {
+        margin: 0 0 6px;
+        font-weight: 800;
+        color: var(--text-dark);
+    }
+
+    .selected-period-card p {
+        margin: 0;
+        color: var(--text-muted);
+        line-height: 1.6;
+    }
+
+    .faculty-search-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 18px;
+        flex-wrap: wrap;
+        margin-bottom: 18px;
+    }
+
+    .filter-title-wrap {
+        flex: 1 1 320px;
+        max-width: 420px;
+    }
+
+    .filter-title-wrap h5 {
+        margin-bottom: 6px;
+    }
+
+    .filter-title-wrap p {
+        font-size: 0.92rem;
+        line-height: 1.55;
+    }
+
+    .filter-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 10px;
+        flex: 1 1 520px;
+        flex-wrap: wrap;
+    }
+
+    .filter-toolbar .form-select {
+        width: 160px;
+        min-width: 160px;
+        border-radius: 14px;
+        min-height: 46px;
+        font-size: 0.92rem;
+    }
+
+    .search-wrap {
+        position: relative;
+        width: 280px;
+        min-width: 220px;
+        flex: 0 1 280px;
+    }
+
+    .search-wrap i {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+        z-index: 2;
+    }
+
+    .search-wrap input {
+        padding-left: 42px !important;
+        border-radius: 14px;
+        min-height: 46px;
+        font-size: 0.92rem;
+    }
+
+    .mini-stat {
+        border: 1px solid var(--border-soft);
         background: #fff;
+        border-radius: 18px;
         padding: 18px;
         height: 100%;
     }
 
-    .mini-card h6 {
+    .mini-stat h6 {
         margin: 0 0 8px;
         color: var(--text-muted);
         font-size: 0.92rem;
         font-weight: 700;
     }
 
-    .mini-card h3 {
+    .mini-stat h3 {
         margin: 0;
         font-weight: 800;
         color: var(--text-dark);
     }
 
-    .mini-card small {
+    .mini-stat small {
         display: block;
         margin-top: 6px;
         color: var(--text-muted);
     }
 
-    .history-top-card {
-        border: 1px solid var(--border-soft);
-        border-radius: 22px;
-        background: linear-gradient(135deg, #fff, #fcf3f5);
-        padding: 22px;
-        margin-bottom: 24px;
-    }
-
-    .history-top-card h5 {
-        margin: 0 0 8px;
-        font-weight: 800;
-        color: var(--text-dark);
-    }
-
-    .history-top-card p {
-        margin: 0;
-        color: var(--text-muted);
-        line-height: 1.6;
-    }
-
-    .history-table-wrap {
+    .results-table-wrap {
+        max-height: 520px;
+        overflow: auto;
         border: 1px solid var(--border-soft);
         border-radius: 18px;
-        overflow: auto;
         background: #fff;
-        max-height: 520px;
     }
 
-    .history-table-wrap table {
-        margin-bottom: 0;
-        min-width: 980px;
-    }
-
-    .history-table-wrap thead th {
-        position: sticky;
-        top: 0;
-        z-index: 2;
-        background: #fff;
-        white-space: nowrap;
-        box-shadow: inset 0 -1px 0 var(--border-soft);
-    }
-
-    .history-table-wrap::-webkit-scrollbar {
+    .results-table-wrap::-webkit-scrollbar {
         width: 10px;
         height: 10px;
     }
 
-    .history-table-wrap::-webkit-scrollbar-thumb {
+    .results-table-wrap::-webkit-scrollbar-thumb {
         background: #cfd6df;
         border-radius: 999px;
     }
 
-    .history-table-wrap::-webkit-scrollbar-track {
+    .results-table-wrap::-webkit-scrollbar-track {
         background: #f7f8fb;
     }
 
-    .history-pill {
+    #historyResultsTable {
+        margin-bottom: 0;
+        min-width: 1280px;
+    }
+
+    #historyResultsTable thead th {
+        white-space: nowrap;
+        position: sticky;
+        top: 0;
+        z-index: 3;
+        background: #fff;
+        box-shadow: inset 0 -1px 0 var(--border-soft);
+        color: #627086;
+        font-weight: 800;
+        font-size: 0.94rem;
+        padding: 16px 14px;
+    }
+
+    #historyResultsTable tbody td {
+        padding: 18px 14px;
+        vertical-align: middle;
+        border-color: #eef1f5;
+    }
+
+    #historyResultsTable tbody tr:hover {
+        background: #fcf7f8;
+    }
+
+    .faculty-name-box {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .faculty-name-box strong {
+        color: var(--text-dark);
+        font-size: 0.98rem;
+    }
+
+    .faculty-name-box small {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        line-height: 1.45;
+    }
+
+    .type-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 9px 14px;
+        border-radius: 999px;
+        font-size: 0.84rem;
+        font-weight: 800;
+        background: #f8f4f5;
+        color: var(--text-dark);
+        border: 1px solid #ead9de;
+    }
+
+    .grade-pill {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        min-width: 78px;
-        padding: 8px 12px;
+        min-width: 68px;
+        padding: 9px 13px;
         border-radius: 999px;
         font-size: 0.84rem;
         font-weight: 700;
+        border: 1px solid #efd3d9;
         background: #f9eff2;
         color: var(--primary-red);
-        border: 1px solid #efd3d9;
     }
 
-    .history-name {
+    .overall-pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 80px;
+        padding: 10px 15px;
+        border-radius: 999px;
+        font-size: 0.88rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
+        color: #fff;
+    }
+
+    .action-stack {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 8px;
+    }
+
+    .btn-view-more,
+    .btn-print-person {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-width: 132px;
+        border-radius: 14px;
+        padding: 10px 14px;
+        font-weight: 800;
+        font-size: 0.88rem;
+        transition: all 0.2s ease;
+    }
+
+    .btn-view-more {
+        border: none;
+        background: linear-gradient(135deg, #fff7f9, #f7e8ec);
+        color: var(--primary-red);
+        box-shadow: 0 8px 18px rgba(152, 27, 46, 0.08);
+    }
+
+    .btn-view-more:hover {
+        background: linear-gradient(135deg, #fff1f5, #f2dbe2);
+        color: var(--primary-red-dark);
+        transform: translateY(-1px);
+    }
+
+    .btn-print-person {
+        border: 1px solid #e4d8dd;
+        background: #fff;
+        color: var(--text-dark);
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
+    }
+
+    .btn-print-person:hover {
+        background: #faf7f8;
+        color: var(--primary-red-dark);
+        border-color: #d9c6cd;
+    }
+
+    .sector-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+        margin-bottom: 18px;
+    }
+
+    .sector-card {
+        border: 1px solid var(--border-soft);
+        background: #fff;
+        border-radius: 18px;
+        padding: 16px;
+    }
+
+    .sector-card h6 {
+        margin: 0 0 8px;
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        line-height: 1.45;
+    }
+
+    .sector-card h4 {
+        margin: 0;
         font-weight: 800;
         color: var(--text-dark);
-    }
-
-    .history-sub {
-        color: var(--text-muted);
-        font-size: 0.88rem;
-        margin-top: 3px;
     }
 
     .modal-content {
@@ -139,74 +346,247 @@
         overflow-y: auto;
     }
 
-    .summary-grid {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 12px;
+    .modal-footer {
+        border-top: 1px solid var(--border-soft);
+        padding: 16px 22px;
+    }
+
+    .faculty-summary-box {
+        background: #fcfcfd;
+        border: 1px solid var(--border-soft);
+        border-radius: 18px;
+        padding: 16px;
         margin-bottom: 18px;
     }
 
-    .summary-card {
+    .faculty-summary-box h6 {
+        margin: 0 0 10px;
+        font-weight: 800;
+        color: var(--text-dark);
+    }
+
+    .faculty-summary-box p {
+        margin: 0;
+        color: var(--text-muted);
+    }
+
+    .evaluator-table-wrap {
+        max-height: 260px;
+        overflow: auto;
+        border: 1px solid var(--border-soft);
+        border-radius: 18px;
+        background: #fff;
+    }
+
+    .evaluator-table-wrap table {
+        margin-bottom: 0;
+        min-width: 1450px;
+    }
+
+    .evaluator-table-wrap thead th {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background: #fff;
+        white-space: nowrap;
+    }
+
+    .detail-box {
         border: 1px solid var(--border-soft);
         background: #fff;
-        border-radius: 18px;
-        padding: 16px;
+        border-radius: 20px;
+        padding: 18px;
+        margin-bottom: 18px;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
     }
 
-    .summary-card h6 {
-        margin: 0 0 8px;
-        font-size: 0.9rem;
-        font-weight: 700;
-        color: var(--text-muted);
-        line-height: 1.45;
+    .detail-box-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 14px;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
     }
 
-    .summary-card h4 {
+    .detail-box h6 {
         margin: 0;
         font-weight: 800;
         color: var(--text-dark);
     }
 
-    .detail-block {
-        border: 1px solid var(--border-soft);
-        border-radius: 18px;
-        background: #fff;
-        padding: 16px;
+    .detail-meta {
+        color: var(--text-muted);
+        margin-top: 4px;
+        font-size: 0.92rem;
+    }
+
+    .detail-score-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
         margin-bottom: 16px;
     }
 
-    .detail-block h6 {
-        font-weight: 800;
+    .detail-score-card {
+        border: 1px solid #f0e5e8;
+        background: linear-gradient(135deg, #fff, #fcf7f8);
+        border-radius: 16px;
+        padding: 14px;
+    }
+
+    .detail-score-card span {
+        display: block;
+        color: var(--text-muted);
+        font-size: 0.82rem;
+        font-weight: 700;
         margin-bottom: 6px;
+    }
+
+    .detail-score-card strong {
+        font-size: 1rem;
         color: var(--text-dark);
     }
 
     .comment-box {
         background: #fff8fa;
-        border: 1px solid #f1dfe5;
+        border: 1px solid #f1dfe4;
         border-radius: 14px;
+        padding: 14px;
+        margin-bottom: 14px;
+        color: var(--text-dark);
+    }
+
+    .question-section-card {
+        border: 1px solid var(--border-soft);
+        border-radius: 16px;
+        overflow: hidden;
+        margin-bottom: 14px;
+    }
+
+    .question-section-header {
+        background: #faf7f8;
         padding: 12px 14px;
-        margin-top: 12px;
+        font-weight: 800;
+        color: var(--text-dark);
+        border-bottom: 1px solid var(--border-soft);
+    }
+
+    .question-table-wrap {
+        overflow-x: auto;
+    }
+
+    .question-table-wrap table {
+        margin-bottom: 0;
+        min-width: 600px;
+    }
+
+    .question-no-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 44px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: #f6f7fb;
+        border: 1px solid #e3e7ef;
+        font-size: 0.8rem;
+        font-weight: 800;
+        color: var(--text-dark);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 32px 16px;
+        color: var(--text-muted);
+    }
+
+    .section-blockless {
+        box-shadow: none !important;
+        padding: 0 !important;
+        border: none !important;
+        background: transparent !important;
     }
 
     @media (max-width: 991px) {
-        .summary-grid {
+        .faculty-search-bar {
+            align-items: stretch;
+        }
+
+        .filter-title-wrap,
+        .filter-toolbar {
+            flex: 1 1 100%;
+            max-width: 100%;
+        }
+
+        .filter-toolbar {
+            justify-content: flex-start;
+        }
+
+        .sector-grid,
+        .detail-score-grid {
             grid-template-columns: repeat(2, minmax(0, 1fr));
         }
     }
 
-    @media (max-width: 576px) {
-        .summary-grid {
+    @media (max-width: 767px) {
+        .filter-toolbar .form-select,
+        .search-wrap {
+            width: 100%;
+            min-width: 100%;
+            flex: 1 1 100%;
+        }
+
+        .sector-grid,
+        .detail-score-grid {
             grid-template-columns: 1fr;
+        }
+
+        .action-stack {
+            align-items: stretch;
+        }
+
+        .btn-view-more,
+        .btn-print-person {
+            width: 100%;
+        }
+    }
+
+    @media print {
+        .topbar,
+        .topbar-actions,
+        .sidebar,
+        .faculty-search-bar,
+        .btn {
+            display: none !important;
+        }
+
+        .main-content {
+            margin-left: 0 !important;
+            width: 100% !important;
+            padding: 0 !important;
+        }
+
+        .content-card,
+        .mini-stat,
+        .results-hero,
+        .results-table-wrap,
+        .evaluator-table-wrap {
+            box-shadow: none !important;
+            max-height: none !important;
+            overflow: visible !important;
         }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="history-top-card">
-    <h5>Archived Evaluation Results</h5>
-    <p>Review submitted faculty and department head evaluations by past academic year and semester, including evaluator-by-evaluator detailed scores.</p>
+<div class="results-hero">
+    <h5><i class="bi bi-clock-history me-2"></i>Archived Evaluation Results</h5>
+    <p>
+        This page shows past faculty members and heads together with their total average rating,
+        section averages, computed rating percentage, and detailed per-question evaluator breakdown.
+    </p>
 </div>
 
 <div class="content-card mb-4">
@@ -225,293 +605,176 @@
     </form>
 </div>
 
+{% if selected_schedule %}
+<div class="selected-period-card">
+    <h6><i class="bi bi-calendar2-range me-2"></i>Selected Evaluation Period</h6>
+    <p>
+        {{ selected_schedule.academic_year }} • {{ selected_schedule.semester }} • {{ selected_schedule.title }}<br>
+        <span class="small">
+            {{ selected_schedule.start_datetime|date:"M d, Y h:i A" }} to {{ selected_schedule.end_datetime|date:"M d, Y h:i A" }}
+        </span>
+    </p>
+</div>
+{% endif %}
+
 <div class="row g-4 mb-4">
-    <div class="col-md-4">
-        <div class="mini-card">
-            <h6>Faculty Evaluations</h6>
-            <h3>{{ faculty_count }}</h3>
-            <small>Submitted faculty evaluation summaries</small>
+    <div class="col-md-3">
+        <div class="mini-stat">
+            <h6>Total Records</h6>
+            <h3 id="totalFacultyCount">{{ total_count|default:0 }}</h3>
+            <small>Total faculty/head results with submitted evaluations</small>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="mini-card">
-            <h6>Head Evaluations</h6>
-            <h3>{{ head_count }}</h3>
-            <small>Submitted department head evaluation summaries</small>
+    <div class="col-md-3">
+        <div class="mini-stat">
+            <h6>Highest Average Grade</h6>
+            <h3 id="highestAverageGrade">0.00</h3>
+            <small>Top overall average grade</small>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="mini-card">
-            <h6>Total Archived Records</h6>
-            <h3>{{ total_count }}</h3>
-            <small>All grouped archived records in this period</small>
+    <div class="col-md-3">
+        <div class="mini-stat">
+            <h6>Lowest Average Grade</h6>
+            <h3 id="lowestAverageGrade">0.00</h3>
+            <small>Lowest overall average grade</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="mini-stat">
+            <h6>Average of All Results</h6>
+            <h3 id="overallFacultyAverage">0.00</h3>
+            <small>Institution-wide computed average</small>
         </div>
     </div>
 </div>
 
 {% if selected_schedule %}
-<div class="content-card mb-4">
-    <div class="p-4">
-        <h5 class="mb-3">Selected Period</h5>
-        <p class="mb-1"><strong>Title:</strong> {{ selected_schedule.title }}</p>
-        <p class="mb-1"><strong>Academic Year:</strong> {{ selected_schedule.academic_year }}</p>
-        <p class="mb-1"><strong>Semester:</strong> {{ selected_schedule.semester }}</p>
-        <p class="mb-0"><strong>Duration:</strong> {{ selected_schedule.start_datetime }} to {{ selected_schedule.end_datetime }}</p>
-    </div>
-</div>
-
-<div class="content-card mb-4">
-    <div class="p-4">
-        <h5 class="mb-3">Faculty Evaluation Records</h5>
-        <div class="history-table-wrap">
-            <table class="table align-middle">
-                <thead>
-                    <tr>
-                        <th>Evaluatee</th>
-                        <th>Department</th>
-                        <th>Evaluators</th>
-                        <th>Average Total Score</th>
-                        <th>Total Average</th>
-                        <th>Computed Rating</th>
-                        <th>Details</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in faculty_history_results %}
-                    <tr>
-                        <td>
-                            <div class="history-name">{{ item.name }}</div>
-                            <div class="history-sub">Faculty Member</div>
-                        </td>
-                        <td>{{ item.department }}</td>
-                        <td>{{ item.evaluator_count }}</td>
-                        <td><span class="history-pill">{{ item.average_total_score }}</span></td>
-                        <td><span class="history-pill">{{ item.overall }}</span></td>
-                        <td><span class="history-pill">{{ item.computed_rating }}%</span></td>
-                        <td>
-                            <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#facultyHistoryModal{{ forloop.counter }}">
-                                View Details
-                            </button>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="7" class="text-center text-muted">No faculty evaluation records found.</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
 <div class="content-card">
-    <div class="p-4">
-        <h5 class="mb-3">Head Evaluation Records</h5>
-        <div class="history-table-wrap">
-            <table class="table align-middle">
-                <thead>
-                    <tr>
-                        <th>Evaluatee</th>
-                        <th>Department</th>
-                        <th>Evaluators</th>
-                        <th>Average Total Score</th>
-                        <th>Total Average</th>
-                        <th>Computed Rating</th>
-                        <th>Details</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in head_history_results %}
-                    <tr>
-                        <td>
-                            <div class="history-name">{{ item.name }}</div>
-                            <div class="history-sub">Department Head</div>
-                        </td>
-                        <td>{{ item.department }}</td>
-                        <td>{{ item.evaluator_count }}</td>
-                        <td><span class="history-pill">{{ item.average_total_score }}</span></td>
-                        <td><span class="history-pill">{{ item.overall }}</span></td>
-                        <td><span class="history-pill">{{ item.computed_rating }}%</span></td>
-                        <td>
-                            <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#headHistoryModal{{ forloop.counter }}">
-                                View Details
-                            </button>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="7" class="text-center text-muted">No head evaluation records found.</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <div class="faculty-search-bar">
+        <div class="filter-title-wrap">
+            <h5 class="section-title mb-0">Evaluation Results List</h5>
+            <p class="text-muted mb-0">
+                Filter by result type and name. Open View More to inspect all answers per evaluator.
+            </p>
         </div>
+
+        <div class="filter-toolbar">
+            <select id="resultTypeFilter" class="form-select">
+                <option value="all">All Results</option>
+                <option value="faculty">Faculty Only</option>
+                <option value="head">Head Only</option>
+            </select>
+
+            <div class="search-wrap">
+                <i class="bi bi-search"></i>
+                <input type="text" id="facultySearchInput" class="form-control" placeholder="Search name...">
+            </div>
+        </div>
+    </div>
+
+    <div class="results-table-wrap">
+        <table class="table align-middle" id="historyResultsTable">
+            <thead>
+                <tr>
+                    <th style="min-width: 130px;">Type</th>
+                    <th style="min-width: 240px;">Evaluatee</th>
+                    <th style="min-width: 130px;">Total Average</th>
+                    <th style="min-width: 240px;">Management of Teaching <br>and Learning</th>
+                    <th style="min-width: 280px;">Content Knowledge, Pedagogy, <br>and Technology</th>
+                    <th style="min-width: 220px;">Commitment and <br>Transparency</th>
+                    <th class="text-end" style="min-width: 180px;">Action</th>
+                </tr>
+            </thead>
+            <tbody id="historyResultsBody"></tbody>
+        </table>
     </div>
 </div>
 
-{% for item in faculty_history_results %}
-<div class="modal fade" id="facultyHistoryModal{{ forloop.counter }}" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+<div class="modal fade" id="viewMoreModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
-                <div>
-                    <h5 class="modal-title">{{ item.name }} - Faculty Evaluation Details</h5>
-                    <div class="text-muted small">{{ item.department }} • {{ item.evaluator_count }} evaluator{{ item.evaluator_count|pluralize }}</div>
-                </div>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <h5 class="modal-title">
+                    <i class="bi bi-person-lines-fill me-2"></i>Evaluation Details
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
+
             <div class="modal-body">
-                <div class="summary-grid">
-                    <div class="summary-card">
+                <div class="faculty-summary-box">
+                    <h6 id="modalFacultyName">Name</h6>
+                    <p id="modalFacultySubtitle">Detailed evaluator breakdown and average grades.</p>
+                </div>
+
+                <div class="d-flex flex-wrap gap-2 mb-3 justify-content-end">
+                    <button type="button" class="btn btn-soft" id="modalPrintPersonBtn">
+                        <i class="bi bi-printer me-1"></i> Print Evaluation Form
+                    </button>
+                </div>
+
+                <div class="sector-grid">
+                    <div class="sector-card">
                         <h6>Management of Teaching and Learning</h6>
-                        <h4>{{ item.sections.management_teaching_learning|default:"0.00" }}</h4>
+                        <h4 id="modalManagementTeachingAvg">0.00</h4>
                     </div>
-                    <div class="summary-card">
+                    <div class="sector-card">
                         <h6>Content Knowledge, Pedagogy, and Technology</h6>
-                        <h4>{{ item.sections.content_knowledge_pedagogy_technology|default:"0.00" }}</h4>
+                        <h4 id="modalContentKnowledgeAvg">0.00</h4>
                     </div>
-                    <div class="summary-card">
+                    <div class="sector-card">
                         <h6>Commitment and Transparency</h6>
-                        <h4>{{ item.sections.commitment_transparency|default:"0.00" }}</h4>
+                        <h4 id="modalCommitmentTransparencyAvg">0.00</h4>
                     </div>
-                    <div class="summary-card">
-                        <h6>Computed Rating</h6>
-                        <h4>{{ item.computed_rating }}%</h4>
+                    <div class="sector-card">
+                        <h6>Total Average Grade</h6>
+                        <h4 id="modalOverallAvg">0.00</h4>
+                    </div>
+                    <div class="sector-card">
+                        <h6>Average Total Score</h6>
+                        <h4 id="modalAverageTotalScore">0.00</h4>
+                    </div>
+                    <div class="sector-card">
+                        <h6>Computed Rating (%)</h6>
+                        <h4 id="modalComputedRating">0.00%</h4>
                     </div>
                 </div>
 
-                {% for evaluator in item.evaluators %}
-                <div class="detail-block">
-                    <h6 class="mb-1">{{ evaluator.evaluator_name }}</h6>
-                    <p class="text-muted mb-2">{{ evaluator.evaluator_department|default:"—" }}</p>
-                    <p class="mb-1"><strong>Total Score:</strong> {{ evaluator.total_score }}</p>
-                    <p class="mb-1"><strong>Total Average:</strong> {{ evaluator.overall }}</p>
-                    <p class="mb-2"><strong>Computed Rating:</strong> {{ evaluator.computed_rating }}%</p>
+                <div class="content-card section-blockless">
+                    <h5 class="section-title mb-3">Evaluators for This Result</h5>
 
-                    {% if evaluator.comments %}
-                    <div class="comment-box">
-                        <strong>Comments:</strong><br>
-                        {{ evaluator.comments }}
+                    <div class="evaluator-table-wrap">
+                        <table class="table align-middle">
+                            <thead>
+                                <tr>
+                                    <th style="min-width: 220px;">Evaluator Name</th>
+                                    <th style="min-width: 180px;">Department</th>
+                                    <th style="min-width: 220px;">Management of Teaching and Learning</th>
+                                    <th style="min-width: 250px;">Content Knowledge, Pedagogy, and Technology</th>
+                                    <th style="min-width: 200px;">Commitment and Transparency</th>
+                                    <th style="min-width: 130px;">Total Score</th>
+                                    <th style="min-width: 150px;">Total Average</th>
+                                    <th style="min-width: 150px;">Computed Rating</th>
+                                </tr>
+                            </thead>
+                            <tbody id="modalEvaluatorTableBody"></tbody>
+                        </table>
                     </div>
-                    {% endif %}
-
-                    {% for section_name, answers in evaluator.detailed_answers.items %}
-                    <div class="mt-3">
-                        <h6>{{ section_name }}</h6>
-                        <div class="table-responsive">
-                            <table class="table table-sm table-bordered align-middle">
-                                <thead>
-                                    <tr>
-                                        <th style="width:90px;">No.</th>
-                                        <th>Question</th>
-                                        <th style="width:120px;">Rating</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for answer in answers %}
-                                    <tr>
-                                        <td>Q{{ answer.question_number }}</td>
-                                        <td>{{ answer.question_text }}</td>
-                                        <td>{{ answer.rating }}</td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    {% endfor %}
                 </div>
-                {% empty %}
-                <div class="text-muted">No evaluator details available.</div>
-                {% endfor %}
+
+                <div class="content-card mt-4 section-blockless">
+                    <h5 class="section-title mb-3">Detailed Answers Per Evaluator</h5>
+                    <div id="modalDetailedAnswersContainer"></div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-soft" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
 </div>
-{% endfor %}
 
-{% for item in head_history_results %}
-<div class="modal fade" id="headHistoryModal{{ forloop.counter }}" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div>
-                    <h5 class="modal-title">{{ item.name }} - Head Evaluation Details</h5>
-                    <div class="text-muted small">{{ item.department }} • {{ item.evaluator_count }} evaluator{{ item.evaluator_count|pluralize }}</div>
-                </div>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="summary-grid">
-                    <div class="summary-card">
-                        <h6>Management of Teaching and Learning</h6>
-                        <h4>{{ item.sections.management_teaching_learning|default:"0.00" }}</h4>
-                    </div>
-                    <div class="summary-card">
-                        <h6>Content Knowledge, Pedagogy, and Technology</h6>
-                        <h4>{{ item.sections.content_knowledge_pedagogy_technology|default:"0.00" }}</h4>
-                    </div>
-                    <div class="summary-card">
-                        <h6>Commitment and Transparency</h6>
-                        <h4>{{ item.sections.commitment_transparency|default:"0.00" }}</h4>
-                    </div>
-                    <div class="summary-card">
-                        <h6>Computed Rating</h6>
-                        <h4>{{ item.computed_rating }}%</h4>
-                    </div>
-                </div>
-
-                {% for evaluator in item.evaluators %}
-                <div class="detail-block">
-                    <h6 class="mb-1">{{ evaluator.evaluator_name }}</h6>
-                    <p class="text-muted mb-2">{{ evaluator.evaluator_department|default:"—" }}</p>
-                    <p class="mb-1"><strong>Total Score:</strong> {{ evaluator.total_score }}</p>
-                    <p class="mb-1"><strong>Total Average:</strong> {{ evaluator.overall }}</p>
-                    <p class="mb-2"><strong>Computed Rating:</strong> {{ evaluator.computed_rating }}%</p>
-
-                    {% if evaluator.comments %}
-                    <div class="comment-box">
-                        <strong>Comments:</strong><br>
-                        {{ evaluator.comments }}
-                    </div>
-                    {% endif %}
-
-                    {% for section_name, answers in evaluator.detailed_answers.items %}
-                    <div class="mt-3">
-                        <h6>{{ section_name }}</h6>
-                        <div class="table-responsive">
-                            <table class="table table-sm table-bordered align-middle">
-                                <thead>
-                                    <tr>
-                                        <th style="width:90px;">No.</th>
-                                        <th>Question</th>
-                                        <th style="width:120px;">Rating</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for answer in answers %}
-                                    <tr>
-                                        <td>Q{{ answer.question_number }}</td>
-                                        <td>{{ answer.question_text }}</td>
-                                        <td>{{ answer.rating }}</td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-                {% empty %}
-                <div class="text-muted">No evaluator details available.</div>
-                {% endfor %}
-            </div>
-        </div>
-    </div>
-</div>
-{% endfor %}
-
+{{ history_results|default:"[]"|json_script:"history-results-data" }}
 {% else %}
 <div class="content-card">
     <div class="text-center text-muted py-5">
@@ -519,4 +782,934 @@
     </div>
 </div>
 {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const questionBankByCode = {
+        management_teaching_learning: {
+            title: "A. Management of Teaching and Learning",
+            questions: {
+                1: "Comes to class on time.",
+                2: "Submits updated syllabus, grade sheets, and other required reports on time.",
+                3: "Maximizes the allocated time or learning hours effectively.",
+                4: "Provides appropriate learning activities that facilitate students' critical thinking and creativity.",
+                5: "Guides students to learn on their own, reflect on new ideas and experiences, and make decisions in accomplishing given tasks.",
+                6: "Communicates constructive feedback to students for their academic growth."
+            }
+        },
+        content_knowledge_pedagogy_technology: {
+            title: "B. Content Knowledge, Pedagogy, and Technology",
+            questions: {
+                1: "Demonstrates extensive and broad knowledge of the subject or course.",
+                2: "Simplifies complex ideas in the lesson for ease of understanding.",
+                3: "Integrates contemporary issues and developments in the discipline and/or daily life activities in the syllabus.",
+                4: "Promotes active learning and student engagement by using appropriate teaching and learning resources including ICT tools and platforms.",
+                5: "Uses appropriate assessments such as projects, exams, quizzes, and assignments aligned with the learning outcomes."
+            }
+        },
+        commitment_transparency: {
+            title: "C. Commitment and Transparency",
+            questions: {
+                1: "Recognizes and values the unique diversity and individual differences among students.",
+                2: "Assists students with their learning challenges during consultation hours.",
+                3: "Provides immediate feedback on student outputs and performance.",
+                4: "Provides transparent and clear criteria in rating student performance."
+            }
+        }
+    };
+
+    const sectionNameToCode = {
+        "Management of Teaching and Learning": "management_teaching_learning",
+        "Content Knowledge, Pedagogy, and Technology": "content_knowledge_pedagogy_technology",
+        "Commitment and Transparency": "commitment_transparency",
+        "A. Management of Teaching and Learning": "management_teaching_learning",
+        "B. Content Knowledge, Pedagogy, and Technology": "content_knowledge_pedagogy_technology",
+        "C. Commitment and Transparency": "commitment_transparency"
+    };
+
+    const sectionContinuousNumberMap = {
+        management_teaching_learning: { 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6 },
+        content_knowledge_pedagogy_technology: { 1: 7, 2: 8, 3: 9, 4: 10, 5: 11 },
+        commitment_transparency: { 1: 12, 2: 13, 3: 14, 4: 15 }
+    };
+
+    const questionTextByContinuousNumber = {
+        1: "Comes to class on time.",
+        2: "Submits updated syllabus, grade sheets, and other required reports on time.",
+        3: "Maximizes the allocated time or learning hours effectively.",
+        4: "Provides appropriate learning activities that facilitate students' critical thinking and creativity.",
+        5: "Guides students to learn on their own, reflect on new ideas and experiences, and make decisions in accomplishing given tasks.",
+        6: "Communicates constructive feedback to students for their academic growth.",
+        7: "Demonstrates extensive and broad knowledge of the subject or course.",
+        8: "Simplifies complex ideas in the lesson for ease of understanding.",
+        9: "Integrates contemporary issues and developments in the discipline and/or daily life activities in the syllabus.",
+        10: "Promotes active learning and student engagement by using appropriate teaching and learning resources including ICT tools and platforms.",
+        11: "Uses appropriate assessments such as projects, exams, quizzes, and assignments aligned with the learning outcomes.",
+        12: "Recognizes and values the unique diversity and individual differences among students.",
+        13: "Assists students with their learning challenges during consultation hours.",
+        14: "Provides immediate feedback on student outputs and performance.",
+        15: "Provides transparent and clear criteria in rating student performance."
+    };
+
+    const historyResultsElement = document.getElementById('history-results-data');
+    const facultyResults = historyResultsElement ? JSON.parse(historyResultsElement.textContent || '[]') : [];
+
+    const facultyResultsBody = document.getElementById('historyResultsBody');
+    const facultySearchInput = document.getElementById('facultySearchInput');
+    const resultTypeFilter = document.getElementById('resultTypeFilter');
+    const modalPrintPersonBtn = document.getElementById('modalPrintPersonBtn');
+
+    let currentModalItem = null;
+
+    function toFixedGrade(value) {
+        return Number(value || 0).toFixed(2);
+    }
+
+    function getSection(source, key) {
+        return Number((source && source.sections && source.sections[key]) || 0);
+    }
+
+    function formatTypeLabel(type) {
+        return type === 'head' ? 'Head' : 'Faculty';
+    }
+
+    function getTypeIcon(type) {
+        return type === 'head' ? 'bi-person-badge' : 'bi-person-workspace';
+    }
+
+    function normalizeSectionCode(sectionName = '') {
+        const trimmed = String(sectionName || '').trim();
+        if (sectionNameToCode[trimmed]) return sectionNameToCode[trimmed];
+
+        const lowered = trimmed.toLowerCase();
+
+        if (lowered.includes('management') && lowered.includes('teaching')) return 'management_teaching_learning';
+        if (lowered.includes('content') || lowered.includes('pedagogy') || lowered.includes('technology')) return 'content_knowledge_pedagogy_technology';
+        if (lowered.includes('commitment') || lowered.includes('transparency')) return 'commitment_transparency';
+
+        return '';
+    }
+
+    function getContinuousQuestionNumber(sectionName, questionNumber) {
+        const sectionCode = normalizeSectionCode(sectionName);
+        const localNumber = Number(questionNumber);
+
+        if (sectionCode && sectionContinuousNumberMap[sectionCode]) {
+            return sectionContinuousNumberMap[sectionCode][localNumber] || localNumber;
+        }
+
+        return localNumber;
+    }
+
+    function getQuestionText(sectionName, questionNumber, fallbackText = '') {
+        const sectionCode = normalizeSectionCode(sectionName);
+        const localNumber = Number(questionNumber);
+
+        if (sectionCode && sectionContinuousNumberMap[sectionCode]) {
+            const continuousNumber = sectionContinuousNumberMap[sectionCode][localNumber];
+            if (continuousNumber && questionTextByContinuousNumber[continuousNumber]) {
+                return questionTextByContinuousNumber[continuousNumber];
+            }
+        }
+
+        if (fallbackText && !/^Question\s+\d+$/i.test(String(fallbackText).trim())) {
+            return fallbackText;
+        }
+
+        return fallbackText || `Question ${questionNumber}`;
+    }
+
+    function escapeHtml(value) {
+        return String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function renderStats() {
+        const values = facultyResults
+            .map(item => Number(item.overall || 0))
+            .filter(value => value > 0);
+
+        const total = facultyResults.length;
+        const highest = values.length ? Math.max(...values) : 0;
+        const lowest = values.length ? Math.min(...values) : 0;
+        const average = values.length
+            ? values.reduce((sum, value) => sum + value, 0) / values.length
+            : 0;
+
+        const totalFacultyCount = document.getElementById('totalFacultyCount');
+        const highestAverageGrade = document.getElementById('highestAverageGrade');
+        const lowestAverageGrade = document.getElementById('lowestAverageGrade');
+        const overallFacultyAverage = document.getElementById('overallFacultyAverage');
+
+        if (totalFacultyCount) totalFacultyCount.textContent = total;
+        if (highestAverageGrade) highestAverageGrade.textContent = toFixedGrade(highest);
+        if (lowestAverageGrade) lowestAverageGrade.textContent = toFixedGrade(lowest);
+        if (overallFacultyAverage) overallFacultyAverage.textContent = toFixedGrade(average);
+    }
+
+    function getFilteredResults() {
+        const keyword = facultySearchInput ? facultySearchInput.value.trim().toLowerCase() : '';
+        const selectedType = resultTypeFilter ? resultTypeFilter.value : 'all';
+
+        return facultyResults.filter(item => {
+            const matchesKeyword = String(item.name || '').toLowerCase().includes(keyword);
+            const matchesType = selectedType === 'all' || (item.result_type || '') === selectedType;
+            return matchesKeyword && matchesType;
+        });
+    }
+
+    function renderFacultyTable() {
+        if (!facultyResultsBody) return;
+
+        const filtered = getFilteredResults();
+
+        if (!filtered.length) {
+            facultyResultsBody.innerHTML = `
+                <tr>
+                    <td colspan="7">
+                        <div class="empty-state">
+                            <i class="bi bi-search fs-3 d-block mb-2"></i>
+                            No result matched your filters.
+                        </div>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        facultyResultsBody.innerHTML = filtered.map(item => `
+            <tr>
+                <td>
+                    <span class="type-badge">
+                        <i class="bi ${getTypeIcon(item.result_type)}"></i>
+                        ${formatTypeLabel(item.result_type)}
+                    </span>
+                </td>
+                <td>
+                    <div class="faculty-name-box">
+                        <strong>${escapeHtml(item.name || 'Unnamed')}</strong>
+                        <small>${escapeHtml(item.department || 'No Department')}</small>
+                    </div>
+                </td>
+                <td><span class="overall-pill">${toFixedGrade(item.overall)}</span></td>
+                <td><span class="grade-pill">${toFixedGrade(getSection(item, 'management_teaching_learning'))}</span></td>
+                <td><span class="grade-pill">${toFixedGrade(getSection(item, 'content_knowledge_pedagogy_technology'))}</span></td>
+                <td><span class="grade-pill">${toFixedGrade(getSection(item, 'commitment_transparency'))}</span></td>
+                <td class="text-end">
+                    <div class="action-stack">
+                        <button type="button" class="btn-view-more" onclick="openViewMore(${item.id}, '${item.result_type}')">
+                            <i class="bi bi-eye"></i>
+                            <span>View More</span>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function prettifySectionTitle(sectionName = '') {
+        const code = normalizeSectionCode(sectionName);
+
+        if (code === 'management_teaching_learning') {
+            return 'A. Management of Teaching and Learning';
+        }
+        if (code === 'content_knowledge_pedagogy_technology') {
+            return 'B. Content Knowledge, Pedagogy, and Technology';
+        }
+        if (code === 'commitment_transparency') {
+            return 'C. Commitment and Transparency';
+        }
+
+        return String(sectionName || '').replace(/_/g, ' ');
+    }
+
+    function openViewMore(id, resultType) {
+        const item = facultyResults.find(entry =>
+            Number(entry.id) === Number(id) && String(entry.result_type) === String(resultType)
+        );
+        if (!item) return;
+
+        currentModalItem = item;
+
+        document.getElementById('modalFacultyName').textContent =
+            `${item.name || 'Unnamed'} (${formatTypeLabel(item.result_type)})`;
+
+        document.getElementById('modalFacultySubtitle').textContent =
+            `${item.department || 'No Department'} • ${item.evaluator_count || 0} evaluator(s)`;
+
+        document.getElementById('modalManagementTeachingAvg').textContent =
+            toFixedGrade(getSection(item, 'management_teaching_learning'));
+
+        document.getElementById('modalContentKnowledgeAvg').textContent =
+            toFixedGrade(getSection(item, 'content_knowledge_pedagogy_technology'));
+
+        document.getElementById('modalCommitmentTransparencyAvg').textContent =
+            toFixedGrade(getSection(item, 'commitment_transparency'));
+
+        document.getElementById('modalOverallAvg').textContent =
+            toFixedGrade(item.overall);
+
+        document.getElementById('modalAverageTotalScore').textContent =
+            toFixedGrade(item.average_total_score);
+
+        document.getElementById('modalComputedRating').textContent =
+            toFixedGrade(item.computed_rating) + '%';
+
+        const tbody = document.getElementById('modalEvaluatorTableBody');
+        const detailContainer = document.getElementById('modalDetailedAnswersContainer');
+
+        if (!item.evaluators || !item.evaluators.length) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="8">
+                        <div class="empty-state py-3">No evaluator records found.</div>
+                    </td>
+                </tr>
+            `;
+            detailContainer.innerHTML = `<div class="empty-state py-3">No detailed answers found.</div>`;
+        } else {
+            tbody.innerHTML = item.evaluators.map(evaluator => `
+                <tr>
+                    <td><strong>${escapeHtml(evaluator.evaluator_name || 'Unknown Evaluator')}</strong></td>
+                    <td>${escapeHtml(evaluator.evaluator_department || '')}</td>
+                    <td>${toFixedGrade(getSection(evaluator, 'management_teaching_learning'))}</td>
+                    <td>${toFixedGrade(getSection(evaluator, 'content_knowledge_pedagogy_technology'))}</td>
+                    <td>${toFixedGrade(getSection(evaluator, 'commitment_transparency'))}</td>
+                    <td>${toFixedGrade(evaluator.total_score)}</td>
+                    <td><span class="overall-pill">${toFixedGrade(evaluator.overall)}</span></td>
+                    <td><span class="overall-pill">${toFixedGrade(evaluator.computed_rating)}%</span></td>
+                </tr>
+            `).join('');
+
+            detailContainer.innerHTML = item.evaluators.map((evaluator) => {
+                const detailedAnswers = evaluator.detailed_answers || {};
+                const sectionBlocks = Object.entries(detailedAnswers).map(([sectionName, answers]) => `
+                    <div class="question-section-card">
+                        <div class="question-section-header">
+                            ${escapeHtml(prettifySectionTitle(sectionName))}
+                        </div>
+                        <div class="question-table-wrap">
+                            <table class="table table-sm align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th style="min-width: 90px;">No.</th>
+                                        <th>Question</th>
+                                        <th style="min-width: 110px;">Rating</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${answers
+                                        .slice()
+                                        .sort((a, b) => getContinuousQuestionNumber(sectionName, a.question_number) - getContinuousQuestionNumber(sectionName, b.question_number))
+                                        .map(answer => `
+                                            <tr>
+                                                <td><span class="question-no-badge">${getContinuousQuestionNumber(sectionName, answer.question_number)}</span></td>
+                                                <td>${escapeHtml(getQuestionText(sectionName, answer.question_number, answer.question_text))}</td>
+                                                <td><span class="grade-pill">${toFixedGrade(answer.rating)}</span></td>
+                                            </tr>
+                                        `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `).join('');
+
+                return `
+                    <div class="detail-box">
+                        <div class="detail-box-header">
+                            <div>
+                                <h6>${escapeHtml(evaluator.evaluator_name || 'Unknown Evaluator')}</h6>
+                                <div class="detail-meta">${escapeHtml(evaluator.evaluator_department || 'No Department')}</div>
+                            </div>
+                        </div>
+
+                        <div class="detail-score-grid">
+                            <div class="detail-score-card">
+                                <span>Total Score</span>
+                                <strong>${toFixedGrade(evaluator.total_score)}</strong>
+                            </div>
+                            <div class="detail-score-card">
+                                <span>Total Average</span>
+                                <strong>${toFixedGrade(evaluator.overall)}</strong>
+                            </div>
+                            <div class="detail-score-card">
+                                <span>Computed Rating</span>
+                                <strong>${toFixedGrade(evaluator.computed_rating)}%</strong>
+                            </div>
+                        </div>
+
+                        ${evaluator.comments ? `
+                            <div class="comment-box">
+                                <strong><i class="bi bi-chat-left-text me-1"></i>Comment:</strong><br>
+                                ${escapeHtml(evaluator.comments)}
+                            </div>
+                        ` : ''}
+
+                        ${sectionBlocks || '<div class="text-muted">No detailed answers available.</div>'}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        new bootstrap.Modal(document.getElementById('viewMoreModal')).show();
+    }
+
+    function buildDocumentStyles() {
+        return `
+            <style>
+                @page {
+                    size: A4;
+                    margin: 16mm 14mm 16mm 14mm;
+                }
+
+                body {
+                    font-family: "Times New Roman", serif;
+                    color: #111827;
+                    margin: 0;
+                    background: #fff;
+                    font-size: 12pt;
+                    line-height: 1.45;
+                }
+
+                .doc-shell {
+                    width: 100%;
+                }
+
+                .doc-header {
+                    text-align: center;
+                    margin-bottom: 18px;
+                    border-bottom: 2px solid #7f1d2d;
+                    padding-bottom: 10px;
+                }
+
+                .doc-header h1 {
+                    font-size: 18pt;
+                    margin: 0 0 4px;
+                    font-weight: 700;
+                    text-transform: uppercase;
+                    color: #5f1020;
+                    letter-spacing: 0.5px;
+                }
+
+                .doc-header h2 {
+                    font-size: 12pt;
+                    margin: 0;
+                    font-weight: 400;
+                    color: #374151;
+                }
+
+                .section-title {
+                    font-size: 13pt;
+                    font-weight: 700;
+                    margin: 18px 0 10px;
+                    color: #7f1d2d;
+                }
+
+                .subsection-title {
+                    font-size: 12pt;
+                    font-weight: 700;
+                    margin: 16px 0 8px;
+                    color: #5f1020;
+                }
+
+                .instruction-box {
+                    border: 1px solid #d7dce3;
+                    background: #fafafa;
+                    border-radius: 8px;
+                    padding: 10px 12px;
+                    margin: 8px 0 16px;
+                    font-size: 10.5pt;
+                }
+
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-bottom: 16px;
+                }
+
+                th, td {
+                    border: 1px solid #bfc8d4;
+                    padding: 7px 8px;
+                    vertical-align: top;
+                    font-size: 10.6pt;
+                }
+
+                th {
+                    background: #f3f4f6;
+                    font-weight: 700;
+                    text-align: left;
+                    color: #1f2937;
+                }
+
+                .section-row td {
+                    background: #f8e9ee;
+                    font-weight: 700;
+                    color: #5f1020;
+                }
+
+                .rating-scale-table th,
+                .rating-scale-table td {
+                    text-align: left;
+                    font-size: 10.1pt;
+                }
+
+                .rating-score-col {
+                    width: 90px;
+                    text-align: center;
+                    font-weight: 700;
+                }
+
+                .comment-box-print {
+                    border-left: 4px solid #7f1d2d;
+                    background: #faf5f6;
+                    padding: 10px 12px;
+                    margin: 10px 0 12px;
+                    min-height: 52px;
+                    white-space: pre-wrap;
+                }
+
+                .computed-rating-row th,
+                .computed-rating-row td {
+                    background: #fff2a8 !important;
+                    font-weight: 800;
+                    color: #5f1020;
+                    font-size: 11.2pt;
+                    border-color: #d4b84a !important;
+                }
+
+                .computed-rating-value {
+                    font-size: 13pt !important;
+                    font-weight: 800 !important;
+                    letter-spacing: 0.3px;
+                }
+
+                .signature-table td {
+                    border: 1px solid #bfc8d4;
+                    font-size: 10.6pt;
+                    vertical-align: middle;
+                }
+
+                .signature-line {
+                    border-top: 1px solid #000;
+                    padding-top: 4px;
+                    text-align: center;
+                    font-size: 10pt;
+                }
+
+                .page-break {
+                    page-break-before: always;
+                }
+
+                .faculty-info-card {
+                    border: 1px solid #cfd6df;
+                    border-radius: 10px;
+                    overflow: hidden;
+                    margin-bottom: 16px;
+                }
+
+                .faculty-info-header {
+                    background: #f7ecef;
+                    color: #5f1020;
+                    font-weight: 700;
+                    padding: 10px 12px;
+                    border-bottom: 1px solid #cfd6df;
+                }
+
+                .faculty-info-grid {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                }
+
+                .faculty-info-item {
+                    padding: 10px 12px;
+                    border-right: 1px solid #e5e7eb;
+                    border-bottom: 1px solid #e5e7eb;
+                }
+
+                .faculty-info-item:nth-child(2n) {
+                    border-right: none;
+                }
+
+                .faculty-info-label {
+                    font-size: 9.6pt;
+                    color: #6b7280;
+                    font-weight: 700;
+                    margin-bottom: 4px;
+                }
+
+                .faculty-info-value {
+                    font-size: 10.8pt;
+                    color: #111827;
+                    font-weight: 600;
+                    min-height: 18px;
+                }
+            </style>
+        `;
+    }
+
+    function evaluatorTypeLabel() {
+        return 'Supervisor';
+    }
+
+    function evaluateeTypeLabel(item) {
+        return item.result_type === 'head' ? 'Department Head' : 'Faculty';
+    }
+
+    function getOrderedSectionsForPrint() {
+        return [
+            'management_teaching_learning',
+            'content_knowledge_pedagogy_technology',
+            'commitment_transparency'
+        ];
+    }
+
+    function buildRatingScaleTable() {
+        return `
+            <div class="subsection-title">Rating Scale</div>
+            <table class="rating-scale-table">
+                <thead>
+                    <tr>
+                        <th style="width: 70px;">Scale</th>
+                        <th style="width: 220px;">Qualitative Description</th>
+                        <th>Operational Definition and Scale</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="rating-score-col">5</td>
+                        <td>Always manifested</td>
+                        <td>Evident in nearly all relevant situations (91–100% of instances).</td>
+                    </tr>
+                    <tr>
+                        <td class="rating-score-col">4</td>
+                        <td>Often manifested</td>
+                        <td>Evident most of the time, with occasional lapses (61–90%).</td>
+                    </tr>
+                    <tr>
+                        <td class="rating-score-col">3</td>
+                        <td>Sometimes manifested</td>
+                        <td>Evident about half the time (31–60%).</td>
+                    </tr>
+                    <tr>
+                        <td class="rating-score-col">2</td>
+                        <td>Seldom manifested</td>
+                        <td>Infrequently demonstrated; rarely evident in relevant situations (11–30%).</td>
+                    </tr>
+                    <tr>
+                        <td class="rating-score-col">1</td>
+                        <td>Never/Rarely manifested</td>
+                        <td>Seldom demonstrated; almost never evident, with only isolated cases (0–10%).</td>
+                    </tr>
+                </tbody>
+            </table>
+        `;
+    }
+
+    function getSuggestedMeans(questionNumber) {
+        const means = {
+            1: 'Daily time record; Faculty schedule and timetable; Informal interview with students',
+            2: 'Documents submission log; Submission receipts or acknowledgment emails',
+            3: 'Class schedules and timetables; LMS logs; Informal interview with students',
+            4: 'Course syllabus; Learning plan; Classroom observation',
+            5: 'Informal interview with students; LMS logs; Course syllabus; Learning plan; Student work samples',
+            6: 'Classroom observation; LMS logs; Informal interview with students; Faculty consultation log; Graded student work with feedback',
+            7: 'Faculty consultation log; Informal interview with students; Emails or official correspondence; LMS logs',
+            8: 'Course syllabus; Learning plan; IMs developed by the faculty; Informal interview with students; Mentorship or thesis/dissertation advisory records',
+            9: 'Learning plan; Course syllabus; Classroom observation; Informal interview with students; Lecture notes and presentations; LMS logs',
+            10: 'Course syllabus; Learning plan; Classroom observation; Informal interview with students; LMS logs; Multimedia lecture materials',
+            11: 'Course syllabus; Learning plan; Assessment tools and rubrics; Exam and quiz samples; Graded student work samples; LMS records',
+            12: 'Course syllabus; Learning plan; IMs developed by the faculty; Classroom observation',
+            13: 'Consultation logs; Messages; Advising records; Student interview',
+            14: 'Checked student outputs; Feedback logs; LMS comments',
+            15: 'Rubrics; Grading criteria; Course guide'
+        };
+        return means[questionNumber] || 'Supporting documents and observation';
+    }
+
+    function buildFacultyInfoBlock(item, evaluator = null) {
+        const evaluatorType = evaluatorTypeLabel();
+
+        return `
+            <div class="faculty-info-card">
+                <div class="faculty-info-header">Faculty Information</div>
+                <div class="faculty-info-grid">
+                    <div class="faculty-info-item">
+                        <div class="faculty-info-label">Academic Year</div>
+                        <div class="faculty-info-value">${escapeHtml(item.academic_year || '-')}</div>
+                    </div>
+                    <div class="faculty-info-item">
+                        <div class="faculty-info-label">Semester</div>
+                        <div class="faculty-info-value">${escapeHtml(item.semester || '-')}</div>
+                    </div>
+
+                    <div class="faculty-info-item">
+                        <div class="faculty-info-label">Name of Evaluatee</div>
+                        <div class="faculty-info-value">${escapeHtml(item.name || '-')}</div>
+                    </div>
+                    <div class="faculty-info-item">
+                        <div class="faculty-info-label">Type</div>
+                        <div class="faculty-info-value">${escapeHtml(evaluateeTypeLabel(item))}</div>
+                    </div>
+
+                    <div class="faculty-info-item">
+                        <div class="faculty-info-label">Department</div>
+                        <div class="faculty-info-value">${escapeHtml(item.department || '-')}</div>
+                    </div>
+                    <div class="faculty-info-item">
+                        <div class="faculty-info-label">Schedule Title</div>
+                        <div class="faculty-info-value">${escapeHtml(item.title || '-')}</div>
+                    </div>
+
+                    <div class="faculty-info-item">
+                        <div class="faculty-info-label">Evaluator Name</div>
+                        <div class="faculty-info-value">${escapeHtml(evaluator?.evaluator_name || '-')}</div>
+                    </div>
+                    <div class="faculty-info-item">
+                        <div class="faculty-info-label">Evaluator Type</div>
+                        <div class="faculty-info-value">${escapeHtml(evaluator ? evaluatorType : '-')}</div>
+                    </div>
+
+                    <div class="faculty-info-item">
+                        <div class="faculty-info-label">Evaluator Department</div>
+                        <div class="faculty-info-value">${escapeHtml(evaluator?.evaluator_department || '-')}</div>
+                    </div>
+                    <div class="faculty-info-item">
+                        <div class="faculty-info-label">Date Submitted</div>
+                        <div class="faculty-info-value">${escapeHtml(evaluator?.submitted_at || '-')}</div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function buildDetailedSectionTables(evaluator) {
+        const detailedAnswers = evaluator.detailed_answers || {};
+        const orderedSections = getOrderedSectionsForPrint();
+
+        let content = `
+            <div class="subsection-title">Instruction</div>
+            <div class="instruction-box">
+                Carefully read each benchmark statement and rate the faculty member based on the appropriate rating scale.
+                The Suggested Means for Verification column may serve as a guide in conducting an objective assessment.
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 43%;">Benchmark Statements</th>
+                        <th style="width: 42%;">Suggested Means for Verification</th>
+                        <th style="width: 15%;">Rating</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        orderedSections.forEach(sectionCode => {
+            const foundEntry = Object.entries(detailedAnswers).find(
+                ([sectionName]) => normalizeSectionCode(sectionName) === sectionCode
+            );
+
+            const sectionTitle = prettifySectionTitle(sectionCode);
+
+            content += `
+                <tr class="section-row">
+                    <td colspan="3">${escapeHtml(sectionTitle)}</td>
+                </tr>
+            `;
+
+            if (!foundEntry) {
+                content += `
+                    <tr>
+                        <td colspan="2">No detailed answers available.</td>
+                        <td class="rating-score-col">-</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            const [rawSectionName, sectionAnswers] = foundEntry;
+
+            const sortedAnswers = [...sectionAnswers].sort(
+                (a, b) => getContinuousQuestionNumber(rawSectionName, a.question_number) - getContinuousQuestionNumber(rawSectionName, b.question_number)
+            );
+
+            sortedAnswers.forEach(answer => {
+                const continuousNumber = getContinuousQuestionNumber(rawSectionName, answer.question_number);
+                const questionText = getQuestionText(rawSectionName, answer.question_number, answer.question_text);
+                const suggestedMeans = getSuggestedMeans(continuousNumber);
+
+                content += `
+                    <tr>
+                        <td><strong>${continuousNumber}.</strong> ${escapeHtml(questionText)}</td>
+                        <td>${escapeHtml(suggestedMeans)}</td>
+                        <td class="rating-score-col">${toFixedGrade(answer.rating)}</td>
+                    </tr>
+                `;
+            });
+        });
+
+        content += `
+                </tbody>
+            </table>
+        `;
+
+        return content;
+    }
+
+    function buildSignatureTable(evaluatorName = '', evaluatorDepartment = '', submittedAt = '', comments = '') {
+        return `
+            <div class="subsection-title">Other Comments and Suggestions</div>
+            <div class="comment-box-print">${comments ? escapeHtml(comments) : '&nbsp;'}</div>
+
+            <table class="signature-table">
+                <tbody>
+                    <tr>
+                        <td style="width: 50%;"><br><br>
+                            <div class="signature-line">Signature of Supervisor</div>
+                        </td>
+                        <td style="width: 50%;"></td>
+                    </tr>
+                    <tr>
+                        <td colspan="2"><strong>Name of Supervisor:</strong> ${escapeHtml(evaluatorName || '')}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="2"><strong>Designation:</strong> ${escapeHtml(evaluatorDepartment || '')}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="2"><strong>Date:</strong> ${escapeHtml(submittedAt || '')}</td>
+                    </tr>
+                </tbody>
+            </table>
+        `;
+    }
+
+    function buildSinglePersonPrintHtml(item) {
+        const evaluatorPages = (item.evaluators || []).map((evaluator, index) => `
+            <div class="${index > 0 ? 'page-break' : ''}">
+                <div class="doc-header">
+                    <h1>Evaluation Summary Report</h1>
+                    <h2>Supervisor's Evaluation of Faculty</h2>
+                </div>
+
+                ${buildFacultyInfoBlock(item, evaluator)}
+
+                ${buildRatingScaleTable()}
+
+                <div class="subsection-title">Summary</div>
+                <table>
+                    <tbody>
+                        <tr>
+                            <th style="width: 70%;">A. Management of Teaching and Learning</th>
+                            <td class="rating-score-col">${toFixedGrade(getSection(evaluator, 'management_teaching_learning'))}</td>
+                        </tr>
+                        <tr>
+                            <th>B. Content Knowledge, Pedagogy, and Technology</th>
+                            <td class="rating-score-col">${toFixedGrade(getSection(evaluator, 'content_knowledge_pedagogy_technology'))}</td>
+                        </tr>
+                        <tr>
+                            <th>C. Commitment and Transparency</th>
+                            <td class="rating-score-col">${toFixedGrade(getSection(evaluator, 'commitment_transparency'))}</td>
+                        </tr>
+                        <tr>
+                            <th>Total Score</th>
+                            <td class="rating-score-col">${toFixedGrade(evaluator.total_score)}</td>
+                        </tr>
+                        <tr>
+                            <th>Total Average</th>
+                            <td class="rating-score-col">${toFixedGrade(evaluator.overall)}</td>
+                        </tr>
+                        <tr class="computed-rating-row">
+                            <th>Computed Rating</th>
+                            <td class="rating-score-col computed-rating-value">${toFixedGrade(evaluator.computed_rating)}%</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                ${buildDetailedSectionTables(evaluator)}
+
+                ${buildSignatureTable(
+                    evaluator.evaluator_name || '',
+                    evaluator.evaluator_department || '',
+                    evaluator.submitted_at || '',
+                    evaluator.comments || ''
+                )}
+            </div>
+        `).join('');
+
+        return `
+            <html>
+            <head>
+                <title>Evaluation Summary Report - ${escapeHtml(item.name || 'Evaluatee')}</title>
+                ${buildDocumentStyles()}
+            </head>
+            <body>
+                <div class="doc-shell">
+                    ${evaluatorPages}
+                </div>
+            </body>
+            </html>
+        `;
+    }
+
+    function openPrintWindow(html) {
+        const printWindow = window.open('', '_blank', 'width=1100,height=900');
+        if (!printWindow) {
+            alert('Please allow popups for printing.');
+            return;
+        }
+
+        printWindow.document.open();
+        printWindow.document.write(html);
+        printWindow.document.close();
+
+        printWindow.onload = function() {
+            printWindow.focus();
+            setTimeout(() => {
+                printWindow.print();
+            }, 350);
+        };
+    }
+
+    function printSinglePerson(id, resultType) {
+        const item = facultyResults.find(entry =>
+            Number(entry.id) === Number(id) && String(entry.result_type) === String(resultType)
+        );
+
+        if (!item) {
+            alert('Result not found.');
+            return;
+        }
+
+        openPrintWindow(buildSinglePersonPrintHtml(item));
+    }
+
+    if (facultySearchInput) {
+        facultySearchInput.addEventListener('input', renderFacultyTable);
+    }
+
+    if (resultTypeFilter) {
+        resultTypeFilter.addEventListener('change', renderFacultyTable);
+    }
+
+    if (modalPrintPersonBtn) {
+        modalPrintPersonBtn.addEventListener('click', function() {
+            if (!currentModalItem) {
+                alert('No person selected.');
+                return;
+            }
+            printSinglePerson(currentModalItem.id, currentModalItem.result_type);
+        });
+    }
+
+    renderStats();
+    renderFacultyTable();
+
+    window.openViewMore = openViewMore;
+    window.printSinglePerson = printSinglePerson;
+</script>
 {% endblock %}
