@@ -28,7 +28,8 @@ urlpatterns = [
     path('verify-head-login-link/<str:token>/',views.verify_head_login_link,name='verify_head_login_link'),
     path('head/past-evaluations/', views.head_past_evaluations, name='head_past_evaluations'),
     
-    
+    path('dashboard/forgot-password/', views.admin_forgot_password, name='admin_forgot_password'),
+    path('dashboard/reset-password/<uidb64>/<token>/', views.admin_reset_password, name='admin_reset_password'),
     
     path('dashboard/logout/', views.admin_logout, name='admin_logout'),
     

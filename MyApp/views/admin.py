@@ -16,6 +16,14 @@ from django.urls import reverse
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 
+
+
+from django.contrib.auth.models import User
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 from ..models import (
     Department,
     FacultyMember,
@@ -1096,6 +1104,142 @@ def admin_login(request):
         },
     )
     return render(request, "admin/admin_login.html", context)
+
+def admin_forgot_password(request):
+    if request.method != "POST":
+        return redirect("admin_login")
+
+    email = (request.POST.get("forgot_email") or "").strip().lower()
+
+    if not email:
+        request.session["login_modal"] = {
+            "type": "danger",
+            "message": "Please enter your admin email address."
+        }
+        return redirect("admin_login")
+
+    user = (
+        User.objects
+        .filter(email__iexact=email, is_staff=True, is_active=True)
+        .order_by("id")
+        .first()
+    )
+
+    if not user:
+        request.session["login_modal"] = {
+            "type": "danger",
+            "message": "No active admin account is registered with that email address."
+        }
+        return redirect("admin_login")
+
+    uid = urlsafe_base64_encode(force_bytes(user.pk))
+    token = default_token_generator.make_token(user)
+
+    reset_url = request.build_absolute_uri(
+        reverse("admin_reset_password", args=[uid, token])
+    )
+
+    subject = "Admin Password Reset Request"
+
+    text_body = (
+        f"Hello {user.username},\n\n"
+        f"You requested to reset your admin password.\n\n"
+        f"Click the link below to continue:\n\n"
+        f"{reset_url}\n\n"
+        f"If you did not request this, please ignore this email."
+    )
+
+    html_body = f"""
+        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #1f2937;">
+            <h2 style="color: #981b2e;">Admin Password Reset</h2>
+            <p>Hello <strong>{user.username}</strong>,</p>
+            <p>You requested to reset your admin password.</p>
+            <p>
+                <a href="{reset_url}"
+                   style="display:inline-block;padding:12px 20px;background:#981b2e;color:#fff;text-decoration:none;border-radius:8px;font-weight:700;">
+                   Reset Password
+                </a>
+            </p>
+            <p>If the button does not work, copy and paste this link into your browser:</p>
+            <p>{reset_url}</p>
+            <p>If you did not request this, you may ignore this email.</p>
+        </div>
+    """
+
+    try:
+        msg = EmailMultiAlternatives(
+            subject=subject,
+            body=text_body,
+            from_email=getattr(settings, "EMAIL_HOST_USER", None),
+            to=[user.email],
+        )
+        msg.attach_alternative(html_body, "text/html")
+        msg.send()
+
+        request.session["login_modal"] = {
+            "type": "success",
+            "message": f"A password reset link has been sent to {user.email}."
+        }
+    except Exception:
+        request.session["login_modal"] = {
+            "type": "danger",
+            "message": "Password reset email could not be sent. Please check your email settings."
+        }
+
+    return redirect("admin_login")
+
+
+def admin_reset_password(request, uidb64, token):
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid, is_staff=True)
+    except Exception:
+        user = None
+
+    if user is None or not default_token_generator.check_token(user, token):
+        return render(request, "admin/admin_reset_password.html", {
+            "validlink": False
+        })
+
+    if request.method == "POST":
+        password1 = (request.POST.get("password1") or "").strip()
+        password2 = (request.POST.get("password2") or "").strip()
+
+        if not password1 or not password2:
+            return render(request, "admin/admin_reset_password.html", {
+                "validlink": True,
+                "error_message": "Please fill in both password fields."
+            })
+
+        if password1 != password2:
+            return render(request, "admin/admin_reset_password.html", {
+                "validlink": True,
+                "error_message": "Passwords do not match."
+            })
+
+        try:
+            validate_password(password1, user=user)
+        except ValidationError as e:
+            return render(request, "admin/admin_reset_password.html", {
+                "validlink": True,
+                "error_message": " ".join(e.messages)
+            })
+
+        user.set_password(password1)
+        user.save()
+
+        request.session["login_modal"] = {
+            "type": "success",
+            "message": "Your password has been reset successfully. You may now log in."
+        }
+        return redirect("admin_login")
+
+    return render(request, "admin/admin_reset_password.html", {
+        "validlink": True
+    })
+
+
+
 
 @admin_required
 def admin_past_evaluations(request):

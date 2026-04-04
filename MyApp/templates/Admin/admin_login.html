@@ -396,26 +396,46 @@
             font-size: 0.94rem;
         }
 
-        .input-group-text {
-            background: var(--input-bg);
-            border: 1px solid var(--border-soft);
-            color: var(--text-muted);
-        }
 
-        .form-control {
-            min-height: 56px;
-            border: 1px solid var(--border-soft);
-            background: var(--input-bg);
-            color: var(--text-dark);
-            font-size: 0.96rem;
-            box-shadow: none;
+        .input-group {
+            border: 1px solid #d9dee7;
+            border-radius: 12px;
+            background: #f3f5f8;
+            overflow: hidden;
             transition: 0.2s ease;
         }
 
-        .form-control:focus {
+        .input-group:focus-within {
             border-color: rgba(152, 27, 46, 0.35);
             box-shadow: 0 0 0 0.2rem rgba(152, 27, 46, 0.10);
             background: #fff;
+        }
+
+        .input-group-text {
+            background: #f3f5f8;
+            border: 0;
+            color: #7a8594;
+            padding: 0 14px;
+            min-height: 58px;
+        }
+
+        .form-control {
+            min-height: 58px;
+            border: 0;
+            background: #f3f5f8;
+            color: var(--text-dark);
+            font-size: 0.98rem;
+            box-shadow: none !important;
+            padding: 0 14px 0 2px;
+        }
+
+        .form-control:focus {
+            background: #fff;
+        }
+
+        .form-control::placeholder {
+            color: #687486;
+            opacity: 1;
         }
 
         .email-group {
@@ -746,7 +766,28 @@
                                     placeholder="Enter your password"
                                     autocomplete="current-password"
                                 >
+                                <button
+                                    type="button"
+                                    class="input-group-text bg-transparent"
+                                    id="toggleAdminPassword"
+                                    style="cursor: pointer;"
+                                    aria-label="Show password"
+                                >
+                                    <i class="bi bi-eye" id="toggleAdminPasswordIcon"></i>
+                                </button>
                             </div>
+                        </div>
+
+                        <div class="text-end mt-3 mb-1 py-2">
+                            <button
+                                type="button"
+                                class="btn btn-link p-0 text-decoration-none"
+                                data-bs-toggle="modal"
+                                data-bs-target="#forgotPasswordModal"
+                                style="font-weight: 700; color: var(--primary-red);"
+                            >
+                                Forgot Password?
+                            </button>
                         </div>
 
                         <button type="submit" class="btn btn-login">
@@ -844,151 +885,304 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        const adminChoice = document.getElementById('adminChoice');
-        const headChoice = document.getElementById('headChoice');
-        const adminPanel = document.getElementById('adminPanel');
-        const headPanel = document.getElementById('headMagicLinkForm');
 
-        const adminLoginForm = document.getElementById('adminLoginForm');
-        const headLoginForm = document.getElementById('headMagicLinkForm');
-        const headEmailInput = document.getElementById('headEmail');
-        const sendHeadLinkBtn = document.getElementById('sendHeadLinkBtn');
 
-        const modalElement = document.getElementById('systemModal');
-        const modalTitle = document.getElementById('systemModalLabel');
-        const modalText = document.getElementById('systemModalText');
-        const modalIconWrap = document.getElementById('modalIconWrap');
-        const modalIcon = document.getElementById('modalIcon');
-        const systemModal = new bootstrap.Modal(modalElement);
 
-        function selectLoginType(type) {
-            if (type === 'admin') {
-                adminChoice.classList.add('active');
-                headChoice.classList.remove('active');
-                adminPanel.classList.add('active');
-                headPanel.classList.remove('active');
-            } else {
-                headChoice.classList.add('active');
-                adminChoice.classList.remove('active');
-                adminPanel.classList.remove('active');
-                headPanel.classList.add('active');
-            }
+    <div class="modal fade" id="forgotPasswordModal" tabindex="-1" aria-labelledby="forgotPasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <form method="POST" action="{% url 'admin_forgot_password' %}" id="forgotPasswordForm">
+                {% csrf_token %}
+                <div class="modal-header custom-modal-header">
+                    <button type="button" class="modal-close-btn ms-auto" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <div class="modal-body custom-modal-body">
+                    <div class="text-center mb-3">
+                        <div class="modal-icon-wrap warning mx-auto">
+                            <i class="bi bi-key-fill"></i>
+                        </div>
+                        <div class="custom-modal-title" id="forgotPasswordModalLabel">Forgot Password</div>
+                        <p class="custom-modal-text">
+                            Enter your admin email address and we will send you a reset link.
+                        </p>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="forgotEmail" class="form-label">Admin Email</label>
+                        <div class="email-group">
+                            <i class="bi bi-envelope input-icon"></i>
+                            <input
+                                type="email"
+                                class="form-control"
+                                id="forgotEmail"
+                                name="forgot_email"
+                                placeholder="Enter your admin email"
+                                required
+                            >
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer custom-modal-footer">
+                    <button type="submit" class="btn btn-login w-100" id="forgotPasswordSubmitBtn">
+                        <i class="bi bi-send-fill me-2"></i>Send Reset Link
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    const adminChoice = document.getElementById('adminChoice');
+    const headChoice = document.getElementById('headChoice');
+    const adminPanel = document.getElementById('adminPanel');
+    const headPanel = document.getElementById('headMagicLinkForm');
+
+    const adminLoginForm = document.getElementById('adminLoginForm');
+    const headLoginForm = document.getElementById('headMagicLinkForm');
+    const headEmailInput = document.getElementById('headEmail');
+    const sendHeadLinkBtn = document.getElementById('sendHeadLinkBtn');
+
+    const modalElement = document.getElementById('systemModal');
+    const modalTitle = document.getElementById('systemModalLabel');
+    const modalText = document.getElementById('systemModalText');
+    const modalIconWrap = document.getElementById('modalIconWrap');
+    const modalIcon = document.getElementById('modalIcon');
+
+    const forgotPasswordForm = document.getElementById('forgotPasswordForm');
+    const forgotEmailInput = document.getElementById('forgotEmail');
+    const forgotPasswordSubmitBtn = document.getElementById('forgotPasswordSubmitBtn');
+
+    const systemModal = modalElement ? new bootstrap.Modal(modalElement) : null;
+    const adminPasswordInput = document.getElementById('adminPassword');
+    const toggleAdminPasswordBtn = document.getElementById('toggleAdminPassword');
+    const toggleAdminPasswordIcon = document.getElementById('toggleAdminPasswordIcon');
+
+    function selectLoginType(type) {
+        if (!adminChoice || !headChoice || !adminPanel || !headPanel) return;
+
+        if (type === 'admin') {
+            adminChoice.classList.add('active');
+            headChoice.classList.remove('active');
+            adminPanel.classList.add('active');
+            headPanel.classList.remove('active');
+        } else {
+            headChoice.classList.add('active');
+            adminChoice.classList.remove('active');
+            adminPanel.classList.remove('active');
+            headPanel.classList.add('active');
+        }
+    }
+
+    function isValidEmail(email) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+    }
+
+    function showSystemModal(title, message, type = 'warning') {
+        if (!systemModal || !modalTitle || !modalText || !modalIconWrap || !modalIcon) {
+            alert(message);
+            return;
         }
 
-        function isValidEmail(email) {
-            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
-        }
+        modalTitle.textContent = title;
+        modalText.textContent = message;
 
-        function showSystemModal(title, message, type = 'warning') {
-            modalTitle.textContent = title;
-            modalText.textContent = message;
+        modalIconWrap.className = 'modal-icon-wrap warning mx-auto';
+        modalIcon.className = 'bi bi-info-circle-fill';
 
+        if (type === 'success') {
+            modalIconWrap.className = 'modal-icon-wrap success mx-auto';
+            modalIcon.className = 'bi bi-check-circle-fill';
+        } else if (type === 'danger') {
+            modalIconWrap.className = 'modal-icon-wrap danger mx-auto';
+            modalIcon.className = 'bi bi-exclamation-octagon-fill';
+        } else if (type === 'warning') {
             modalIconWrap.className = 'modal-icon-wrap warning mx-auto';
             modalIcon.className = 'bi bi-info-circle-fill';
-
-            if (type === 'success') {
-                modalIconWrap.className = 'modal-icon-wrap success mx-auto';
-                modalIcon.className = 'bi bi-check-circle-fill';
-            } else if (type === 'danger') {
-                modalIconWrap.className = 'modal-icon-wrap danger mx-auto';
-                modalIcon.className = 'bi bi-exclamation-octagon-fill';
-            } else if (type === 'warning') {
-                modalIconWrap.className = 'modal-icon-wrap warning mx-auto';
-                modalIcon.className = 'bi bi-info-circle-fill';
-            }
-
-            systemModal.show();
         }
 
-        if (adminLoginForm) {
-            adminLoginForm.addEventListener('submit', function(e) {
-                const username = document.getElementById('adminUsername').value.trim();
-                const password = document.getElementById('adminPassword').value.trim();
+        systemModal.show();
+    }
 
-                if (!username || !password) {
-                    e.preventDefault();
-                    selectLoginType('admin');
-                    showSystemModal(
-                        'Admin Login',
-                        'Please enter both username and password.',
-                        'warning'
-                    );
-                }
-            });
-        }
+    if (adminLoginForm) {
+        adminLoginForm.addEventListener('submit', function (e) {
+            const usernameInput = document.getElementById('adminUsername');
+            const passwordInput = document.getElementById('adminPassword');
 
-        if (headLoginForm) {
-            headLoginForm.addEventListener('submit', function(e) {
-                const emailValue = headEmailInput.value.trim();
+            const username = usernameInput ? usernameInput.value.trim() : '';
+            const password = passwordInput ? passwordInput.value.trim() : '';
 
-                if (!emailValue) {
-                    e.preventDefault();
-                    selectLoginType('head');
-                    headEmailInput.focus();
-                    showSystemModal(
-                        'Email Required',
-                        'Please enter your GSFE email address first before requesting the secure login link.',
-                        'warning'
-                    );
-                    return;
-                }
-
-                if (!isValidEmail(emailValue)) {
-                    e.preventDefault();
-                    selectLoginType('head');
-                    headEmailInput.focus();
-                    showSystemModal(
-                        'Invalid Email Address',
-                        'Please enter a valid GSFE email address before requesting the secure login link.',
-                        'danger'
-                    );
-                    return;
-                }
-
-                sendHeadLinkBtn.disabled = true;
-                sendHeadLinkBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Sending Link...';
-            });
-        }
-
-        window.addEventListener('pageshow', function () {
-            if (sendHeadLinkBtn) {
-                sendHeadLinkBtn.disabled = false;
-                sendHeadLinkBtn.innerHTML = '<i class="bi bi-send-fill me-2"></i>Send';
+            if (!username || !password) {
+                e.preventDefault();
+                selectLoginType('admin');
+                showSystemModal(
+                    'Admin Login',
+                    'Please enter both username and password.',
+                    'warning'
+                );
+                return;
             }
         });
+    }
 
-        window.addEventListener('load', function () {
-            {% if login_modal %}
-                {% if login_modal.type == "success" %}
+    if (headLoginForm) {
+        headLoginForm.addEventListener('submit', function (e) {
+            const emailValue = headEmailInput ? headEmailInput.value.trim() : '';
+
+            if (!emailValue) {
+                e.preventDefault();
+                selectLoginType('head');
+
+                if (headEmailInput) {
+                    headEmailInput.focus();
+                }
+
+                showSystemModal(
+                    'Email Required',
+                    'Please enter your GSFE email address first before requesting the secure login link.',
+                    'warning'
+                );
+                return;
+            }
+
+            if (!isValidEmail(emailValue)) {
+                e.preventDefault();
+                selectLoginType('head');
+
+                if (headEmailInput) {
+                    headEmailInput.focus();
+                }
+
+                showSystemModal(
+                    'Invalid Email Address',
+                    'Please enter a valid GSFE email address before requesting the secure login link.',
+                    'danger'
+                );
+                return;
+            }
+
+            if (sendHeadLinkBtn) {
+                sendHeadLinkBtn.disabled = true;
+                sendHeadLinkBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Sending Link...';
+            }
+        });
+    }
+
+    if (forgotPasswordForm) {
+        forgotPasswordForm.addEventListener('submit', function (e) {
+            const emailValue = forgotEmailInput ? forgotEmailInput.value.trim() : '';
+
+            if (!emailValue) {
+                e.preventDefault();
+
+                if (forgotEmailInput) {
+                    forgotEmailInput.focus();
+                }
+
+                showSystemModal(
+                    'Email Required',
+                    'Please enter your admin email address first.',
+                    'warning'
+                );
+                return;
+            }
+
+            if (!isValidEmail(emailValue)) {
+                e.preventDefault();
+
+                if (forgotEmailInput) {
+                    forgotEmailInput.focus();
+                }
+
+                showSystemModal(
+                    'Invalid Email Address',
+                    'Please enter a valid admin email address.',
+                    'danger'
+                );
+                return;
+            }
+
+            if (forgotPasswordSubmitBtn) {
+                forgotPasswordSubmitBtn.disabled = true;
+                forgotPasswordSubmitBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Sending Reset Link...';
+            }
+        });
+    }
+
+    window.addEventListener('pageshow', function () {
+        if (sendHeadLinkBtn) {
+            sendHeadLinkBtn.disabled = false;
+            sendHeadLinkBtn.innerHTML = '<i class="bi bi-send-fill me-2"></i>Send';
+        }
+
+        if (forgotPasswordSubmitBtn) {
+            forgotPasswordSubmitBtn.disabled = false;
+            forgotPasswordSubmitBtn.innerHTML = '<i class="bi bi-send-fill me-2"></i>Send Reset Link';
+        }
+    });
+
+    window.addEventListener('load', function () {
+        {% if login_modal %}
+            {% if login_modal.type == "success" %}
+                {% if "password reset" in login_modal.message|lower or "reset link" in login_modal.message|lower %}
+                    selectLoginType('admin');
+                    showSystemModal(
+                        'Check Your Email',
+                        '{{ login_modal.message|escapejs }}',
+                        'success'
+                    );
+                {% else %}
                     selectLoginType('head');
                     showSystemModal(
                         'Check Your Email',
                         '{{ login_modal.message|escapejs }}',
                         'success'
                     );
-                {% elif login_modal.type == "danger" %}
-                    {% if "username" in login_modal.message|lower or "password" in login_modal.message|lower or "admin" in login_modal.message|lower or "access" in login_modal.message|lower %}
-                        selectLoginType('admin');
-                    {% else %}
-                        selectLoginType('head');
-                    {% endif %}
-                    showSystemModal(
-                        'Request Failed',
-                        '{{ login_modal.message|escapejs }}',
-                        'danger'
-                    );
+                {% endif %}
+            {% elif login_modal.type == "danger" %}
+                {% if "username" in login_modal.message|lower or "password" in login_modal.message|lower or "admin" in login_modal.message|lower or "access" in login_modal.message|lower %}
+                    selectLoginType('admin');
+                {% elif "reset" in login_modal.message|lower %}
+                    selectLoginType('admin');
                 {% else %}
                     selectLoginType('head');
-                    showSystemModal(
-                        'Notice',
-                        '{{ login_modal.message|escapejs }}',
-                        '{{ login_modal.type }}'
-                    );
                 {% endif %}
+
+                showSystemModal(
+                    'Request Failed',
+                    '{{ login_modal.message|escapejs }}',
+                    'danger'
+                );
+            {% else %}
+                selectLoginType('admin');
+                showSystemModal(
+                    'Notice',
+                    '{{ login_modal.message|escapejs }}',
+                    '{{ login_modal.type }}'
+                );
             {% endif %}
+        {% endif %}
+
+
+
+        if (toggleAdminPasswordBtn && adminPasswordInput && toggleAdminPasswordIcon) {
+        toggleAdminPasswordBtn.addEventListener('click', function () {
+            const isPassword = adminPasswordInput.type === 'password';
+
+            adminPasswordInput.type = isPassword ? 'text' : 'password';
+            toggleAdminPasswordIcon.className = isPassword ? 'bi bi-eye-slash' : 'bi bi-eye';
+            toggleAdminPasswordBtn.setAttribute(
+                'aria-label',
+                isPassword ? 'Hide password' : 'Show password'
+            );
         });
-    </script>
+    }
+    });
+</script>
 </body>
 </html>
