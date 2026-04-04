@@ -13,6 +13,8 @@ from django.core.mail import EmailMultiAlternatives
 from django.core.signing import TimestampSigner
 from django.template.loader import render_to_string
 from django.urls import reverse
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required, user_passes_test
 
 from ..models import (
     Department,
@@ -237,7 +239,13 @@ def _get_latest_schedule_with_submitted_evaluations():
 
     return None
 
+def admin_required(view_func):
+    return user_passes_test(
+        lambda u: u.is_authenticated and u.is_staff,
+        login_url='admin_login'
+    )(view_func)
 
+@admin_required
 def admin_department(request):
     if request.method == "POST" and request.FILES.get("excel_file"):
         schedule_id = request.POST.get("schedule_id")
@@ -385,7 +393,7 @@ def admin_department(request):
     )
     return render(request, "admin/admin_department.html", context)
 
-
+@admin_required
 def admin_manage(request):
     if request.method == "POST":
         action = request.POST.get("action")
@@ -584,7 +592,7 @@ def delete_department(request, dept_id):
     messages.success(request, f"Department '{department_name}' was deleted successfully.")
     return redirect("admin_department")
 
-
+@admin_required
 def admin_results_summary(request):
     schedules = EvaluationSchedule.objects.all().order_by("-start_datetime", "-created_at")
     selected_schedule_id = request.GET.get("schedule")
@@ -884,7 +892,7 @@ def admin_login(request):
 
     if request.method == "POST":
         login_type = (request.POST.get("login_type") or "").strip()
-
+        
         if login_type == "admin":
             username = (request.POST.get("username") or "").strip()
             password = (request.POST.get("password") or "").strip()
@@ -896,6 +904,30 @@ def admin_login(request):
                 }
                 return redirect("admin_login")
 
+            user = authenticate(request, username=username, password=password)
+
+            if user is None:
+                request.session["login_modal"] = {
+                    "type": "danger",
+                    "message": "Invalid username or password."
+                }
+                return redirect("admin_login")
+
+            if not user.is_active:
+                request.session["login_modal"] = {
+                    "type": "danger",
+                    "message": "This account is inactive."
+                }
+                return redirect("admin_login")
+
+            if not user.is_staff:
+                request.session["login_modal"] = {
+                    "type": "danger",
+                    "message": "You do not have admin access."
+                }
+                return redirect("admin_login")
+
+            login(request, user)
             return redirect("admin_department")
 
         elif login_type == "head":
@@ -1065,6 +1097,7 @@ def admin_login(request):
     )
     return render(request, "admin/admin_login.html", context)
 
+@admin_required
 def admin_past_evaluations(request):
     selected_schedule_id = request.GET.get("schedule")
 
@@ -1333,3 +1366,9 @@ def admin_past_evaluations(request):
     })
 
     return render(request, "admin/admin_past_evaluations.html", context)
+
+
+
+def admin_logout(request):
+    logout(request)
+    return redirect("admin_login")

@@ -132,3 +132,8 @@ EMAIL_HOST_PASSWORD = 'sqpo sxre mlkv wkkx'
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+LOGIN_URL = '/dashboard/login/'
+LOGIN_REDIRECT_URL = '/dashboard/department/'
+LOGOUT_REDIRECT_URL = '/dashboard/login/'

@@ -194,6 +194,7 @@
             margin-bottom: 12px;
         }
 
+        /* copied from your reference button chip feel */
         .switch-chip {
             display: inline-flex;
             align-items: center;
@@ -350,8 +351,7 @@
             color: var(--text-dark);
         }
 
-        .schedule-box,
-        .link-wrapper {
+        .schedule-box {
             display: flex;
             align-items: flex-start;
             gap: 12px;
@@ -363,8 +363,7 @@
             margin-bottom: 18px;
         }
 
-        .schedule-badge,
-        .link-badge {
+        .schedule-badge {
             width: 42px;
             height: 42px;
             border-radius: 12px;
@@ -377,15 +376,13 @@
             font-size: 1.05rem;
         }
 
-        .schedule-title,
-        .link-title {
+        .schedule-title {
             font-weight: 800;
             margin-bottom: 4px;
             color: #22613a;
         }
 
-        .schedule-subtitle,
-        .link-subtitle {
+        .schedule-subtitle {
             font-size: 0.92rem;
             line-height: 1.6;
             color: #22613a;
@@ -416,65 +413,67 @@
         }
 
         .form-control:focus {
-            border-color: rgba(152, 27, 46, 0.45);
+            border-color: rgba(152, 27, 46, 0.35);
+            box-shadow: 0 0 0 0.2rem rgba(152, 27, 46, 0.10);
             background: #fff;
-            box-shadow: 0 0 0 4px rgba(152, 27, 46, 0.08);
-        }
-
-        .helper-text {
-            color: var(--text-muted);
-            font-size: 0.84rem;
-            margin-top: 8px;
-            line-height: 1.55;
         }
 
         .email-group {
             position: relative;
         }
 
-        .input-icon {
+        .email-group .input-icon {
             position: absolute;
             left: 16px;
             top: 50%;
             transform: translateY(-50%);
-            color: #9aa3af;
+            color: var(--text-muted);
+            z-index: 3;
             font-size: 1rem;
-            pointer-events: none;
-            z-index: 2;
         }
 
         .email-group .form-control {
-            padding-left: 46px;
-            border-radius: 16px;
+            padding-left: 48px;
         }
 
-        .btn-main,
+        /* copied from your reference main button feel */
         .btn-login,
         .btn-send-link {
-            width: 100%;
             min-height: 54px;
             border-radius: 16px;
-            border: 1px solid transparent;
             font-weight: 700;
             font-size: 0.97rem;
-            background: var(--primary-red);
-            color: #fff;
-            box-shadow: 0 10px 20px rgba(152, 27, 46, 0.18);
+            width: 100%;
+            border: 1px solid transparent;
             transition: 0.2s ease;
         }
 
-        .btn-main:hover,
+        .btn-login {
+            background: var(--primary-red);
+            color: #fff;
+            box-shadow: 0 10px 20px rgba(152, 27, 46, 0.18);
+        }
+
         .btn-login:hover,
+        .btn-login:focus {
+            background: var(--primary-red-dark);
+            color: #fff;
+            transform: translateY(-1px);
+        }
+
+        .btn-send-link {
+            background: var(--primary-red);
+            color: #fff;
+            box-shadow: 0 10px 20px rgba(152, 27, 46, 0.18);
+        }
+
         .btn-send-link:hover,
-        .btn-main:focus,
-        .btn-login:focus,
         .btn-send-link:focus {
             background: var(--primary-red-dark);
             color: #fff;
             transform: translateY(-1px);
         }
 
-        .btn-main:disabled,
         .btn-login:disabled,
         .btn-send-link:disabled {
             opacity: 1;
@@ -484,73 +483,69 @@
         }
 
         .footer-note {
-            margin-top: 24px;
+            margin-top: 18px;
+            padding: 14px 16px;
+            border-radius: 16px;
+            background: #f8fafc;
+            border: 1px solid var(--border-soft);
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            line-height: 1.6;
             display: flex;
             align-items: flex-start;
             gap: 10px;
-            color: var(--text-muted);
-            font-size: 0.88rem;
-            line-height: 1.65;
         }
 
-        .footer-note i {
-            color: var(--primary-red);
-            margin-top: 1px;
-            flex-shrink: 0;
+        .custom-modal-header {
+            border-bottom: none;
+            padding: 14px 14px 0;
+        }
+
+        .custom-modal-body {
+            padding: 8px 24px 10px;
+        }
+
+        .custom-modal-footer {
+            border-top: none;
+            justify-content: center;
+            padding: 10px 20px 24px;
         }
 
         .modal-content {
             border: none;
-            border-radius: 22px;
+            border-radius: 24px;
             overflow: hidden;
-            box-shadow: 0 20px 50px rgba(17, 24, 39, 0.18);
-        }
-
-        .modal-header.custom-modal-header {
-            border-bottom: none;
-            padding: 20px 22px 8px;
-        }
-
-        .modal-body.custom-modal-body {
-            padding: 8px 22px 22px;
-        }
-
-        .modal-footer.custom-modal-footer {
-            border-top: none;
-            padding: 0 22px 22px;
+            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.16);
         }
 
         .modal-icon-wrap {
-            width: 58px;
-            height: 58px;
-            border-radius: 18px;
-            display: inline-flex;
+            width: 74px;
+            height: 74px;
+            border-radius: 999px;
+            display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.4rem;
-            margin-bottom: 14px;
+            margin-bottom: 16px;
+            font-size: 2rem;
         }
 
         .modal-icon-wrap.success {
-            background: var(--success-bg);
-            color: var(--success-text);
-            border: 1px solid var(--success-border);
-        }
-
-        .modal-icon-wrap.warning {
-            background: var(--warning-bg);
-            color: var(--warning-text);
-            border: 1px solid var(--warning-border);
+            background: #eaf7ee;
+            color: #22613a;
         }
 
         .modal-icon-wrap.danger {
-            background: var(--danger-bg);
-            color: var(--danger-text);
-            border: 1px solid var(--danger-border);
+            background: #fff1f2;
+            color: #a22735;
+        }
+
+        .modal-icon-wrap.warning {
+            background: #fff8e8;
+            color: #845e00;
         }
 
         .custom-modal-title {
-            font-size: 1.28rem;
+            font-size: 1.2rem;
             font-weight: 800;
             color: var(--text-dark);
             margin-bottom: 8px;
@@ -690,11 +685,12 @@
                         <i class="bi bi-ui-checks-grid me-1"></i> Evaluation Form
                     </a>
                 </div>
-                    <span class="small-label">Secure Login</span>
-                    <h2>Choose Login Type</h2>
-                    <p class="subtitle">
-                        Select your role to continue.
-                    </p>
+
+                <span class="small-label">Secure Login</span>
+                <h2>Choose Login Type</h2>
+                <p class="subtitle">
+                    Select your role to continue.
+                </p>
 
                 <div class="choice-grid">
                     <div class="choice-card active" id="adminChoice" onclick="selectLoginType('admin')">
@@ -713,9 +709,7 @@
                         <p class="choice-text">Use GSFE email and login link.</p>
                     </div>
                 </div>
-                
 
-                <!-- ADMIN FORM -->
                 <div class="form-panel active" id="adminPanel">
                     <form method="POST" id="adminLoginForm" novalidate>
                         {% csrf_token %}
@@ -727,7 +721,14 @@
                                 <span class="input-group-text">
                                     <i class="bi bi-person"></i>
                                 </span>
-                                <input type="text" name="username" id="adminUsername" class="form-control" placeholder="Enter your username">
+                                <input
+                                    type="text"
+                                    name="username"
+                                    id="adminUsername"
+                                    class="form-control"
+                                    placeholder="Enter your username"
+                                    autocomplete="username"
+                                >
                             </div>
                         </div>
 
@@ -737,7 +738,14 @@
                                 <span class="input-group-text">
                                     <i class="bi bi-lock"></i>
                                 </span>
-                                <input type="password" name="password" id="adminPassword" class="form-control" placeholder="Enter your password">
+                                <input
+                                    type="password"
+                                    name="password"
+                                    id="adminPassword"
+                                    class="form-control"
+                                    placeholder="Enter your password"
+                                    autocomplete="current-password"
+                                >
                             </div>
                         </div>
 
@@ -747,14 +755,10 @@
                     </form>
                 </div>
 
-                <!-- HEAD FORM -->
                 <form method="POST" id="headMagicLinkForm" class="form-panel" novalidate>
                     {% csrf_token %}
                     <input type="hidden" name="login_type" value="head">
                     <input type="hidden" name="action" value="send_link">
-
-
-
 
                     <div class="mb-3">
                         <label for="headEmail" class="form-label">GSFE Email Address</label>
@@ -770,8 +774,30 @@
                                 required
                             >
                         </div>
-
                     </div>
+
+                    {% if open_schedule %}
+                    <div class="schedule-box">
+                        <div class="schedule-badge">
+                            <i class="bi bi-calendar2-check"></i>
+                        </div>
+                        <div>
+                            <div class="schedule-title">Current Evaluation Period</div>
+                            <p class="schedule-subtitle">
+                                {{ open_schedule.academic_year }} • {{ open_schedule.semester }} • {{ open_schedule.title }}<br>
+                                {{ open_schedule.start_datetime|date:"M d, Y h:i A" }} to {{ open_schedule.end_datetime|date:"M d, Y h:i A" }}
+                            </p>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="info-box info-soft">
+                        <i class="bi bi-info-circle-fill"></i>
+                        <div>
+                            <span class="title">Department Head Access</span>
+                            <p class="desc">Enter your GSFE email address to receive your secure login link.</p>
+                        </div>
+                    </div>
+                    {% endif %}
 
                     <button
                         type="submit"
@@ -784,7 +810,7 @@
 
                 <div class="footer-note">
                     <i class="bi bi-lock-fill"></i>
-                    Your secure email link is used only for secure access to the evaluation system.
+                    <span>Your secure email link is used only for secure access to the evaluation system.</span>
                 </div>
             </div>
         </div>
@@ -820,8 +846,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        const portalClosed = {{ portal_closed|yesno:"true,false" }};
-
         const adminChoice = document.getElementById('adminChoice');
         const headChoice = document.getElementById('headChoice');
         const adminPanel = document.getElementById('adminPanel');
@@ -885,6 +909,7 @@
 
                 if (!username || !password) {
                     e.preventDefault();
+                    selectLoginType('admin');
                     showSystemModal(
                         'Admin Login',
                         'Please enter both username and password.',
@@ -894,64 +919,75 @@
             });
         }
 
-       if (headLoginForm) {
-    headLoginForm.addEventListener('submit', function(e) {
-        const emailValue = headEmailInput.value.trim();
+        if (headLoginForm) {
+            headLoginForm.addEventListener('submit', function(e) {
+                const emailValue = headEmailInput.value.trim();
 
-        if (!emailValue) {
-            e.preventDefault();
-            headEmailInput.focus();
-            showSystemModal(
-                'Email Required',
-                'Please enter your GSFE email address first before requesting the secure login link.',
-                'warning'
-            );
-            return;
+                if (!emailValue) {
+                    e.preventDefault();
+                    selectLoginType('head');
+                    headEmailInput.focus();
+                    showSystemModal(
+                        'Email Required',
+                        'Please enter your GSFE email address first before requesting the secure login link.',
+                        'warning'
+                    );
+                    return;
+                }
+
+                if (!isValidEmail(emailValue)) {
+                    e.preventDefault();
+                    selectLoginType('head');
+                    headEmailInput.focus();
+                    showSystemModal(
+                        'Invalid Email Address',
+                        'Please enter a valid GSFE email address before requesting the secure login link.',
+                        'danger'
+                    );
+                    return;
+                }
+
+                sendHeadLinkBtn.disabled = true;
+                sendHeadLinkBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Sending Link...';
+            });
         }
-
-        if (!isValidEmail(emailValue)) {
-            e.preventDefault();
-            headEmailInput.focus();
-            showSystemModal(
-                'Invalid Email Address',
-                'Please enter a valid GSFE email address before requesting the secure login link.',
-                'danger'
-            );
-            return;
-        }
-
-        sessionStorage.removeItem('admin_login_modal_shown');
-
-        sendHeadLinkBtn.disabled = true;
-        sendHeadLinkBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Sending Link...';
-    });
-}
-
 
         window.addEventListener('pageshow', function () {
-            if (sendHeadLinkBtn && !portalClosed) {
+            if (sendHeadLinkBtn) {
                 sendHeadLinkBtn.disabled = false;
                 sendHeadLinkBtn.innerHTML = '<i class="bi bi-send-fill me-2"></i>Send';
             }
         });
 
         window.addEventListener('load', function () {
-            const modalAlreadyShown = sessionStorage.getItem('admin_login_modal_shown') === 'true';
-            let modalWasShown = false;
-
             {% if login_modal %}
-                selectLoginType('head');
-                showSystemModal(
-                    '{% if login_modal.type == "success" %}Check Your Email{% elif login_modal.type == "danger" %}Request Failed{% else %}Notice{% endif %}',
-                    '{{ login_modal.message|escapejs }}',
-                    '{{ login_modal.type }}'
-                );
-                modalWasShown = true;
+                {% if login_modal.type == "success" %}
+                    selectLoginType('head');
+                    showSystemModal(
+                        'Check Your Email',
+                        '{{ login_modal.message|escapejs }}',
+                        'success'
+                    );
+                {% elif login_modal.type == "danger" %}
+                    {% if "username" in login_modal.message|lower or "password" in login_modal.message|lower or "admin" in login_modal.message|lower or "access" in login_modal.message|lower %}
+                        selectLoginType('admin');
+                    {% else %}
+                        selectLoginType('head');
+                    {% endif %}
+                    showSystemModal(
+                        'Request Failed',
+                        '{{ login_modal.message|escapejs }}',
+                        'danger'
+                    );
+                {% else %}
+                    selectLoginType('head');
+                    showSystemModal(
+                        'Notice',
+                        '{{ login_modal.message|escapejs }}',
+                        '{{ login_modal.type }}'
+                    );
+                {% endif %}
             {% endif %}
-
-            if (modalWasShown && !modalAlreadyShown) {
-                sessionStorage.setItem('admin_login_modal_shown', 'true');
-            }
         });
     </script>
 </body>
