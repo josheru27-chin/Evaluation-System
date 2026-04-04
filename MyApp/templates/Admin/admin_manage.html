@@ -228,6 +228,71 @@
             min-width: 100%;
         }
     }
+
+            .table-header-row{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            gap:16px;
+            flex-wrap:wrap;
+        }
+
+        .filter-row{
+            display:flex;
+            align-items:center;
+            gap:12px;
+            flex-wrap:nowrap;
+        }
+
+        .search-wrap{
+            position:relative;
+            min-width:280px;
+            width:320px;
+        }
+
+        .search-wrap i{
+            position:absolute;
+            top:50%;
+            left:14px;
+            transform:translateY(-50%);
+            color:#6c757d;
+            font-size:1rem;
+            z-index:2;
+        }
+
+        .search-wrap .form-control{
+            padding-left:42px;
+            height:46px;
+            border-radius:14px;
+        }
+
+        #statusFilter{
+            min-width:180px;
+            height:46px;
+            border-radius:14px;
+        }
+
+        @media (max-width: 768px){
+            .table-header-row{
+                align-items:stretch;
+            }
+
+            .filter-row{
+                width:100%;
+                flex-direction:column;
+                align-items:stretch;
+            }
+
+            .search-wrap{
+                width:100%;
+                min-width:0;
+            }
+
+            #statusFilter{
+                width:100%;
+                min-width:0;
+            }
+        }
 </style>
 {% endblock %}
 
@@ -298,11 +363,8 @@
             </div>
 
             <div class="col-lg-8">
-                <label class="form-label">Instructions / Notes</label>
+                <label class="form-label">Notes</label>
                 <textarea id="evaluationNotes" name="notes" rows="4" class="form-control" style="min-height: 130px;" placeholder="Add instructions, reminders, or admin notes for this faculty evaluation schedule..." required></textarea>
-                <div class="muted-note">
-                    The opening and closing date here will define the duration period of the faculty evaluation.
-                </div>
             </div>
 
             <div class="col-lg-4">
@@ -339,7 +401,7 @@
                 <input type="text" id="scheduleSearch" class="form-control" placeholder="Search title, academic year, or semester...">
             </div>
 
-            <select class="form-select" id="statusFilter" style="min-width: 180px;">
+            <select class="form-select" id="statusFilter">
                 <option value="">All Status</option>
                 <option value="Open">Open</option>
                 <option value="Closed">Closed</option>
@@ -424,6 +486,39 @@
     </div>
 </div>
 
+
+
+<div class="modal fade" id="duplicateScheduleModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-exclamation-triangle-fill me-2 text-danger"></i>
+                    Duplicate Schedule
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+                <div class="summary-note">
+                    <h6 class="mb-2">Schedule already exists</h6>
+                    <p id="duplicateScheduleMessage">
+                      An evaluation schedule is currently Open. Please wait for it to finish before creating a new one.
+                    </p>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-red" data-bs-dismiss="modal">
+                    OK
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
 <div class="modal fade" id="deleteScheduleModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -465,6 +560,12 @@
     const endInput = document.getElementById('end_datetime');
     const durationText = document.getElementById('durationText');
     const resetBtn = document.getElementById('resetScheduleForm');
+    const scheduleForm = document.getElementById('evaluationScheduleForm');
+    const scheduleIdInput = document.getElementById('schedule_id');
+    const evaluationTitleInput = document.getElementById('evaluationTitle');
+    const academicYearInput = document.getElementById('academicYear');
+    const semesterInput = document.getElementById('semester');
+    const evaluationNotesInput = document.getElementById('evaluationNotes');
 
     function getDurationText(startValue, endValue) {
         if (!startValue || !endValue) {
@@ -474,17 +575,17 @@
         const start = new Date(startValue);
         const end = new Date(endValue);
 
-        if (isNaN(start) || isNaN(end) || end <= start) {
+        if (isNaN(start.getTime()) || isNaN(end.getTime()) || end <= start) {
             return 'Closing date and time must be later than the opening date and time.';
         }
 
         const diffMs = end - start;
-        const totalHours = Math.floor(diffMs / (1000 * 60 * 60));
-        const days = Math.floor(totalHours / 24);
-        const hours = totalHours % 24;
-        const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+        const totalMinutes = Math.floor(diffMs / (1000 * 60));
+        const days = Math.floor(totalMinutes / (60 * 24));
+        const hours = Math.floor((totalMinutes % (60 * 24)) / 60);
+        const minutes = totalMinutes % 60;
 
-        let parts = [];
+        const parts = [];
         if (days) parts.push(days + (days === 1 ? ' day' : ' days'));
         if (hours) parts.push(hours + (hours === 1 ? ' hour' : ' hours'));
         if (minutes) parts.push(minutes + (minutes === 1 ? ' minute' : ' minutes'));
@@ -493,97 +594,204 @@
     }
 
     function updateDurationPreview() {
+        if (!durationText || !startInput || !endInput) return;
         durationText.textContent = getDurationText(startInput.value, endInput.value);
     }
 
     function resetFormState() {
-        document.getElementById('schedule_id').value = '';
-        document.getElementById('evaluationScheduleForm').reset();
-        durationText.textContent = 'Select an opening and closing schedule to calculate the duration period.';
-        endInput.min = '';
+        if (scheduleIdInput) scheduleIdInput.value = '';
+        if (scheduleForm) scheduleForm.reset();
+        if (durationText) {
+            durationText.textContent = 'Select an opening and closing schedule to calculate the duration period.';
+        }
+        if (endInput) endInput.min = '';
     }
 
-    startInput.addEventListener('change', function () {
-        endInput.min = this.value;
-        updateDurationPreview();
-    });
-
-    endInput.addEventListener('change', updateDurationPreview);
-
-    resetBtn.addEventListener('click', function () {
-        resetFormState();
-    });
-
-    document.querySelectorAll('.editScheduleBtn').forEach(btn => {
-        btn.addEventListener('click', function () {
-            document.getElementById('schedule_id').value = this.dataset.id;
-            document.getElementById('evaluationTitle').value = this.dataset.title;
-            document.getElementById('academicYear').value = this.dataset.academic_year;
-            document.getElementById('semester').value = this.dataset.semester;
-            document.getElementById('start_datetime').value = this.dataset.start;
-            document.getElementById('end_datetime').value = this.dataset.end;
-            document.getElementById('evaluationNotes').value = this.dataset.notes || '';
-
-            endInput.min = this.dataset.start;
-            updateDurationPreview();
-
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
-    });
-
-    document.querySelectorAll('.deleteScheduleBtn').forEach(btn => {
-        btn.addEventListener('click', function () {
-            document.getElementById('deleteScheduleId').value = this.dataset.id;
-            document.getElementById('deleteScheduleTitle').textContent = this.dataset.title;
-            new bootstrap.Modal(document.getElementById('deleteScheduleModal')).show();
-        });
-    });
-
     function filterTable() {
-        const keyword = searchInput.value.trim().toLowerCase();
-        const status = statusFilter.value;
+        const keyword = searchInput ? searchInput.value.trim().toLowerCase() : '';
+        const status = statusFilter ? statusFilter.value : '';
         const rows = document.querySelectorAll('#scheduleTableBody tr[data-search]');
+        let visibleCount = 0;
 
         rows.forEach(row => {
-            const text = row.dataset.search || '';
+            const text = (row.dataset.search || '').toLowerCase();
             const rowStatus = row.dataset.status || '';
 
             const keywordMatch = !keyword || text.includes(keyword);
             const statusMatch = !status || rowStatus === status;
 
-            row.style.display = (keywordMatch && statusMatch) ? '' : 'none';
+            if (keywordMatch && statusMatch) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
         });
-    }
 
-    searchInput.addEventListener('input', filterTable);
-    statusFilter.addEventListener('change', filterTable);
-
-
-
-
-    function generateAcademicYears() {
-        const select = document.getElementById("academicYear");
-        const currentYear = new Date().getFullYear();
-
-        select.innerHTML = '<option value="">Select Academic Year</option>';
-
-        // START 1 YEAR BEFORE CURRENT (so 2025–2026 appears)
-        for (let i = -1; i < 4; i++) {
-            const start = currentYear + i;
-            const end = start + 1;
-            const value = `${start} - ${end}`;
-
-            const option = document.createElement("option");
-            option.value = value;
-            option.textContent = value;
-
-            select.appendChild(option);
+        const emptyRow = document.getElementById('emptyRow');
+        if (emptyRow) {
+            emptyRow.style.display = visibleCount === 0 ? '' : 'none';
         }
     }
 
-generateAcademicYears();
+    function generateAcademicYears() {
+        if (!academicYearInput) return;
 
-generateAcademicYears();
+        const currentYear = new Date().getFullYear();
+        const currentValue = academicYearInput.getAttribute('data-current') || academicYearInput.value || '';
 
+        academicYearInput.innerHTML = '<option value="">Select Academic Year</option>';
+
+        for (let i = -1; i < 4; i++) {
+            const startYear = currentYear + i;
+            const endYear = startYear + 1;
+            const value = `${startYear} - ${endYear}`;
+
+            const option = document.createElement('option');
+            option.value = value;
+            option.textContent = value;
+
+            if (value === currentValue) {
+                option.selected = true;
+            }
+
+            academicYearInput.appendChild(option);
+        }
+    }
+
+    function populateScheduleForm(button) {
+        if (!button) return;
+
+        if (scheduleIdInput) scheduleIdInput.value = button.dataset.id || '';
+        if (evaluationTitleInput) evaluationTitleInput.value = button.dataset.title || '';
+        if (academicYearInput) academicYearInput.value = button.dataset.academic_year || '';
+        if (semesterInput) semesterInput.value = button.dataset.semester || '';
+        if (startInput) startInput.value = button.dataset.start || '';
+        if (endInput) endInput.value = button.dataset.end || '';
+        if (evaluationNotesInput) evaluationNotesInput.value = button.dataset.notes || '';
+
+        if (endInput) {
+            endInput.min = button.dataset.start || '';
+        }
+
+        updateDurationPreview();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function showDeleteModal(button) {
+        if (!button) return;
+
+        const deleteScheduleId = document.getElementById('deleteScheduleId');
+        const deleteScheduleTitle = document.getElementById('deleteScheduleTitle');
+        const deleteModalEl = document.getElementById('deleteScheduleModal');
+
+        if (deleteScheduleId) {
+            deleteScheduleId.value = button.dataset.id || '';
+        }
+
+        if (deleteScheduleTitle) {
+            deleteScheduleTitle.textContent = button.dataset.title || 'Evaluation Title';
+        }
+
+        if (deleteModalEl && typeof bootstrap !== 'undefined') {
+            new bootstrap.Modal(deleteModalEl).show();
+        }
+    }
+
+    function showDuplicateModal(message) {
+        const messageBox = document.getElementById('duplicateScheduleMessage');
+        const duplicateModalEl = document.getElementById('duplicateScheduleModal');
+
+        if (messageBox) {
+            messageBox.textContent = message;
+        }
+
+        if (duplicateModalEl && typeof bootstrap !== 'undefined') {
+            new bootstrap.Modal(duplicateModalEl).show();
+        }
+    }
+
+    function bindEditButtons() {
+        document.querySelectorAll('.editScheduleBtn').forEach(button => {
+            button.addEventListener('click', function () {
+                populateScheduleForm(this);
+            });
+        });
+    }
+
+    function bindDeleteButtons() {
+        document.querySelectorAll('.deleteScheduleBtn').forEach(button => {
+            button.addEventListener('click', function () {
+                showDeleteModal(this);
+            });
+        });
+    }
+
+    function handleDjangoMessages() {
+        const djangoMessages = [
+            {% if messages %}
+                {% for message in messages %}
+                    {
+                        tags: "{{ message.tags|escapejs }}",
+                        text: "{{ message|escapejs }}"
+                    },
+                {% endfor %}
+            {% endif %}
+        ];
+
+        const scheduleErrorMessage = djangoMessages.find(msg =>
+            (msg.tags || '').includes('error') &&
+            (
+                (msg.text || '').toLowerCase().includes('this schedule already exists') ||
+                (msg.text || '').toLowerCase().includes('only one evaluation schedule is allowed') ||
+                (msg.text || '').toLowerCase().includes('please edit the existing schedule instead of creating a new one')
+            )
+        );
+
+        if (scheduleErrorMessage) {
+            showDuplicateModal(scheduleErrorMessage.text);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        generateAcademicYears();
+        updateDurationPreview();
+        filterTable();
+        bindEditButtons();
+        bindDeleteButtons();
+        handleDjangoMessages();
+
+        if (startInput) {
+            startInput.addEventListener('change', function () {
+                if (endInput) {
+                    endInput.min = this.value || '';
+                }
+                updateDurationPreview();
+            });
+        }
+
+        if (endInput) {
+            endInput.addEventListener('change', updateDurationPreview);
+            endInput.addEventListener('input', updateDurationPreview);
+        }
+
+        if (startInput) {
+            startInput.addEventListener('input', updateDurationPreview);
+        }
+
+        if (resetBtn) {
+            resetBtn.addEventListener('click', function () {
+                resetFormState();
+            });
+        }
+
+        if (searchInput) {
+            searchInput.addEventListener('input', filterTable);
+        }
+
+        if (statusFilter) {
+            statusFilter.addEventListener('change', filterTable);
+        }
+    });
 </script>
 {% endblock %}

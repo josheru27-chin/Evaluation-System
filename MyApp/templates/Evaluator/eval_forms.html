@@ -1619,10 +1619,26 @@ function isCurrentCategorySubmitted() {
       renderSection();
       renderDashboard();
     }
-
+    
     function goBackToDashboard() {
       saveComments();
-      refreshCategoryStatus(currentCategory);
+
+      if (currentCategory) {
+        refreshCategoryStatus(currentCategory);
+
+        const liveSavedCount = getSubmittedCount(currentCategory);
+        const liveRequiredCount = getCategoryEvaluatees(currentCategory).length;
+        const liveStatus = submissionStatus[currentCategory];
+
+        if (!dashboardSummary[currentCategory]) {
+          dashboardSummary[currentCategory] = {};
+        }
+
+        dashboardSummary[currentCategory].saved = liveSavedCount;
+        dashboardSummary[currentCategory].required = liveRequiredCount;
+        dashboardSummary[currentCategory].status = liveStatus;
+      }
+
       document.getElementById("formView").classList.add("hidden");
       document.getElementById("dashboardView").classList.remove("hidden");
       renderDashboard();

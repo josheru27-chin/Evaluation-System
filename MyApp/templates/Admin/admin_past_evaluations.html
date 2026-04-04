@@ -581,13 +581,6 @@
 {% endblock %}
 
 {% block content %}
-<div class="results-hero">
-    <h5><i class="bi bi-clock-history me-2"></i>Archived Evaluation Results</h5>
-    <p>
-        This page shows past faculty members and heads together with their total average rating,
-        section averages, computed rating percentage, and detailed per-question evaluator breakdown.
-    </p>
-</div>
 
 <div class="content-card mb-4">
     <form method="GET" class="row g-3 align-items-end p-4">
@@ -917,7 +910,7 @@
             return fallbackText;
         }
 
-        return fallbackText || `Question ${questionNumber}`;
+        return fallbackText || `Benchmark Statement ${questionNumber}`;
     }
 
     function escapeHtml(value) {
@@ -1098,7 +1091,7 @@
                                 <thead>
                                     <tr>
                                         <th style="min-width: 90px;">No.</th>
-                                        <th>Question</th>
+                                        <th>Benchmark Statements</th>
                                         <th style="min-width: 110px;">Rating</th>
                                     </tr>
                                 </thead>

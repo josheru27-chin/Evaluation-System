@@ -825,8 +825,8 @@
                         <div>
                             <div class="schedule-title">Current Evaluation Period</div>
                             <p class="schedule-subtitle">
-                                {{ open_schedule.academic_year }} • {{ open_schedule.semester }} • {{ open_schedule.title }}<br>
-                                {{ open_schedule.start_datetime|date:"M d, Y h:i A" }} to {{ open_schedule.end_datetime|date:"M d, Y h:i A" }}
+                                <strong>{{ open_schedule.title }} </strong>
+                                <br> Open until {{ open_schedule.end_datetime|date:"M d, Y h:i A" }}
                             </p>
                         </div>
                     </div>
@@ -1126,47 +1126,57 @@
         }
     });
 
-    window.addEventListener('load', function () {
-        {% if login_modal %}
-            {% if login_modal.type == "success" %}
-                {% if "password reset" in login_modal.message|lower or "reset link" in login_modal.message|lower %}
-                    selectLoginType('admin');
-                    showSystemModal(
-                        'Check Your Email',
-                        '{{ login_modal.message|escapejs }}',
-                        'success'
-                    );
-                {% else %}
-                    selectLoginType('head');
-                    showSystemModal(
-                        'Check Your Email',
-                        '{{ login_modal.message|escapejs }}',
-                        'success'
-                    );
-                {% endif %}
-            {% elif login_modal.type == "danger" %}
-                {% if "username" in login_modal.message|lower or "password" in login_modal.message|lower or "admin" in login_modal.message|lower or "access" in login_modal.message|lower %}
-                    selectLoginType('admin');
-                {% elif "reset" in login_modal.message|lower %}
-                    selectLoginType('admin');
-                {% else %}
-                    selectLoginType('head');
-                {% endif %}
+window.addEventListener('load', function () {
+    {% if login_modal %}
+        const modalMessage = '{{ login_modal.message|escapejs|lower }}';
 
-                showSystemModal(
-                    'Request Failed',
-                    '{{ login_modal.message|escapejs }}',
-                    'danger'
-                );
-            {% else %}
+        if ('{{ login_modal.type }}' === 'success') {
+            if (
+                modalMessage.includes('password has been reset') ||
+                modalMessage.includes('password reset') ||
+                modalMessage.includes('reset link') ||
+                modalMessage.includes('admin')
+            ) {
                 selectLoginType('admin');
-                showSystemModal(
-                    'Notice',
-                    '{{ login_modal.message|escapejs }}',
-                    '{{ login_modal.type }}'
-                );
-            {% endif %}
-        {% endif %}
+            } else {
+                selectLoginType('head');
+            }
+
+            showSystemModal(
+                'Success',
+                '{{ login_modal.message|escapejs }}',
+                'success'
+            );
+        } else if ('{{ login_modal.type }}' === 'danger') {
+            if (
+                modalMessage.includes('username') ||
+                modalMessage.includes('password') ||
+                modalMessage.includes('admin') ||
+                modalMessage.includes('access') ||
+                modalMessage.includes('reset')
+            ) {
+                selectLoginType('admin');
+            } else {
+                selectLoginType('head');
+            }
+
+            showSystemModal(
+                'Request Failed',
+                '{{ login_modal.message|escapejs }}',
+                'danger'
+            );
+        } else {
+            selectLoginType('admin');
+            showSystemModal(
+                'Notice',
+                '{{ login_modal.message|escapejs }}',
+                '{{ login_modal.type }}'
+            );
+        }
+    {% else %}
+        selectLoginType('admin');
+    {% endif %}
+});
 
 
 
@@ -1182,7 +1192,7 @@
             );
         });
     }
-    });
+
 </script>
 </body>
 </html>

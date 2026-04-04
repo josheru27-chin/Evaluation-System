@@ -400,7 +400,6 @@ def admin_department(request):
         },
     )
     return render(request, "admin/admin_department.html", context)
-
 @admin_required
 def admin_manage(request):
     if request.method == "POST":
@@ -424,6 +423,43 @@ def admin_manage(request):
 
             if end_datetime <= start_datetime:
                 messages.error(request, "Closing date and time must be later than the opening date and time.")
+                return redirect("admin_manage")
+
+            # exact duplicate check
+            existing = EvaluationSchedule.objects.filter(
+                title=title,
+                academic_year=academic_year,
+                semester=semester,
+                start_datetime=start_datetime,
+                end_datetime=end_datetime,
+            )
+
+            if schedule_id:
+                existing = existing.exclude(id=schedule_id)
+
+            if existing.exists():
+                messages.error(
+                    request,
+                    "This schedule already exists. Please create another schedule with different details."
+                )
+                return redirect("admin_manage")
+
+            # ONLY ONE SCHEDULE TOTAL IN THE SYSTEM
+            now = timezone.localtime(timezone.now())
+
+            existing_schedule = EvaluationSchedule.objects.filter(
+                start_datetime__lte=now,
+                end_datetime__gte=now
+            )
+
+            if schedule_id:
+                existing_schedule = existing_schedule.exclude(id=schedule_id)
+
+            if existing_schedule.exists():
+                messages.error(
+                    request,
+                    "Only one evaluation schedule is allowed. Wait for it to finish before creating a new one."
+                )
                 return redirect("admin_manage")
 
             if schedule_id:
@@ -456,7 +492,7 @@ def admin_manage(request):
             messages.success(request, "Evaluation schedule deleted successfully.")
             return redirect("admin_manage")
 
-    schedules = EvaluationSchedule.objects.all()
+    schedules = EvaluationSchedule.objects.all().order_by("-start_datetime", "-created_at")
     now = timezone.localtime(timezone.now())
 
     context = _admin_context(
