@@ -443,33 +443,35 @@
                         {% endif %}
                     </td>
                     <td class="text-end">
-                        <div class="action-group">
-                            <button
-                                type="button"
-                                class="btn-icon-soft editScheduleBtn"
-                                title="Edit Schedule"
-                                data-id="{{ item.id }}"
-                                data-title="{{ item.title }}"
-                                data-academic_year="{{ item.academic_year }}"
-                                data-semester="{{ item.semester }}"
-                                data-start="{{ item.start_datetime|date:'Y-m-d\\TH:i' }}"
-                                data-end="{{ item.end_datetime|date:'Y-m-d\\TH:i' }}"
-                                data-notes="{{ item.notes }}"
-                            >
-                                <i class="bi bi-pencil-square"></i>
-                            </button>
+                    <div class="action-group">
+                        {% if item.computed_status == "Open" %}
+                        <button
+                            type="button"
+                            class="btn-icon-soft editScheduleBtn"
+                            title="Edit Schedule"
+                            data-id="{{ item.id }}"
+                            data-title="{{ item.title }}"
+                            data-academic_year="{{ item.academic_year }}"
+                            data-semester="{{ item.semester }}"
+                            data-start="{{ item.start_datetime|date:'Y-m-d\\TH:i' }}"
+                            data-end="{{ item.end_datetime|date:'Y-m-d\\TH:i' }}"
+                            data-notes="{{ item.notes }}"
+                        >
+                            <i class="bi bi-pencil-square"></i>
+                        </button>
+                        {% endif %}
 
-                            <button
-                                type="button"
-                                class="btn-icon-danger deleteScheduleBtn"
-                                title="Delete Schedule"
-                                data-id="{{ item.id }}"
-                                data-title="{{ item.title }}"
-                            >
-                                <i class="bi bi-trash3"></i>
-                            </button>
-                        </div>
-                    </td>
+                        <button
+                            type="button"
+                            class="btn-icon-danger deleteScheduleBtn"
+                            title="Delete Schedule"
+                            data-id="{{ item.id }}"
+                            data-title="{{ item.title }}"
+                        >
+                            <i class="bi bi-trash3"></i>
+                        </button>
+                    </div>
+                </td>
                 </tr>
                 {% empty %}
                 <tr id="emptyRow">
