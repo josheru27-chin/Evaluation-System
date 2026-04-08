@@ -10,6 +10,11 @@
     <button class="btn btn-soft" type="button" id="printBatchBtn">
         <i class="bi bi-printer me-1"></i> Print Summary
     </button>
+
+    <button class="btn btn-soft" type="button" id="openBatchSelectionBtn">
+        <i class="bi bi-collection me-1"></i> Batch Print
+    </button>
+
     <button class="btn btn-red" type="button" id="exportResultsBtn">
         <i class="bi bi-file-earmark-arrow-down me-1"></i> Export Results
     </button>
@@ -767,6 +772,56 @@
     </div>
 </div>
 
+<div class="modal fade" id="batchPrintModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-printer me-2"></i>Select Results to Batch Print
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="modalSelectAllBatch">
+                        <label class="form-check-label fw-semibold" for="modalSelectAllBatch">
+                            Select All
+                        </label>
+                    </div>
+                    <small class="text-muted" id="modalBatchSelectedCount">0 selected</small>
+                </div>
+
+                <div class="results-table-wrap" style="max-height: 420px;">
+                    <table class="table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th style="width: 70px;">Select</th>
+                                <th>Type</th>
+                                <th>Evaluatee</th>
+                                <th>Department</th>
+                                <th>Total Average</th>
+                            </tr>
+                        </thead>
+                        <tbody id="batchPrintModalTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-soft" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-red" id="confirmBatchPrintModalBtn">
+                    <i class="bi bi-printer me-1"></i> Print Selected
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
 {{ faculty_results|default:"[]"|json_script:"faculty-results-data" }}
 {% endblock %}
 {% block extra_js %}
@@ -847,6 +902,11 @@
     const exportResultsBtn = document.getElementById('exportResultsBtn');
     const printBatchBtn = document.getElementById('printBatchBtn');
     const modalPrintPersonBtn = document.getElementById('modalPrintPersonBtn');
+    const openBatchSelectionBtn = document.getElementById('openBatchSelectionBtn');
+    const batchPrintModalTableBody = document.getElementById('batchPrintModalTableBody');
+    const modalSelectAllBatch = document.getElementById('modalSelectAllBatch');
+    const modalBatchSelectedCount = document.getElementById('modalBatchSelectedCount');
+    const confirmBatchPrintModalBtn = document.getElementById('confirmBatchPrintModalBtn');
 
     let currentModalItem = null;
 
@@ -1772,6 +1832,37 @@ function buildBatchSignatories(item) {
         `;
     }
 
+function buildBatchIndividualPrintHtml(items) {
+    const pages = items.map((item, index) => {
+        const singleHtml = buildSinglePersonPrintHtml(item);
+
+        const bodyMatch = singleHtml.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+        const bodyContent = bodyMatch ? bodyMatch[1] : '';
+
+        return `
+            <div class="${index > 0 ? 'page-break' : ''}">
+                ${bodyContent}
+            </div>
+        `;
+    }).join('');
+
+    return `
+        <html>
+        <head>
+            <title>Batch Individual Evaluation Forms</title>
+            ${buildDocumentStyles()}
+        </head>
+        <body>
+            <div class="doc-shell">
+                ${pages || '<div>No results available to print.</div>'}
+            </div>
+        </body>
+        </html>
+    `;
+}
+
+
+
     function buildBatchPrintHtml(items) {
         const cards = items.map((item, index) => {
             const evaluatorRows = (item.evaluators || []).map(evaluator => `
@@ -1926,6 +2017,95 @@ function buildBatchSignatories(item) {
         openPrintWindow(buildSinglePersonPrintHtml(item));
     }
 
+
+    function updateBatchSelectedCount() {
+    const checkedCount = document.querySelectorAll('.batch-print-checkbox:checked').length;
+    if (modalBatchSelectedCount) {
+        modalBatchSelectedCount.textContent = `${checkedCount} selected`;
+    }
+}
+
+function bindBatchModalCheckboxEvents() {
+    const checkboxes = document.querySelectorAll('.batch-print-checkbox');
+
+    checkboxes.forEach(box => {
+        box.addEventListener('change', function() {
+            const all = document.querySelectorAll('.batch-print-checkbox');
+            const checked = document.querySelectorAll('.batch-print-checkbox:checked');
+
+            if (modalSelectAllBatch) {
+                modalSelectAllBatch.checked = all.length > 0 && all.length === checked.length;
+            }
+
+            updateBatchSelectedCount();
+        });
+    });
+}
+
+function getBatchSelectedItems() {
+    const checked = document.querySelectorAll('.batch-print-checkbox:checked');
+
+    return Array.from(checked).map(box => {
+        const id = Number(box.dataset.id);
+        const resultType = box.dataset.type;
+
+        return facultyResults.find(entry =>
+            Number(entry.id) === id && String(entry.result_type) === String(resultType)
+        );
+    }).filter(Boolean);
+}
+
+function openBatchPrintModal() {
+    const filtered = getFilteredResults();
+
+    if (!filtered.length) {
+        alert('No filtered results available for batch printing.');
+        return;
+    }
+
+    if (!batchPrintModalTableBody) return;
+
+    batchPrintModalTableBody.innerHTML = filtered.map(item => `
+        <tr>
+            <td>
+                <input
+                    type="checkbox"
+                    class="batch-print-checkbox"
+                    data-id="${item.id}"
+                    data-type="${item.result_type}"
+                >
+            </td>
+            <td>${formatTypeLabel(item.result_type)}</td>
+            <td>${escapeHtml(item.name || 'Unnamed')}</td>
+            <td>${escapeHtml(item.department || 'No Department')}</td>
+            <td>${toFixedGrade(item.overall)}</td>
+        </tr>
+    `).join('');
+
+    if (modalSelectAllBatch) {
+        modalSelectAllBatch.checked = false;
+    }
+
+    bindBatchModalCheckboxEvents();
+    updateBatchSelectedCount();
+
+    new bootstrap.Modal(document.getElementById('batchPrintModal')).show();
+}
+
+function printSelectedBatchFromModal() {
+    const selectedItems = getBatchSelectedItems();
+
+    if (!selectedItems.length) {
+        alert('Please select at least one result to print.');
+        return;
+    }
+
+    openPrintWindow(buildBatchIndividualPrintHtml(selectedItems));
+}
+
+
+    
+
     function printBatchSummary() {
         const filtered = getFilteredResults();
 
@@ -1934,7 +2114,7 @@ function buildBatchSignatories(item) {
             return;
         }
 
-        openPrintWindow(buildBatchPrintHtml(filtered));
+        openPrintWindow(buildBatchIndividualPrintHtml(filtered));
     }
 
     function exportResultsToCSV() {
@@ -2009,6 +2189,28 @@ function buildBatchSignatories(item) {
         printBatchBtn.addEventListener('click', printBatchSummary);
     }
 
+
+    if (openBatchSelectionBtn) {
+    openBatchSelectionBtn.addEventListener('click', openBatchPrintModal);
+
+    }
+
+    if (modalSelectAllBatch) {
+        modalSelectAllBatch.addEventListener('change', function() {
+            const checkboxes = document.querySelectorAll('.batch-print-checkbox');
+            checkboxes.forEach(box => {
+                box.checked = this.checked;
+            });
+            updateBatchSelectedCount();
+        });
+    }
+
+    if (confirmBatchPrintModalBtn) {
+        confirmBatchPrintModalBtn.addEventListener('click', function() {
+            printSelectedBatchFromModal();
+        });
+    }
+
     if (modalPrintPersonBtn) {
         modalPrintPersonBtn.addEventListener('click', function() {
             if (!currentModalItem) {
@@ -2024,6 +2226,7 @@ function buildBatchSignatories(item) {
 
     window.openViewMore = openViewMore;
     window.printSinglePerson = printSinglePerson;
+    window.openBatchPrintModal = openBatchPrintModal;
     window.printBatchSummary = printBatchSummary;
     window.exportResultsToCSV = exportResultsToCSV;
 </script>
