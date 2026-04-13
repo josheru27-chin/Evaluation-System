@@ -972,7 +972,7 @@ def admin_login(request):
                 return redirect("admin_login")
 
             login(request, user)
-            return redirect("admin_department")
+            return redirect("admin_manage")
 
         elif login_type == "head":
             email = (request.POST.get("email") or "").strip().lower()
