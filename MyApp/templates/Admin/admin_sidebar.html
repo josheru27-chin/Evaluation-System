@@ -11,6 +11,11 @@
 <div class="menu-label">Navigation</div>
 
 <nav class="nav flex-column">
+    <a href="{% url 'admin_manage' %}" class="nav-link {% if active_page == 'manage' %}active{% endif %}">
+        <i class="bi bi-calendar2-range"></i>
+        <span>Manage Evaluation</span>
+    </a>
+
     <a href="{% url 'admin_department' %}" class="nav-link {% if active_page == 'department' %}active{% endif %}">
         <i class="bi bi-diagram-3"></i>
         <span>Department</span>
@@ -20,12 +25,6 @@
         <i class="bi bi-bar-chart-line"></i>
         <span>Results & Summary</span>
     </a>
-
-    <a href="{% url 'admin_manage' %}" class="nav-link {% if active_page == 'manage' %}active{% endif %}">
-        <i class="bi bi-calendar2-range"></i>
-        <span>Manage Evaluation</span>
-    </a>
-
     <a href="{% url 'admin_past_evaluations' %}" class="nav-link {% if active_page == 'past_evaluations' %}active{% endif %}">
         <i class="bi bi-clock-history"></i>
         <span>Evaluation History</span>
