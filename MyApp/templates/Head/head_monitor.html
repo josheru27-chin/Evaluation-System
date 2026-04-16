@@ -87,6 +87,7 @@
     .info-icon.warning{background:var(--warning-bg); color:var(--warning-text);}
     .info-label{font-size:0.85rem; color:var(--muted); margin-bottom:2px;}
     .info-value{font-size:1.15rem; font-weight:800; color:var(--text);}
+    .info-value.zero-average{color:#9ca3af !important;}
 
     .content-card{background:var(--card); border:1px solid var(--border); border-radius:24px; overflow:hidden; box-shadow:var(--shadow); margin-bottom:28px;}
     .card-header-custom{background:linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color:#fff; padding:24px 28px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;}
@@ -132,6 +133,7 @@
     .type-badge{display:inline-flex; align-items:center; gap:8px; padding:9px 14px; border-radius:999px; font-size:0.84rem; font-weight:800; background:#f8f4f5; color:var(--text); border:1px solid #ead9de;}
     .grade-pill{display:inline-flex; align-items:center; justify-content:center; min-width:68px; padding:9px 13px; border-radius:999px; font-size:0.84rem; font-weight:700; border:1px solid #efd3d9; background:#f9eff2; color:var(--primary);}
     .overall-pill{display:inline-flex; align-items:center; justify-content:center; min-width:80px; padding:10px 15px; border-radius:999px; font-size:0.88rem; font-weight:800; background:linear-gradient(135deg, var(--primary), var(--primary-dark)); color:#fff;}
+    .overall-pill.overall-pill-zero{background:#f3f4f6 !important; color:#9ca3af !important;}
     .action-stack{display:flex; flex-direction:column; align-items:flex-end; gap:8px;}
     .empty-state{text-align:center; padding:32px 16px; color:var(--muted);}
 
@@ -147,6 +149,7 @@
     .sector-card{border:1px solid var(--border-soft); background:#fff; border-radius:18px; padding:16px;}
     .sector-card h6{margin:0 0 8px; font-size:0.9rem; font-weight:700; color:var(--muted); line-height:1.45;}
     .sector-card h4{margin:0; font-weight:800; color:var(--text);}
+    .sector-card h4.zero-average{color:#9ca3af !important;}
     .evaluator-table-wrap{max-height:260px; overflow:auto; border:1px solid var(--border-soft); border-radius:18px; background:#fff;}
     .evaluator-table-wrap table{margin-bottom:0; min-width:1450px;}
     .evaluator-table-wrap thead th{position:sticky; top:0; z-index:2; background:#fff; white-space:nowrap;}
@@ -158,6 +161,7 @@
     .detail-score-card{border:1px solid #f0e5e8; background:linear-gradient(135deg, #fff, #fcf7f8); border-radius:16px; padding:14px;}
     .detail-score-card span{display:block; color:var(--muted); font-size:0.82rem; font-weight:700; margin-bottom:6px;}
     .detail-score-card strong{font-size:1rem; color:var(--text);}
+    .detail-score-card strong.zero-average{color:#9ca3af !important;}
     .comment-box{background:#fff8fa; border:1px solid #f1dfe4; border-radius:14px; padding:14px; margin-bottom:14px; color:var(--text);}
     .question-section-card{border:1px solid var(--border-soft); border-radius:16px; overflow:hidden; margin-bottom:14px;}
     .question-section-header{background:#faf7f8; padding:12px 14px; font-weight:800; color:var(--text); border-bottom:1px solid var(--border-soft);}
@@ -237,19 +241,19 @@
     <div class="info-grid">
       <div class="info-item">
         <div class="info-icon"><i class="bi bi-people-fill"></i></div>
-        <div><div class="info-label">Total Records</div><div class="info-value" id="totalFacultyCount">{{ total_instructors|default:0 }}</div></div>
+        <div><div class="info-label">Total Records</div><div class="info-value" id="totalFacultyCount">{{ evaluations_complete|default:0 }}/{{ total_instructors|default:0 }}</div></div>
       </div>
       <div class="info-item">
         <div class="info-icon success"><i class="bi bi-trophy-fill"></i></div>
-        <div><div class="info-label">Highest Average</div><div class="info-value" id="highestAverageGrade">0.00</div></div>
+        <div><div class="info-label">Highest Average</div><div class="info-value zero-average" id="highestAverageGrade">0.00</div></div>
       </div>
       <div class="info-item">
         <div class="info-icon warning"><i class="bi bi-graph-down-arrow"></i></div>
-        <div><div class="info-label">Lowest Average</div><div class="info-value" id="lowestAverageGrade">0.00</div></div>
+        <div><div class="info-label">Lowest Average</div><div class="info-value zero-average" id="lowestAverageGrade">0.00</div></div>
       </div>
       <div class="info-item">
         <div class="info-icon"><i class="bi bi-bar-chart-fill"></i></div>
-        <div><div class="info-label">Dept. Overall Average</div><div class="info-value" id="overallFacultyAverage">{{ dept_avg_score|default:"0.00" }}</div></div>
+        <div><div class="info-label">Dept. Overall Average</div><div class="info-value {% if not dept_avg_score or dept_avg_score == 0 %}zero-average{% endif %}" id="overallFacultyAverage">{{ dept_avg_score|default:"0.00" }}</div></div>
       </div>
     </div>
 
@@ -268,23 +272,18 @@
           </p>
         </div>
         <div class="d-flex flex-wrap gap-2 no-print">
-          
-
-                  <div class="faculty-search-bar">
-
-          <div class="filter-toolbar">
-            <div class="search-wrap">
-              <i class="bi bi-search"></i>
-              <input type="text" id="facultySearchInput" class="form-control" placeholder="Search name...">
+          <div class="faculty-search-bar">
+            <div class="filter-toolbar">
+              <div class="search-wrap">
+                <i class="bi bi-search"></i>
+                <input type="text" id="facultySearchInput" class="form-control" placeholder="Search name...">
+              </div>
             </div>
           </div>
-        </div>
         </div>
       </div>
 
       <div class="card-body-custom">
-
-
         <div class="results-table-wrap">
           <table class="table align-middle" id="facultyResultsTable">
             <thead>
@@ -317,9 +316,7 @@
               <p id="modalFacultySubtitle">Detailed evaluator breakdown and average grades.</p>
             </div>
 
-            <div class="d-flex flex-wrap gap-2 mb-3 justify-content-end">
-              
-            </div>
+            <div class="d-flex flex-wrap gap-2 mb-3 justify-content-end"></div>
 
             <div class="sector-gri d-none">
               <div class="sector-card"><h6>Management of Teaching and Learning</h6><h4 id="modalManagementTeachingAvg">0.00</h4></div>
@@ -329,8 +326,6 @@
               <div class="sector-card"><h6>Average Total Score</h6><h4 id="modalAverageTotalScore">0.00</h4></div>
               <div class="sector-card"><h6>Computed Rating (%)</h6><h4 id="modalComputedRating">0.00%</h4></div>
             </div>
-
-
 
             <div class="content-card mt-4 section-blockless">
               <div id="modalDetailedAnswersContainer"></div>
@@ -503,12 +498,48 @@
       return desired.map(code => entries.find(([name]) => normalizeSectionCode(name) === code)).filter(Boolean);
     }
 
+    function applyZeroAverageStyle(element, numericValue) {
+      if (!element) return;
+      if (Number(numericValue || 0) <= 0) {
+        element.classList.add('zero-average');
+      } else {
+        element.classList.remove('zero-average');
+      }
+    }
+
     function renderStats() {
       const values = facultyResults.map(item => getOverallValue(item)).filter(v => v > 0);
-      document.getElementById('totalFacultyCount').textContent = facultyResults.length;
-      document.getElementById('highestAverageGrade').textContent = toFixedGrade(values.length ? Math.max(...values) : 0);
-      document.getElementById('lowestAverageGrade').textContent = toFixedGrade(values.length ? Math.min(...values) : 0);
-      document.getElementById('overallFacultyAverage').textContent = toFixedGrade(values.length ? values.reduce((a,b)=>a+b,0) / values.length : 0);
+
+      const totalFacultyCountEl = document.getElementById('totalFacultyCount');
+      const highestAverageEl = document.getElementById('highestAverageGrade');
+      const lowestAverageEl = document.getElementById('lowestAverageGrade');
+      const overallFacultyAverageEl = document.getElementById('overallFacultyAverage');
+
+      const totalCompleted = facultyResults.filter(item => Number(item.evaluator_count || 0) > 0).length;
+      const totalRecords = facultyResults.length;
+
+      const highestAverage = values.length ? Math.max(...values) : 0;
+      const lowestAverage = values.length ? Math.min(...values) : 0;
+      const overallAverage = values.length ? values.reduce((a,b)=>a+b,0) / values.length : 0;
+
+      if (totalFacultyCountEl) {
+        totalFacultyCountEl.textContent = `${totalCompleted}/${totalRecords}`;
+      }
+
+      if (highestAverageEl) {
+        highestAverageEl.textContent = toFixedGrade(highestAverage);
+        applyZeroAverageStyle(highestAverageEl, highestAverage);
+      }
+
+      if (lowestAverageEl) {
+        lowestAverageEl.textContent = toFixedGrade(lowestAverage);
+        applyZeroAverageStyle(lowestAverageEl, lowestAverage);
+      }
+
+      if (overallFacultyAverageEl) {
+        overallFacultyAverageEl.textContent = toFixedGrade(overallAverage);
+        applyZeroAverageStyle(overallFacultyAverageEl, overallAverage);
+      }
     }
 
     function getFilteredResults() {
@@ -530,7 +561,10 @@
         facultyResultsBody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><i class="bi bi-search fs-3 d-block mb-2"></i>No result matched your filters.</div></td></tr>`;
         return;
       }
-      facultyResultsBody.innerHTML = filtered.map(item => `
+      facultyResultsBody.innerHTML = filtered.map(item => {
+        const totalAverage = getOverallValue(item);
+        const isZeroAverage = Number(totalAverage) <= 0;
+        return `
         <tr>
           <td><span class="type-badge"><i class="bi ${getTypeIcon(item.result_type, item.position)}"></i>${formatTypeLabel(item.result_type, item.position)}</span></td>
           <td>
@@ -539,7 +573,7 @@
               <small>${escapeHtml(item.department || '{{ logged_in_head.department.name|default:"No Department" }}')}</small>
             </div>
           </td>
-          <td><span class="overall-pill">${toFixedGrade(getOverallValue(item))}</span></td>
+          <td><span class="overall-pill ${isZeroAverage ? 'overall-pill-zero' : ''}">${toFixedGrade(totalAverage)}</span></td>
           <td><span class="grade-pill">${toFixedGrade(getSection(item, 'management_teaching_learning'))}</span></td>
           <td><span class="grade-pill">${toFixedGrade(getSection(item, 'content_knowledge_pedagogy_technology'))}</span></td>
           <td><span class="grade-pill">${toFixedGrade(getSection(item, 'commitment_transparency'))}</span></td>
@@ -548,7 +582,8 @@
               <button type="button" class="btn-view-more" onclick="openViewMore(${Number(item.id || 0)}, '${String(item.result_type || '')}')"><i class="bi bi-eye"></i><span>View More</span></button>
             </div>
           </td>
-        </tr>`).join('');
+        </tr>`;
+      }).join('');
     }
 
     function buildEvaluatorRows(item) {
@@ -581,6 +616,10 @@
         const sections = ev.sections || {};
         const orderedSections = getOrderedSections(ev.detailed_answers || {});
         const commentBlock = ev.comments ? `<div class="comment-box"><strong>Comments and Suggestions:</strong><br>${escapeHtml(ev.comments)}</div>` : '';
+        const avgScore = Number(ev.average_score || ev.total_average || 0);
+        const totalScore = Number(ev.total_score || 0);
+        const computedRating = Number(ev.computed_rating || 0);
+
         const sectionHtml = orderedSections.map(([sectionName, answers]) => {
           const sorted = sortDetailedAnswers(sectionName, answers || []);
           return `
@@ -611,12 +650,12 @@
             <div class="detail-box-header">
             </div>
             <div class="detail-score-grid">
-              <div class="detail-score-card"><span>Management of Teaching and Learning</span><strong>${toFixedGrade(Number(sections.management_teaching_learning || 0))}</strong></div>
-              <div class="detail-score-card"><span>Content Knowledge, Pedagogy, and Technology</span><strong>${toFixedGrade(Number(sections.content_knowledge_pedagogy_technology || 0))}</strong></div>
-              <div class="detail-score-card"><span>Commitment and Transparency</span><strong>${toFixedGrade(Number(sections.commitment_transparency || 0))}</strong></div>
-              <div class="detail-score-card"><span>Total Score</span><strong>${toFixedGrade(Number(ev.total_score || 0))}</strong></div>
-              <div class="detail-score-card"><span>Total Average</span><strong>${toFixedGrade(Number(ev.average_score || ev.total_average || 0))}</strong></div>
-              <div class="detail-score-card"><span>Computed Rating</span><strong>${toFixedGrade(Number(ev.computed_rating || 0))}%</strong></div>
+              <div class="detail-score-card"><span>Management of Teaching and Learning</span><strong class="${Number(sections.management_teaching_learning || 0) <= 0 ? 'zero-average' : ''}">${toFixedGrade(Number(sections.management_teaching_learning || 0))}</strong></div>
+              <div class="detail-score-card"><span>Content Knowledge, Pedagogy, and Technology</span><strong class="${Number(sections.content_knowledge_pedagogy_technology || 0) <= 0 ? 'zero-average' : ''}">${toFixedGrade(Number(sections.content_knowledge_pedagogy_technology || 0))}</strong></div>
+              <div class="detail-score-card"><span>Commitment and Transparency</span><strong class="${Number(sections.commitment_transparency || 0) <= 0 ? 'zero-average' : ''}">${toFixedGrade(Number(sections.commitment_transparency || 0))}</strong></div>
+              <div class="detail-score-card"><span>Total Score</span><strong class="${totalScore <= 0 ? 'zero-average' : ''}">${toFixedGrade(totalScore)}</strong></div>
+              <div class="detail-score-card"><span>Total Average</span><strong class="${avgScore <= 0 ? 'zero-average' : ''}">${toFixedGrade(avgScore)}</strong></div>
+              <div class="detail-score-card"><span>Computed Rating</span><strong class="${computedRating <= 0 ? 'zero-average' : ''}">${toFixedGrade(computedRating)}%</strong></div>
             </div>
             ${commentBlock}
             ${sectionHtml}
@@ -628,18 +667,41 @@
       const item = facultyResults.find(entry => Number(entry.id) === Number(id) && String(entry.result_type || '') === String(resultType || ''));
       if (!item) return;
       currentModalItem = item;
+
+      const managementAvg = getSection(item, 'management_teaching_learning');
+      const contentAvg = getSection(item, 'content_knowledge_pedagogy_technology');
+      const commitmentAvg = getSection(item, 'commitment_transparency');
+      const overallAvg = getOverallValue(item);
+      const averageTotalScore = getAverageTotalScore(item);
+      const computedRating = getComputedRating(item);
+
       document.getElementById('modalFacultyName').textContent = `${item.name || 'Unnamed'} (${formatTypeLabel(item.result_type, item.position)})`;
       document.getElementById('modalFacultySubtitle').textContent = `${item.department || '{{ logged_in_head.department.name|default:"No Department" }}'} • ${item.evaluator_count || 0} evaluator(s)`;
-      document.getElementById('modalManagementTeachingAvg').textContent = toFixedGrade(getSection(item, 'management_teaching_learning'));
-      document.getElementById('modalContentKnowledgeAvg').textContent = toFixedGrade(getSection(item, 'content_knowledge_pedagogy_technology'));
-      document.getElementById('modalCommitmentTransparencyAvg').textContent = toFixedGrade(getSection(item, 'commitment_transparency'));
-      document.getElementById('modalOverallAvg').textContent = toFixedGrade(getOverallValue(item));
-      document.getElementById('modalAverageTotalScore').textContent = toFixedGrade(getAverageTotalScore(item));
-      document.getElementById('modalComputedRating').textContent = `${toFixedGrade(getComputedRating(item))}%`;
+
+      const modalManagementTeachingAvg = document.getElementById('modalManagementTeachingAvg');
+      const modalContentKnowledgeAvg = document.getElementById('modalContentKnowledgeAvg');
+      const modalCommitmentTransparencyAvg = document.getElementById('modalCommitmentTransparencyAvg');
+      const modalOverallAvg = document.getElementById('modalOverallAvg');
+      const modalAverageTotalScore = document.getElementById('modalAverageTotalScore');
+      const modalComputedRating = document.getElementById('modalComputedRating');
+
+      modalManagementTeachingAvg.textContent = toFixedGrade(managementAvg);
+      modalContentKnowledgeAvg.textContent = toFixedGrade(contentAvg);
+      modalCommitmentTransparencyAvg.textContent = toFixedGrade(commitmentAvg);
+      modalOverallAvg.textContent = toFixedGrade(overallAvg);
+      modalAverageTotalScore.textContent = toFixedGrade(averageTotalScore);
+      modalComputedRating.textContent = `${toFixedGrade(computedRating)}%`;
+
+      applyZeroAverageStyle(modalManagementTeachingAvg, managementAvg);
+      applyZeroAverageStyle(modalContentKnowledgeAvg, contentAvg);
+      applyZeroAverageStyle(modalCommitmentTransparencyAvg, commitmentAvg);
+      applyZeroAverageStyle(modalOverallAvg, overallAvg);
+      applyZeroAverageStyle(modalAverageTotalScore, averageTotalScore);
+      applyZeroAverageStyle(modalComputedRating, computedRating);
+
       document.getElementById('modalDetailedAnswersContainer').innerHTML = buildDetailedAnswerCards(item);
       bootstrap.Modal.getOrCreateInstance(document.getElementById('viewMoreModal')).show();
     }
-
 
     facultySearchInput?.addEventListener('input', renderFacultyTable);
     resultTypeFilter?.addEventListener('change', renderFacultyTable);

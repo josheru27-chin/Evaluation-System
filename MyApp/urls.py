@@ -16,6 +16,7 @@ urlpatterns = [
     path('dashboard/manage/', views.admin_manage, name='admin_manage'),
     path('dashboard/past-evaluations/', views.admin_past_evaluations, name='admin_past_evaluations'),
     path('head/past-evaluations/', views.head_past_evaluations, name='head_past_evaluations'),
+    path('dashboard/pending/', views.admin_pending, name='admin_pending'),
 
     # Department actions
     path('dashboard/department/add/', views.add_department, name='add_department'),

@@ -15,6 +15,7 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.utils.text import slugify
 
 
 
@@ -1552,3 +1553,232 @@ def admin_past_evaluations(request):
 def admin_logout(request):
     logout(request)
     return redirect("admin_login")
+
+
+
+
+
+@login_required
+def admin_pending(request):
+    schedules = EvaluationSchedule.objects.order_by('-start_datetime')
+    selected_schedule = schedules.first()
+
+    total_pending_evaluatees = 0
+    total_done_evaluatees = 0
+    department_tabs = []
+
+    if selected_schedule:
+        department_heads = DepartmentHead.objects.filter(
+            schedule=selected_schedule
+        ).select_related('department').order_by('department__name', 'name')
+
+        departments_map = {}
+
+        for head in department_heads:
+            dept = head.department
+            dept_name = dept.name if dept else "No Department"
+            dept_code = getattr(dept, 'code', '') if dept else ''
+
+            if dept_name not in departments_map:
+                departments_map[dept_name] = {
+                    'name': dept_name,
+                    'code': dept_code,
+                    'slug': slugify(dept_name) or f"department-{len(departments_map)+1}",
+                    'pending_rows': [],
+                    'done_rows': [],
+                    'pending_count': 0,
+                    'done_count': 0,
+                    'total_faculty': 0,
+                }
+
+            faculty_members = FacultyMember.objects.filter(
+                schedule=selected_schedule,
+                department=dept
+            ).select_related('department').order_by('name')
+
+            for faculty in faculty_members:
+                evaluation = FacultyEvaluation.objects.filter(
+                    schedule=selected_schedule,
+                    evaluator_head=head,
+                    evaluatee_faculty=faculty
+                ).first()
+
+                if evaluation and evaluation.status == 'submitted':
+                    departments_map[dept_name]['done_rows'].append({
+                        'evaluatee_name': evaluation.evaluatee_name or faculty.name,
+                        'evaluatee_department': evaluation.evaluatee_department or dept_name,
+                        'status': 'Done',
+                        'submitted_at': evaluation.submitted_at.strftime('%b %d, %Y %I:%M %p') if evaluation.submitted_at else '—',
+                    })
+                    departments_map[dept_name]['done_count'] += 1
+                    total_done_evaluatees += 1
+                else:
+                    departments_map[dept_name]['pending_rows'].append({
+                        'evaluatee_name': faculty.name,
+                        'evaluatee_department': dept_name,
+                        'status': 'In Progress' if evaluation and evaluation.status == 'in_progress' else 'Not Yet Finished',
+                    })
+                    departments_map[dept_name]['pending_count'] += 1
+                    total_pending_evaluatees += 1
+
+        # Finalize totals per department
+        for dept_name, dept_data in departments_map.items():
+            dept_data['total_faculty'] = dept_data['pending_count'] + dept_data['done_count']
+
+        department_tabs = sorted(departments_map.values(), key=lambda x: x['name'])
+
+    context = {
+        'active_page': 'pending',
+        'selected_schedule': selected_schedule,
+        'schedules': schedules,
+        'department_tabs': department_tabs,
+        'total_pending_evaluatees': total_pending_evaluatees,
+        'total_done_evaluatees': total_done_evaluatees,
+    }
+
+    return render(request, 'admin/admin_pending.html', context)
+    schedules = EvaluationSchedule.objects.order_by('-start_datetime')
+    selected_schedule = schedules.first()
+
+    total_pending_evaluatees = 0
+    total_done_evaluatees = 0
+    total_heads = 0
+    department_tabs = []
+
+    if selected_schedule:
+        department_heads = DepartmentHead.objects.filter(
+            schedule=selected_schedule
+        ).select_related('department').order_by('department__name', 'name')
+
+        total_heads = department_heads.count()
+
+        departments_map = {}
+
+        for head in department_heads:
+            dept = head.department
+            dept_name = dept.name if dept else "No Department"
+
+            if dept_name not in departments_map:
+                departments_map[dept_name] = {
+                    'name': dept_name,
+                    'slug': slugify(dept_name) or f"department-{len(departments_map)+1}",
+                    'pending_rows': [],
+                    'done_rows': [],
+                    'pending_count': 0,
+                    'done_count': 0,
+                }
+
+            faculty_members = FacultyMember.objects.filter(
+                schedule=selected_schedule,
+                department=dept
+            ).select_related('department').order_by('name')
+
+            for faculty in faculty_members:
+                evaluation = FacultyEvaluation.objects.filter(
+                    schedule=selected_schedule,
+                    evaluator_head=head,
+                    evaluatee_faculty=faculty
+                ).first()
+
+                if evaluation and evaluation.status == 'submitted':
+                    departments_map[dept_name]['done_rows'].append({
+                        'evaluator_name': evaluation.evaluator_name or head.name,
+                        'evaluator_department': evaluation.evaluator_department or dept_name,
+                        'evaluatee_name': evaluation.evaluatee_name or faculty.name,
+                        'evaluatee_department': evaluation.evaluatee_department or dept_name,
+                        'status': 'Done',
+                        'submitted_at': evaluation.submitted_at.strftime('%b %d, %Y %I:%M %p') if evaluation.submitted_at else '—',
+                    })
+                    departments_map[dept_name]['done_count'] += 1
+                    total_done_evaluatees += 1
+                else:
+                    departments_map[dept_name]['pending_rows'].append({
+                        'evaluator_name': head.name,
+                        'evaluator_department': dept_name,
+                        'evaluatee_name': faculty.name,
+                        'evaluatee_department': dept_name,
+                        'status': 'In Progress' if evaluation and evaluation.status == 'in_progress' else 'Not Yet Finished',
+                    })
+                    departments_map[dept_name]['pending_count'] += 1
+                    total_pending_evaluatees += 1
+
+        department_tabs = sorted(departments_map.values(), key=lambda x: x['name'])
+
+    context = {
+        'active_page': 'pending',
+        'selected_schedule': selected_schedule,
+        'schedules': schedules,
+        'department_tabs': department_tabs,
+        'total_heads': total_heads,
+        'total_pending_evaluatees': total_pending_evaluatees,
+        'total_done_evaluatees': total_done_evaluatees,
+    }
+
+    return render(request, 'admin/admin_pending.html', context)
+    schedules = EvaluationSchedule.objects.order_by('-start_datetime')
+    selected_schedule = schedules.first()
+
+    total_pending_evaluatees = 0
+    total_done_evaluatees = 0
+    department_tabs = []
+
+    if selected_schedule:
+        faculty_members = FacultyMember.objects.filter(schedule=selected_schedule).select_related('department')
+        department_heads = DepartmentHead.objects.filter(schedule=selected_schedule).select_related('department')
+
+        departments_map = {}
+
+        for faculty in faculty_members:
+            dept_name = faculty.department.name if faculty.department else "No Department"
+
+            if dept_name not in departments_map:
+                departments_map[dept_name] = {
+                    'name': dept_name,
+                    'slug': slugify(dept_name) or f"department-{len(departments_map)+1}",
+                    'pending_rows': [],
+                    'done_rows': [],
+                    'pending_count': 0,
+                    'done_count': 0,
+                }
+
+            for head in department_heads:
+                evaluation = FacultyEvaluation.objects.filter(
+                    schedule=selected_schedule,
+                    evaluator_head=head,
+                    evaluatee_faculty=faculty
+                ).first()
+
+                if evaluation and evaluation.status == 'submitted':
+                    departments_map[dept_name]['done_rows'].append({
+                        'evaluator_name': evaluation.evaluator_name or head.name,
+                        'evaluator_department': evaluation.evaluator_department or (head.department.name if head.department else ''),
+                        'evaluatee_name': evaluation.evaluatee_name or faculty.name,
+                        'evaluatee_department': evaluation.evaluatee_department or dept_name,
+                        'status': 'Done',
+                        'submitted_at': evaluation.submitted_at.strftime('%b %d, %Y %I:%M %p') if evaluation.submitted_at else '—',
+                    })
+                    departments_map[dept_name]['done_count'] += 1
+                    total_done_evaluatees += 1
+                else:
+                    departments_map[dept_name]['pending_rows'].append({
+                        'evaluator_name': head.name,
+                        'evaluator_department': head.department.name if head.department else '',
+                        'evaluatee_name': faculty.name,
+                        'evaluatee_department': dept_name,
+                        'status': 'In Progress' if evaluation and evaluation.status == 'in_progress' else 'Not Yet Finished',
+                    })
+                    departments_map[dept_name]['pending_count'] += 1
+                    total_pending_evaluatees += 1
+
+        department_tabs = sorted(departments_map.values(), key=lambda x: x['name'])
+
+    context = {
+        'active_page': 'pending',
+        'selected_schedule': selected_schedule,
+        'schedules': schedules,
+        'department_tabs': department_tabs,
+        'total_pending_evaluatees': total_pending_evaluatees,
+        'total_done_evaluatees': total_done_evaluatees,
+    }
+
+    return render(request, 'admin/admin_pending.html', context)

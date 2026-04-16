@@ -331,6 +331,7 @@ def head_add(request):
     return render(request, "head/head_add.html", context)
 
 
+
 def head_monitor(request):
     logged_in_head = _get_logged_in_head(request)
     if not logged_in_head:
@@ -350,13 +351,17 @@ def head_monitor(request):
     if selected_schedule:
         summary = _build_head_results_for_schedule(logged_in_head, selected_schedule)
 
+    total_records_display = f"{summary['evaluations_complete']}/{summary['total_instructors']}"
+
     context = {
         "logged_in_head": logged_in_head,
         "open_schedule": _get_open_schedule(),
         "selected_schedule": selected_schedule,
+        "total_records_display": total_records_display,
         **summary,
     }
     return render(request, "head/head_monitor.html", context)
+
 
 
 def head_past_evaluations(request):

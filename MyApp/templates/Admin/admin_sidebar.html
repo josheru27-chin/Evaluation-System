@@ -10,7 +10,8 @@
 
 <div class="menu-label">Navigation</div>
 
-<nav class="nav flex-column">
+<nav class="nav flex-column admin-sidebar-nav">
+
     <a href="{% url 'admin_manage' %}" class="nav-link {% if active_page == 'manage' %}active{% endif %}">
         <i class="bi bi-calendar2-range"></i>
         <span>Manage Evaluation</span>
@@ -21,10 +22,33 @@
         <span>Department</span>
     </a>
 
-    <a href="{% url 'admin_results_summary' %}" class="nav-link {% if active_page == 'results_summary' %}active{% endif %}">
-        <i class="bi bi-bar-chart-line"></i>
-        <span>Results & Summary</span>
-    </a>
+    <div class="sidebar-dropdown">
+        <button
+            class="nav-link dropdown-toggle-btn {% if active_page == 'results_summary' or active_page == 'pending' %}active{% endif %}"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#resultsDropdown"
+            aria-expanded="{% if active_page == 'results_summary' or active_page == 'pending' %}true{% else %}false{% endif %}"
+            aria-controls="resultsDropdown"
+        >
+            <i class="bi bi-bar-chart-line"></i>
+            <span class="dropdown-text">Results</span>
+            <i class="bi bi-chevron-down dropdown-arrow"></i>
+        </button>
+
+        <div id="resultsDropdown" class="collapse submenu {% if active_page == 'results_summary' or active_page == 'pending' %}show{% endif %}">
+            <a href="{% url 'admin_results_summary' %}" class="submenu-link {% if active_page == 'results_summary' %}active{% endif %}">
+                <span class="submenu-dot"></span>
+                <span>Results &amp; Summary</span>
+            </a>
+
+            <a href="{% url 'admin_pending' %}" class="submenu-link {% if active_page == 'pending' %}active{% endif %}">
+                <span class="submenu-dot"></span>
+                <span>Pending Evaluations</span>
+            </a>
+        </div>
+    </div>
+
     <a href="{% url 'admin_past_evaluations' %}" class="nav-link {% if active_page == 'past_evaluations' %}active{% endif %}">
         <i class="bi bi-clock-history"></i>
         <span>Evaluation History</span>
@@ -34,4 +58,134 @@
         <i class="bi bi-box-arrow-right"></i>
         <span>Logout</span>
     </a>
+
 </nav>
+
+<style>
+    .admin-sidebar-nav .nav-link,
+    .admin-sidebar-nav .dropdown-toggle-btn {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        padding: 12px 14px;
+        border-radius: 14px;
+        text-decoration: none;
+        border: none;
+        background: transparent;
+        margin-bottom: 4px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        box-sizing: border-box;
+    }
+
+    .admin-sidebar-nav .nav-link {
+        justify-content: flex-start;
+        gap: 12px;
+        color: #ffffff !important;
+    }
+
+    .admin-sidebar-nav .nav-link i,
+    .admin-sidebar-nav .nav-link span {
+        color: #ffffff !important;
+    }
+
+    .admin-sidebar-nav .nav-link:hover {
+        background: rgba(255,255,255,0.12);
+        color: #ffffff !important;
+    }
+
+    .admin-sidebar-nav .nav-link.active {
+        background: rgba(255,255,255,0.18);
+        color: #ffffff !important;
+    }
+
+    .dropdown-toggle-btn {
+        justify-content: flex-start;
+        gap: 12px;
+        color: #ffffff !important;
+        position: relative;
+        text-align: left;
+    }
+
+    .dropdown-toggle-btn i,
+    .dropdown-toggle-btn span {
+        color: #ffffff !important;
+    }
+
+    .dropdown-toggle-btn:hover {
+        background: rgba(255,255,255,0.12);
+        color: #ffffff !important;
+    }
+
+    .dropdown-toggle-btn.active {
+        background: rgba(255,255,255,0.18);
+        color: #ffffff !important;
+    }
+
+    .dropdown-toggle-btn:focus,
+    .dropdown-toggle-btn:active {
+        outline: none;
+        box-shadow: none;
+        color: #ffffff !important;
+    }
+
+    .dropdown-text {
+        flex: 1;
+        text-align: left;
+        display: inline-block;
+    }
+
+    .dropdown-arrow {
+        margin-left: auto;
+        font-size: 0.9rem;
+        color: #ffffff !important;
+        transition: transform 0.2s ease;
+    }
+
+    .dropdown-toggle-btn[aria-expanded="true"] .dropdown-arrow {
+        transform: rotate(180deg);
+    }
+
+    .sidebar-dropdown {
+        width: 100%;
+    }
+
+    .submenu {
+        margin-left: 18px;
+        padding-left: 14px;
+        border-left: 2px solid rgba(255,255,255,0.45);
+    }
+
+    .submenu-link {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        text-decoration: none;
+        color: rgba(255,255,255,0.85);
+        font-size: 0.95rem;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        margin: 4px 0;
+    }
+
+    .submenu-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: currentColor;
+        flex-shrink: 0;
+    }
+
+    .submenu-link:hover {
+        background: rgba(255,255,255,0.12);
+        color: #ffffff;
+    }
+
+    .submenu-link.active {
+        background: #ffffff;
+        color: #981b2e;
+        font-weight: 700;
+    }
+</style>

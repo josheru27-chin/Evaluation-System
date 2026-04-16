@@ -204,6 +204,46 @@
         background: #fcf7f8;
     }
 
+    #facultyResultsTable thead th:first-child,
+    #facultyResultsTable tbody td:first-child {
+        position: sticky;
+        left: 0;
+        z-index: 4;
+        background: #fff;
+    }
+
+    #facultyResultsTable thead th:nth-child(2),
+    #facultyResultsTable tbody td:nth-child(2) {
+        position: sticky;
+        left: 130px;
+        z-index: 4;
+        background: #fff;
+    }
+
+    #facultyResultsTable thead th.text-end,
+    #facultyResultsTable tbody td.text-end {
+        position: sticky;
+        right: 0;
+        z-index: 4;
+        background: #fff;
+    }
+
+    #facultyResultsTable thead th:first-child,
+    #facultyResultsTable thead th:nth-child(2),
+    #facultyResultsTable thead th.text-end {
+        z-index: 6;
+        box-shadow: inset 0 -1px 0 var(--border-soft);
+    }
+
+    #facultyResultsTable tbody td:first-child,
+    #facultyResultsTable tbody td:nth-child(2) {
+        box-shadow: 1px 0 0 #eef1f5;
+    }
+
+    #facultyResultsTable tbody td.text-end {
+        box-shadow: -1px 0 0 #eef1f5;
+    }
+
     .faculty-name-box {
         display: flex;
         flex-direction: column;
@@ -315,6 +355,10 @@
         margin-bottom: 18px;
     }
 
+    .modal-summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
     .sector-card {
         border: 1px solid var(--border-soft);
         background: #fff;
@@ -382,6 +426,22 @@
     .faculty-summary-box p {
         margin: 0;
         color: var(--text-muted);
+    }
+
+    .summary-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 12px;
+        margin-bottom: 12px;
+        border-radius: 999px;
+        background: #f8eef1;
+        color: var(--primary-red);
+        border: 1px solid #eed8de;
+        font-size: 0.78rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
     }
 
     .evaluator-table-wrap {
@@ -700,6 +760,10 @@
 
             <div class="modal-body">
                 <div class="faculty-summary-box">
+                    <div class="summary-eyebrow">
+                        <i class="bi bi-person-vcard"></i>
+                        <span>Evaluatee Details</span>
+                    </div>
                     <h6 id="modalFacultyName">Name</h6>
                     <p id="modalFacultySubtitle">Detailed evaluator breakdown and average grades.</p>
                 </div>
@@ -710,26 +774,10 @@
                     </button>
                 </div>
 
-                <div class="sector-grid">
-                    <div class="sector-card">
-                        <h6>Management of Teaching and Learning</h6>
-                        <h4 id="modalManagementTeachingAvg">0.00</h4>
-                    </div>
-                    <div class="sector-card">
-                        <h6>Content Knowledge, Pedagogy, and Technology</h6>
-                        <h4 id="modalContentKnowledgeAvg">0.00</h4>
-                    </div>
-                    <div class="sector-card">
-                        <h6>Commitment and Transparency</h6>
-                        <h4 id="modalCommitmentTransparencyAvg">0.00</h4>
-                    </div>
+                <div class="sector-grid modal-summary-grid">
                     <div class="sector-card">
                         <h6>Total Average Grade</h6>
                         <h4 id="modalOverallAvg">0.00</h4>
-                    </div>
-                    <div class="sector-card">
-                        <h6>Average Total Score</h6>
-                        <h4 id="modalAverageTotalScore">0.00</h4>
                     </div>
                     <div class="sector-card">
                         <h6>Computed Rating (%)</h6>
@@ -746,11 +794,7 @@
                                 <tr>
                                     <th style="min-width: 220px;">Evaluator Name</th>
                                     <th style="min-width: 180px;">Department</th>
-                                    <th style="min-width: 220px;">Management of Teaching and Learning</th>
-                                    <th style="min-width: 250px;">Content Knowledge, Pedagogy, and Technology</th>
-                                    <th style="min-width: 200px;">Commitment and Transparency</th>
-                                    <th style="min-width: 130px;">Total Score</th>
-                                    <th style="min-width: 150px;">Total Average</th>
+                                    <th style="min-width: 140px;">Total Average</th>
                                     <th style="min-width: 150px;">Computed Rating</th>
                                 </tr>
                             </thead>
@@ -1080,22 +1124,10 @@
         document.getElementById('modalFacultySubtitle').textContent =
             `${item.department || 'No Department'} • ${item.evaluator_count || 0} evaluator(s)`;
 
-        document.getElementById('modalManagementTeachingAvg').textContent =
-            toFixedGrade(getSection(item, 'management_teaching_learning'));
-
-        document.getElementById('modalContentKnowledgeAvg').textContent =
-            toFixedGrade(getSection(item, 'content_knowledge_pedagogy_technology'));
-
-        document.getElementById('modalCommitmentTransparencyAvg').textContent =
-            toFixedGrade(getSection(item, 'commitment_transparency'));
-
-        document.getElementById('modalOverallAvg').textContent =
+                document.getElementById('modalOverallAvg').textContent =
             toFixedGrade(item.overall);
 
-        document.getElementById('modalAverageTotalScore').textContent =
-            toFixedGrade(item.average_total_score);
-
-        document.getElementById('modalComputedRating').textContent =
+                document.getElementById('modalComputedRating').textContent =
             toFixedGrade(item.computed_rating) + '%';
 
         const tbody = document.getElementById('modalEvaluatorTableBody');
@@ -1115,10 +1147,6 @@
                 <tr>
                     <td><strong>${escapeHtml(evaluator.evaluator_name || 'Unknown Evaluator')}</strong></td>
                     <td>${escapeHtml(evaluator.evaluator_department || '')}</td>
-                    <td>${toFixedGrade(getSection(evaluator, 'management_teaching_learning'))}</td>
-                    <td>${toFixedGrade(getSection(evaluator, 'content_knowledge_pedagogy_technology'))}</td>
-                    <td>${toFixedGrade(getSection(evaluator, 'commitment_transparency'))}</td>
-                    <td>${toFixedGrade(evaluator.total_score)}</td>
                     <td><span class="overall-pill">${toFixedGrade(evaluator.overall)}</span></td>
                     <td><span class="overall-pill">${toFixedGrade(evaluator.computed_rating)}%</span></td>
                 </tr>

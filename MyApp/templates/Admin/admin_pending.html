@@ -1,0 +1,659 @@
+{% extends "admin/admin_base.html" %}
+{% load static %}
+
+{% block title %}Pending Evaluations | Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+    .topbar {
+        display: none !important;
+    }
+
+    .page-hero {
+        background: linear-gradient(135deg, #fff, #fcf4f6);
+        border: 1px solid var(--border-soft);
+        border-radius: 24px;
+        padding: 24px;
+        margin-bottom: 24px;
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
+    }
+
+    .page-hero h3 {
+        margin: 0;
+        font-weight: 800;
+        color: var(--text-dark);
+    }
+
+    .page-hero p {
+        margin: 8px 0 0;
+        color: var(--text-muted);
+        font-size: 0.96rem;
+    }
+
+    .stats-card {
+        background: #fff;
+        border: 1px solid var(--border-soft);
+        border-radius: 20px;
+        padding: 18px;
+        height: 100%;
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+    }
+
+    .stats-card .stats-icon {
+        width: 46px;
+        height: 46px;
+        border-radius: 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 12px;
+        font-size: 1.15rem;
+    }
+
+    .stats-card.total .stats-icon {
+        background: #f4f1ff;
+        color: #5b3cc4;
+    }
+
+    .stats-card.pending .stats-icon {
+        background: #fff4db;
+        color: #8a6116;
+    }
+
+    .stats-card.done .stats-icon {
+        background: #eaf7ee;
+        color: #22613a;
+    }
+
+    .stats-card h6 {
+        margin: 0 0 6px;
+        color: var(--text-muted);
+        font-size: 0.92rem;
+        font-weight: 700;
+    }
+
+    .stats-card h3 {
+        margin: 0;
+        font-weight: 800;
+        color: var(--text-dark);
+    }
+
+    .stats-card small {
+        display: block;
+        margin-top: 6px;
+        color: var(--text-muted);
+    }
+
+    .content-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-soft);
+        border-radius: 24px;
+        padding: 22px;
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+        margin-bottom: 24px;
+    }
+
+    .section-title {
+        font-weight: 800;
+        color: var(--text-dark);
+        margin-bottom: 4px;
+    }
+
+    .muted-note {
+        color: var(--text-muted);
+        font-size: 0.93rem;
+        margin-bottom: 0;
+    }
+
+    .toolbar-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 18px;
+    }
+
+    .search-wrap {
+        position: relative;
+        min-width: 300px;
+        width: 360px;
+    }
+
+    .search-wrap i {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+        z-index: 2;
+    }
+
+    .search-wrap .form-control {
+        padding-left: 42px !important;
+        min-height: 46px;
+        border-radius: 14px;
+    }
+
+    .table-shell {
+        overflow-x: auto;
+    }
+
+    .department-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        min-width: 900px;
+    }
+
+    .department-table thead th {
+        color: #64748b;
+        font-weight: 800;
+        font-size: 0.95rem;
+        padding: 16px 10px;
+        border-bottom: 1px solid var(--border-soft);
+        background: transparent;
+        white-space: nowrap;
+        text-align: left;
+    }
+
+    .department-table tbody td {
+        padding: 18px 10px;
+        border-bottom: 1px solid #edf0f3;
+        vertical-align: middle;
+    }
+
+    .department-cell {
+        min-width: 320px;
+    }
+
+    .department-name {
+        font-size: 1rem;
+        font-weight: 800;
+        color: #0f172a;
+        margin-bottom: 4px;
+    }
+
+    .department-code {
+        color: #64748b;
+        font-size: 0.95rem;
+    }
+
+    .count-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 12px 18px;
+        border-radius: 16px;
+        font-weight: 700;
+        font-size: 0.95rem;
+        white-space: nowrap;
+        border: none;
+        transition: all 0.2s ease;
+    }
+
+    .count-btn.pending {
+        background: #f9ecef;
+        color: #9f1239;
+    }
+
+    .count-btn.pending:hover {
+        background: #f4dfe5;
+        color: #881337;
+    }
+
+    .count-btn.done {
+        background: #eaf7ee;
+        color: #22613a;
+    }
+
+    .count-btn.done:hover {
+        background: #dff1e5;
+        color: #1b4d2e;
+    }
+
+    .progress-pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 12px 18px;
+        border-radius: 16px;
+        font-weight: 800;
+        font-size: 0.95rem;
+        background: #f3f4f6;
+        color: #0f172a;
+        min-width: 92px;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 40px 16px;
+        color: var(--text-muted);
+    }
+
+    .empty-state i {
+        font-size: 2rem;
+        margin-bottom: 10px;
+        display: block;
+    }
+
+    .modal-content {
+        border: none;
+        border-radius: 24px;
+        overflow: hidden;
+        box-shadow: 0 24px 60px rgba(15, 23, 42, 0.16);
+    }
+
+    .modal-header {
+        border-bottom: 1px solid var(--border-soft);
+        background: linear-gradient(135deg, #fff, #fcf3f5);
+        padding: 18px 22px;
+    }
+
+    .modal-title {
+        font-weight: 800;
+        color: var(--text-dark);
+    }
+
+    .modal-body {
+        padding: 22px;
+    }
+
+    .modal-footer {
+        border-top: 1px solid var(--border-soft);
+        padding: 16px 22px;
+    }
+
+    .modal-summary {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+        margin-bottom: 18px;
+    }
+
+    .modal-summary-box {
+        background: #fcfcfd;
+        border: 1px solid var(--border-soft);
+        border-radius: 18px;
+        padding: 16px;
+    }
+
+    .modal-summary-box h6 {
+        margin: 0 0 8px;
+        font-size: 0.90rem;
+        color: var(--text-muted);
+        font-weight: 700;
+    }
+
+    .modal-summary-box h5 {
+        margin: 0;
+        font-weight: 800;
+        color: var(--text-dark);
+    }
+
+    .member-list-wrap {
+        border: 1px solid var(--border-soft);
+        border-radius: 18px;
+        background: #fff;
+        overflow: hidden;
+    }
+
+    .member-list-header {
+        padding: 16px 18px;
+        border-bottom: 1px solid var(--border-soft);
+        background: #fcfcfd;
+    }
+
+    .member-list-header h6 {
+        margin: 0;
+        font-weight: 800;
+        color: var(--text-dark);
+    }
+
+    .member-list {
+        padding: 10px 18px;
+    }
+
+    .member-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 14px;
+        padding: 12px 0;
+        border-bottom: 1px solid #eef2f6;
+        flex-wrap: wrap;
+    }
+
+    .member-row:last-child {
+        border-bottom: none;
+    }
+
+    .member-info strong {
+        display: block;
+        color: #0f172a;
+        font-weight: 700;
+    }
+
+    .member-info small {
+        color: #64748b;
+    }
+
+    .status-chip {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 8px 12px;
+        border-radius: 999px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .status-chip.pending {
+        background: #fff4db;
+        color: #8a6116;
+    }
+
+    .status-chip.in-progress {
+        background: #eef4ff;
+        color: #2452a3;
+    }
+
+    .status-chip.done {
+        background: #eaf7ee;
+        color: #22613a;
+    }
+
+    @media (max-width: 991px) {
+        .modal-summary {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .search-wrap {
+            width: 100%;
+            min-width: 100%;
+        }
+
+        .toolbar-row {
+            align-items: stretch;
+        }
+
+        .modal-summary {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-hero">
+    <h3>Pending Evaluations Monitoring</h3>
+    <p>
+        Review evaluation progress per department. Click the pending or done counts to view the faculty member list.
+    </p>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="stats-card total">
+            <div class="stats-icon">
+                <i class="bi bi-building"></i>
+            </div>
+            <h6>Total Departments</h6>
+            <h3>{{ department_tabs|length|default:0 }}</h3>
+            <small>Departments included in the selected schedule</small>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="stats-card.pending">
+            <div class="stats-icon">
+                <i class="bi bi-hourglass-split"></i>
+            </div>
+            <h6>Total Pending</h6>
+            <h3>{{ total_pending_evaluatees|default:0 }}</h3>
+            <small>Faculty members not yet fully completed</small>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="stats-card done">
+            <div class="stats-icon">
+                <i class="bi bi-check2-circle"></i>
+            </div>
+            <h6>Total Done</h6>
+            <h3>{{ total_done_evaluatees|default:0 }}</h3>
+            <small>Faculty members already submitted by heads</small>
+        </div>
+    </div>
+</div>
+
+<div class="content-card">
+    <div class="toolbar-row">
+        <div>
+            <h5 class="section-title mb-1">Department Monitoring Table</h5>
+            <p class="muted-note mb-0">Summary by department. Click each count to see the full list.</p>
+        </div>
+
+        <div class="search-wrap">
+            <i class="bi bi-search"></i>
+            <input type="text" id="departmentSearch" class="form-control" placeholder="Search department...">
+        </div>
+    </div>
+
+    <div class="table-shell">
+        <table class="department-table">
+            <thead>
+                <tr>
+                    <th>Department</th>
+                    <th>No. of Pending</th>
+                    <th>No. of Done</th>
+                    <th>Progress</th>
+                </tr>
+            </thead>
+            <tbody id="departmentSummaryBody">
+                {% for dept in department_tabs %}
+                <tr data-search="{{ dept.name|default:''|lower }} {{ dept.code|default:''|lower }}">
+                    <td class="department-cell">
+                        <div class="department-name">{{ dept.name }}</div>
+                        <div class="department-code">Department code: {{ dept.code|default:"—" }}</div>
+                    </td>
+                    <td>
+                        <button
+                            type="button"
+                            class="count-btn pending"
+                            data-bs-toggle="modal"
+                            data-bs-target="#pendingModal{{ forloop.counter }}"
+                        >
+                            <i class="bi bi-hourglass-split"></i>
+                            {{ dept.pending_count }} Pending
+                        </button>
+                    </td>
+                    <td>
+                        <button
+                            type="button"
+                            class="count-btn done"
+                            data-bs-toggle="modal"
+                            data-bs-target="#doneModal{{ forloop.counter }}"
+                        >
+                            <i class="bi bi-check2-circle"></i>
+                            {{ dept.done_count }} Done
+                        </button>
+                    </td>
+                    <td>
+                        <span class="progress-pill">{{ dept.done_count }}/{{ dept.total_faculty }}</span>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4">
+                        <div class="empty-state">
+                            <i class="bi bi-inbox"></i>
+                            No department monitoring data available.
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% for dept in department_tabs %}
+<div class="modal fade" id="pendingModal{{ forloop.counter }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-hourglass-split me-2"></i>
+                    Pending Faculty Members
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+                <div class="modal-summary">
+                    <div class="modal-summary-box">
+                        <h6>Department</h6>
+                        <h5>{{ dept.name }}</h5>
+                    </div>
+                    <div class="modal-summary-box">
+                        <h6>Department Code</h6>
+                        <h5>{{ dept.code|default:"—" }}</h5>
+                    </div>
+                    <div class="modal-summary-box">
+                        <h6>Total Pending</h6>
+                        <h5>{{ dept.pending_count }}</h5>
+                    </div>
+                    <div class="modal-summary-box">
+                        <h6>Progress</h6>
+                        <h5>{{ dept.done_count }}/{{ dept.total_faculty }}</h5>
+                    </div>
+                </div>
+
+                <div class="member-list-wrap">
+                    <div class="member-list-header">
+                        <h6>Pending Faculty Member List</h6>
+                    </div>
+
+                    <div class="member-list">
+                        {% for row in dept.pending_rows %}
+                        <div class="member-row">
+                            <div class="member-info">
+                                <strong>{{ row.evaluatee_name }}</strong>
+                                <small>{{ row.evaluatee_department|default:dept.name }}</small>
+                            </div>
+
+                            <span class="status-chip {% if row.status == 'In Progress' %}in-progress{% else %}pending{% endif %}">
+                                {{ row.status }}
+                            </span>
+                        </div>
+                        {% empty %}
+                        <div class="empty-state">
+                            <i class="bi bi-check2-all"></i>
+                            No pending faculty members in this department.
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-soft" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="doneModal{{ forloop.counter }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-check2-circle me-2"></i>
+                    Completed Faculty Members
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+                <div class="modal-summary">
+                    <div class="modal-summary-box">
+                        <h6>Department</h6>
+                        <h5>{{ dept.name }}</h5>
+                    </div>
+                    <div class="modal-summary-box">
+                        <h6>Department Code</h6>
+                        <h5>{{ dept.code|default:"—" }}</h5>
+                    </div>
+                    <div class="modal-summary-box">
+                        <h6>Total Done</h6>
+                        <h5>{{ dept.done_count }}</h5>
+                    </div>
+                    <div class="modal-summary-box">
+                        <h6>Progress</h6>
+                        <h5>{{ dept.done_count }}/{{ dept.total_faculty }}</h5>
+                    </div>
+                </div>
+
+                <div class="member-list-wrap">
+                    <div class="member-list-header">
+                        <h6>Completed Faculty Member List</h6>
+                    </div>
+
+                    <div class="member-list">
+                        {% for row in dept.done_rows %}
+                        <div class="member-row">
+                            <div class="member-info">
+                                <strong>{{ row.evaluatee_name }}</strong>
+                                <small>
+                                    {{ row.evaluatee_department|default:dept.name }}
+                                    {% if row.submitted_at %}• Submitted: {{ row.submitted_at }}{% endif %}
+                                </small>
+                            </div>
+
+                            <span class="status-chip done">Done</span>
+                        </div>
+                        {% empty %}
+                        <div class="empty-state">
+                            <i class="bi bi-inbox"></i>
+                            No completed faculty members in this department.
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-soft" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const searchInput = document.getElementById('departmentSearch');
+    const tableRows = document.querySelectorAll('#departmentSummaryBody tr[data-search]');
+
+    function filterDepartments() {
+        const keyword = (searchInput?.value || '').trim().toLowerCase();
+
+        tableRows.forEach(row => {
+            const text = (row.dataset.search || '').toLowerCase();
+            row.style.display = (!keyword || text.includes(keyword)) ? '' : 'none';
+        });
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('input', filterDepartments);
+    }
+});
+</script>
+{% endblock %}
