@@ -497,7 +497,7 @@
 
     .detail-score-grid {
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: 1fr;
         gap: 10px;
         margin-bottom: 16px;
     }
@@ -774,17 +774,6 @@
                     </button>
                 </div>
 
-                <div class="sector-grid modal-summary-grid">
-                    <div class="sector-card">
-                        <h6>Total Average Grade</h6>
-                        <h4 id="modalOverallAvg">0.00</h4>
-                    </div>
-                    <div class="sector-card">
-                        <h6>Computed Rating (%)</h6>
-                        <h4 id="modalComputedRating">0.00%</h4>
-                    </div>
-                </div>
-
                 <div class="content-card section-blockless">
                     <h5 class="section-title mb-3">Evaluators for This Result</h5>
 
@@ -794,8 +783,6 @@
                                 <tr>
                                     <th style="min-width: 220px;">Evaluator Name</th>
                                     <th style="min-width: 180px;">Department</th>
-                                    <th style="min-width: 140px;">Total Average</th>
-                                    <th style="min-width: 150px;">Computed Rating</th>
                                 </tr>
                             </thead>
                             <tbody id="modalEvaluatorTableBody"></tbody>
@@ -1087,7 +1074,6 @@
                 <td>
                     <div class="faculty-name-box">
                         <strong>${escapeHtml(item.name || 'Unnamed')}</strong>
-                        <small>${escapeHtml(item.department || 'No Department')}</small>
                     </div>
                 </td>
                 <td><span class="overall-pill">${toFixedGrade(item.overall)}</span></td>
@@ -1119,16 +1105,10 @@
         currentModalItem = item;
 
         document.getElementById('modalFacultyName').textContent =
-            `${item.name || 'Unnamed'} (${formatTypeLabel(item.result_type)})`;
+            `${item.name || 'Unnamed'}`;
 
         document.getElementById('modalFacultySubtitle').textContent =
-            `${item.department || 'No Department'} • ${item.evaluator_count || 0} evaluator(s)`;
-
-                document.getElementById('modalOverallAvg').textContent =
-            toFixedGrade(item.overall);
-
-                document.getElementById('modalComputedRating').textContent =
-            toFixedGrade(item.computed_rating) + '%';
+            `${item.evaluator_count || 0} evaluator(s)`;
 
         const tbody = document.getElementById('modalEvaluatorTableBody');
         const detailContainer = document.getElementById('modalDetailedAnswersContainer');
@@ -1147,8 +1127,6 @@
                 <tr>
                     <td><strong>${escapeHtml(evaluator.evaluator_name || 'Unknown Evaluator')}</strong></td>
                     <td>${escapeHtml(evaluator.evaluator_department || '')}</td>
-                    <td><span class="overall-pill">${toFixedGrade(evaluator.overall)}</span></td>
-                    <td><span class="overall-pill">${toFixedGrade(evaluator.computed_rating)}%</span></td>
                 </tr>
             `).join('');
 
@@ -1196,16 +1174,8 @@
 
                         <div class="detail-score-grid">
                             <div class="detail-score-card">
-                                <span>Total Score</span>
-                                <strong>${toFixedGrade(evaluator.total_score)}</strong>
-                            </div>
-                            <div class="detail-score-card">
                                 <span>Total Average</span>
                                 <strong>${toFixedGrade(evaluator.overall)}</strong>
-                            </div>
-                            <div class="detail-score-card">
-                                <span>Computed Rating</span>
-                                <strong>${toFixedGrade(evaluator.computed_rating)}%</strong>
                             </div>
                         </div>
 
