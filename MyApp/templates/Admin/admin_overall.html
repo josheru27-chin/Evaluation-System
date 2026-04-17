@@ -232,16 +232,23 @@
     #facultyResultsTable thead th:nth-child(2),
     #facultyResultsTable thead th.text-end {
         z-index: 6;
-        box-shadow: inset 0 -1px 0 var(--border-soft);
     }
 
-    #facultyResultsTable tbody td:first-child,
+    /* thicker divider after Evaluatee */
+    #facultyResultsTable thead th:nth-child(2),
     #facultyResultsTable tbody td:nth-child(2) {
-        box-shadow: 1px 0 0 #eef1f5;
+        box-shadow: inset -4px 0 0 #d1d5db !important;
     }
 
+    /* thicker divider before Action */
+    #facultyResultsTable thead th.text-end,
     #facultyResultsTable tbody td.text-end {
-        box-shadow: -1px 0 0 #eef1f5;
+        box-shadow: inset 4px 0 0 #d1d5db !important;
+    }
+
+    /* keep subtle divider after the Type sticky column */
+    #facultyResultsTable tbody td:first-child {
+        box-shadow: 1px 0 0 #eef1f5;
     }
 
     .faculty-name-box {
