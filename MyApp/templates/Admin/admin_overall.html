@@ -178,7 +178,7 @@
 
     #facultyResultsTable {
         margin-bottom: 0;
-        min-width: 1280px;
+        min-width: 1180px;
     }
 
     #facultyResultsTable thead th {
@@ -212,14 +212,6 @@
         background: #fff;
     }
 
-    #facultyResultsTable thead th:nth-child(2),
-    #facultyResultsTable tbody td:nth-child(2) {
-        position: sticky;
-        left: 130px;
-        z-index: 4;
-        background: #fff;
-    }
-
     #facultyResultsTable thead th.text-end,
     #facultyResultsTable tbody td.text-end {
         position: sticky;
@@ -229,26 +221,25 @@
     }
 
     #facultyResultsTable thead th:first-child,
-    #facultyResultsTable thead th:nth-child(2),
     #facultyResultsTable thead th.text-end {
         z-index: 6;
+        box-shadow: inset 0 -1px 0 var(--border-soft);
     }
 
-    /* thicker divider after Evaluatee */
-    #facultyResultsTable thead th:nth-child(2),
-    #facultyResultsTable tbody td:nth-child(2) {
-        box-shadow: inset -4px 0 0 #d1d5db !important;
-    }
-
-    /* thicker divider before Action */
-    #facultyResultsTable thead th.text-end,
-    #facultyResultsTable tbody td.text-end {
-        box-shadow: inset 4px 0 0 #d1d5db !important;
-    }
-
-    /* keep subtle divider after the Type sticky column */
     #facultyResultsTable tbody td:first-child {
-        box-shadow: 1px 0 0 #eef1f5;
+        box-shadow: inset -3px 0 0 #d1d5db;
+    }
+
+    #facultyResultsTable tbody td.text-end {
+        box-shadow: inset 3px 0 0 #d1d5db;
+    }
+
+    #facultyResultsTable thead th:first-child {
+        box-shadow: inset -3px 0 0 #d1d5db, inset 0 -1px 0 var(--border-soft);
+    }
+
+    #facultyResultsTable thead th.text-end {
+        box-shadow: inset 3px 0 0 #d1d5db, inset 0 -1px 0 var(--border-soft);
     }
 
     .faculty-name-box {
@@ -740,7 +731,6 @@
         <table class="table align-middle" id="facultyResultsTable">
             <thead>
                 <tr>
-                    <th style="min-width: 130px;">Type</th>
                     <th style="min-width: 240px;">Evaluatee</th>
                     <th style="min-width: 130px;">Total Average</th>
                     <th style="min-width: 240px;">Management of Teaching <br>and Learning</th>
@@ -1059,7 +1049,7 @@
         if (!filtered.length) {
             facultyResultsBody.innerHTML = `
                 <tr>
-                    <td colspan="7">
+                    <td colspan="6">
                         <div class="empty-state">
                             <i class="bi bi-search fs-3 d-block mb-2"></i>
                             No result matched your filters.
@@ -1072,12 +1062,6 @@
 
         facultyResultsBody.innerHTML = filtered.map(item => `
             <tr>
-                <td>
-                    <span class="type-badge">
-                        <i class="bi ${getTypeIcon(item.result_type)}"></i>
-                        ${formatTypeLabel(item.result_type)}
-                    </span>
-                </td>
                 <td>
                     <div class="faculty-name-box">
                         <strong>${escapeHtml(item.name || 'Unnamed')}</strong>
@@ -1225,9 +1209,11 @@
 
                 .doc-header {
                     text-align: center;
-                    margin-bottom: 18px;
-                    border-bottom: 2px solid #7f1d2d;
-                    padding-bottom: 10px;
+                    margin-bottom: 16px;
+                    padding: 12px 12px 10px;
+                    background: linear-gradient(135deg, #fff7f9, #fdecef);
+                    border: 1px solid #edd5db;
+                    border-radius: 12px;
                 }
 
                 .doc-header h1 {
@@ -1235,14 +1221,14 @@
                     margin: 0 0 4px;
                     font-weight: 700;
                     text-transform: uppercase;
-                    color: #5f1020;
+                    color: #7f1d2d;
                     letter-spacing: 0.5px;
                 }
 
                 .doc-header h2 {
                     font-size: 12pt;
                     margin: 0;
-                    font-weight: 400;
+                    font-weight: 700;
                     color: #374151;
                 }
 
@@ -1261,8 +1247,8 @@
                 }
 
                 .instruction-box {
-                    border: 1px solid #d7dce3;
-                    background: #fafafa;
+                    border: 1px solid #e6d8dd;
+                    background: #fff8fa;
                     border-radius: 8px;
                     padding: 10px 12px;
                     margin: 8px 0 16px;
@@ -1283,7 +1269,7 @@
                 }
 
                 th {
-                    background: #f3f4f6;
+                    background: #f7eef1;
                     font-weight: 700;
                     text-align: left;
                     color: #1f2937;
@@ -1331,46 +1317,41 @@
                     letter-spacing: 0.3px;
                 }
 
+                .signature-table td {
+                    padding: 4px 8px;
+                    vertical-align: middle;
+                }
 
+                .compact-signature-table td {
+                    height: auto !important;
+                }
 
-            .signature-table td {
-                padding: 4px 8px;
-                vertical-align: middle;
-            }
+                .compact-signature-table tr:first-child td {
+                    height: 42px !important;
+                    padding-top: 10px !important;
+                    padding-bottom: 4px !important;
+                    vertical-align: bottom !important;
+                }
 
-            .compact-signature-table td {
-                height: auto !important;
-            }
+                .compact-signature-table tr:not(:first-child) td {
+                    padding-top: 4px !important;
+                    padding-bottom: 4px !important;
+                }
 
-            .compact-signature-table tr:first-child td {
-                height: 42px !important;
-                padding-top: 10px !important;
-                padding-bottom: 4px !important;
-                vertical-align: bottom !important;
-            }
+                .signature-cell {
+                    text-align: center !important;
+                }
 
-            .compact-signature-table tr:not(:first-child) td {
-    padding-top: 4px !important;
-    padding-bottom: 4px !important;
-}
-
-.signature-cell {
-    text-align: center !important;
-}
-
-.signature-line {
-    display: block;
-    width: 100%;
-    border-top: 1px solid #000;
-    padding-top: 4px;
-    text-align: center !important;
-    font-size: 10pt;
-    line-height: 1.2;
-    box-sizing: border-box;
-}
-
-
-
+                .signature-line {
+                    display: block;
+                    width: 100%;
+                    border-top: 1px solid #000;
+                    padding-top: 4px;
+                    text-align: center !important;
+                    font-size: 10pt;
+                    line-height: 1.2;
+                    box-sizing: border-box;
+                }
 
                 .page-break {
                     page-break-before: always;
@@ -1383,48 +1364,64 @@
                     text-align: right;
                 }
 
-                .faculty-info-card {
-                    border: 1px solid #cfd6df;
-                    border-radius: 10px;
+                .faculty-info-print {
+                    border: 1px solid #ead5db;
+                    border-radius: 12px;
                     overflow: hidden;
                     margin-bottom: 16px;
+                    background: #fff;
                 }
 
-                .faculty-info-header {
-                    background: #f7ecef;
-                    color: #5f1020;
-                    font-weight: 700;
+                .faculty-info-print-header {
+                    background: linear-gradient(135deg, #fff2f6, #fdecef);
+                    color: #7f1d2d;
+                    font-weight: 800;
                     padding: 10px 12px;
-                    border-bottom: 1px solid #cfd6df;
+                    border-bottom: 1px solid #ead5db;
                 }
 
-                .faculty-info-grid {
-                    display: grid;
-                    grid-template-columns: 1fr 1fr;
-                }
-
-                .faculty-info-item {
+                .faculty-info-print-body {
                     padding: 10px 12px;
-                    border-right: 1px solid #e5e7eb;
-                    border-bottom: 1px solid #e5e7eb;
                 }
 
-                .faculty-info-item:nth-child(2n) {
-                    border-right: none;
-                }
-
-                .faculty-info-label {
-                    font-size: 9.6pt;
-                    color: #6b7280;
-                    font-weight: 700;
-                    margin-bottom: 4px;
-                }
-
-                .faculty-info-value {
+                .faculty-info-print-table td {
+                    border: none;
+                    padding: 6px 4px;
                     font-size: 10.8pt;
-                    color: #111827;
-                    font-weight: 600;
-                    min-height: 18px;
+                }
+
+                .faculty-info-print-table td:first-child {
+                    width: 38%;
+                    font-weight: 700;
+                }
+
+                .set-rating-box {
+                    margin-top: 14px;
+                    margin-bottom: 16px;
+                    border: 1px solid #ead5db;
+                    border-radius: 12px;
+                    background: linear-gradient(135deg, #fff8fa, #fff1f4);
+                    padding: 12px 14px;
+                }
+
+                .set-rating-title {
+                    color: #7f1d2d;
+                    font-size: 12pt;
+                    font-weight: 800;
+                    margin-bottom: 8px;
+                    text-transform: uppercase;
+                }
+
+                .set-rating-formula {
+                    font-size: 10.8pt;
+                    margin: 6px 0;
+                }
+
+                .set-rating-final {
+                    margin-top: 8px;
+                    font-size: 12pt;
+                    font-weight: 800;
+                    color: #5f1020;
                 }
             </style>
         `;
@@ -1526,56 +1523,36 @@
     }
 
     function buildFacultyInfoBlock(item, evaluator = null) {
-        const evaluatorType = evaluatorTypeLabel();
-
         return `
-            <div class="faculty-info-card">
-                <div class="faculty-info-header">Faculty Information</div>
-                <div class="faculty-info-grid">
-                    <div class="faculty-info-item">
-                        <div class="faculty-info-label">Academic Year</div>
-                        <div class="faculty-info-value">${escapeHtml(item.academic_year || '-')}</div>
-                    </div>
-                    <div class="faculty-info-item">
-                        <div class="faculty-info-label">Semester</div>
-                        <div class="faculty-info-value">${escapeHtml(item.semester || '-')}</div>
-                    </div>
-
-                    <div class="faculty-info-item">
-                        <div class="faculty-info-label">Name of Evaluatee</div>
-                        <div class="faculty-info-value">${escapeHtml(item.name || '-')}</div>
-                    </div>
-                    <div class="faculty-info-item">
-                        <div class="faculty-info-label">Type</div>
-                        <div class="faculty-info-value">${escapeHtml(evaluateeTypeLabel(item))}</div>
-                    </div>
-
-                    <div class="faculty-info-item">
-                        <div class="faculty-info-label">Department</div>
-                        <div class="faculty-info-value">${escapeHtml(item.department || '-')}</div>
-                    </div>
-                    <div class="faculty-info-item">
-                        <div class="faculty-info-label">Schedule Title</div>
-                        <div class="faculty-info-value">${escapeHtml(item.title || '-')}</div>
-                    </div>
-
-                    <div class="faculty-info-item">
-                        <div class="faculty-info-label">Evaluator Name</div>
-                        <div class="faculty-info-value">${escapeHtml(evaluator?.evaluator_name || '-')}</div>
-                    </div>
-                    <div class="faculty-info-item">
-                        <div class="faculty-info-label">Evaluator Type</div>
-                        <div class="faculty-info-value">${escapeHtml(evaluator ? evaluatorType : '-')}</div>
-                    </div>
-
-                    <div class="faculty-info-item">
-                        <div class="faculty-info-label">Evaluator Department</div>
-                        <div class="faculty-info-value">${escapeHtml(evaluator?.evaluator_department || '-')}</div>
-                    </div>
-                    <div class="faculty-info-item">
-                        <div class="faculty-info-label">Date Submitted</div>
-                        <div class="faculty-info-value">${escapeHtml(evaluator?.submitted_at || '-')}</div>
-                    </div>
+            <div class="faculty-info-print">
+                <div class="faculty-info-print-header">A. Faculty Information (to be accomplished by the Designated Office)</div>
+                <div class="faculty-info-print-body">
+                    <table class="faculty-info-print-table">
+                        <tr>
+                            <td>Name of Faculty being Evaluated</td>
+                            <td>: ${escapeHtml(item.name || '-')}</td>
+                        </tr>
+                        <tr>
+                            <td>Academic Rank</td>
+                            <td>: __________________________</td>
+                        </tr>
+                        <tr>
+                            <td>College/Department</td>
+                            <td>: ${escapeHtml(item.department || '-')}</td>
+                        </tr>
+                        <tr>
+                            <td>Course Code/Title</td>
+                            <td>: __________________________</td>
+                        </tr>
+                        <tr>
+                            <td>Program Year</td>
+                            <td>: __________________________</td>
+                        </tr>
+                        <tr>
+                            <td>Semester or Term/Academic Year</td>
+                            <td>: ${escapeHtml(item.semester || '-')} / ${escapeHtml(item.academic_year || '-')}</td>
+                        </tr>
+                    </table>
                 </div>
             </div>
         `;
@@ -1654,6 +1631,18 @@
 
         return content;
     }
+
+
+function buildSetRatingBlock(evaluator) {
+    return `
+        <div class="set-rating-box">
+            <div class="set-rating-title">SET Rating Computation</div>
+            <div class="set-rating-formula"><strong>Total Score:</strong> ${toFixedGrade(evaluator.total_score)}</div>
+            <div class="set-rating-formula"><strong>Formula:</strong> Rating = (Total Score / 75) × 100</div>
+            <div class="set-rating-final">COMPUTED RATING: ${toFixedGrade(evaluator.computed_rating)}%</div>
+        </div>
+    `;
+}
 
 function buildSignatureTable(evaluatorName = '', evaluatorDepartment = '', submittedAt = '', comments = '') {
     return `
@@ -1763,14 +1752,13 @@ function buildBatchSignatories(item) {
                             <th>Total Average</th>
                             <td class="rating-score-col">${toFixedGrade(evaluator.overall)}</td>
                         </tr>
-                        <tr class="computed-rating-row">
-                            <th>Computed Rating</th>
-                            <td class="rating-score-col computed-rating-value">${toFixedGrade(evaluator.computed_rating)}%</td>
-                        </tr>
+
                     </tbody>
                 </table>
 
                 ${buildDetailedSectionTables(evaluator)}
+
+                ${buildSetRatingBlock(evaluator)}
 
                 ${buildSignatureTable(
                     evaluator.evaluator_name || '',
@@ -1822,12 +1810,11 @@ function buildBatchSignatories(item) {
                                     <th>Total Average</th>
                                     <td class="rating-score-col">${toFixedGrade(item.overall)}</td>
                                 </tr>
-                                <tr class="computed-rating-row">
-                                    <th>Computed Rating</th>
-                                    <td class="rating-score-col computed-rating-value">${toFixedGrade(item.computed_rating)}%</td>
-                                </tr>
+
                             </tbody>
                         </table>
+
+                        ${buildSetRatingBlock({ total_score: item.average_total_score || 0, computed_rating: item.computed_rating || 0 })}
 
                         ${buildSignatureTable('', '', '', '')}
                     `}
