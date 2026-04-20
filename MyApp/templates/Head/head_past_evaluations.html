@@ -87,6 +87,7 @@
     .info-icon.warning{background:var(--warning-bg); color:var(--warning-text);}
     .info-label{font-size:0.85rem; color:var(--muted); margin-bottom:2px;}
     .info-value{font-size:1.15rem; font-weight:800; color:var(--text);}
+    .info-value.zero-average{color:#9ca3af !important;}
 
     .content-card{background:var(--card); border:1px solid var(--border); border-radius:24px; overflow:hidden; box-shadow:var(--shadow); margin-bottom:28px;}
     .card-header-custom{background:linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color:#fff; padding:24px 28px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;}
@@ -121,7 +122,7 @@
     .results-table-wrap::-webkit-scrollbar-thumb,.modal-body::-webkit-scrollbar-thumb,.evaluator-table-wrap::-webkit-scrollbar-thumb,.question-table-wrap::-webkit-scrollbar-thumb{background:#cfd6df; border-radius:999px;}
     .results-table-wrap::-webkit-scrollbar-track,.modal-body::-webkit-scrollbar-track,.evaluator-table-wrap::-webkit-scrollbar-track,.question-table-wrap::-webkit-scrollbar-track{background:#f7f8fb;}
 
-    #historyResultsTable{margin-bottom:0; min-width:1280px;}
+    #historyResultsTable{margin-bottom:0; min-width:1180px;}
     #historyResultsTable thead th{white-space:nowrap; position:sticky; top:0; z-index:3; background:#fff; box-shadow:inset 0 -1px 0 var(--border-soft); color:#627086; font-weight:800; font-size:0.94rem; padding:16px 14px;}
     #historyResultsTable tbody td{padding:18px 14px; vertical-align:middle; border-color:#eef1f5;}
     #historyResultsTable tbody tr:hover{background:#fcf7f8;}
@@ -129,7 +130,6 @@
     .faculty-name-box{display:flex; flex-direction:column; gap:4px;}
     .faculty-name-box strong{color:var(--text); font-size:0.98rem;}
     .faculty-name-box small{color:var(--muted); font-size:0.9rem; line-height:1.45;}
-    .type-badge{display:inline-flex; align-items:center; gap:8px; padding:9px 14px; border-radius:999px; font-size:0.84rem; font-weight:800; background:#f8f4f5; color:var(--text); border:1px solid #ead9de;}
     .grade-pill{display:inline-flex; align-items:center; justify-content:center; min-width:68px; padding:9px 13px; border-radius:999px; font-size:0.84rem; font-weight:700; border:1px solid #efd3d9; background:#f9eff2; color:var(--primary);}
     .overall-pill{display:inline-flex; align-items:center; justify-content:center; min-width:80px; padding:10px 15px; border-radius:999px; font-size:0.88rem; font-weight:800; background:linear-gradient(135deg, var(--primary), var(--primary-dark)); color:#fff;}
     .action-stack{display:flex; flex-direction:column; align-items:flex-end; gap:8px;}
@@ -213,7 +213,7 @@
   <main class="main-content">
     <div class="page-header">
       <h1 class="page-title">History Evaluation Results</h1>
-      <p class="page-subtitle">Review archived department evaluation results using the same table, modal, and question numbering layout as the admin history pages.</p>
+      <p class="page-subtitle">Review archived department evaluation results using the same table and modal flow as the faculty results page.</p>
 
       <div class="head-chip-row">
         <span class="chip"><i class="bi bi-person-circle"></i>{{ logged_in_head.name|default:"Department Head" }}</span>
@@ -259,7 +259,7 @@
     <div class="info-grid">
       <div class="info-item">
         <div class="info-icon"><i class="bi bi-people-fill"></i></div>
-        <div><div class="info-label">Total Records</div><div class="info-value" id="totalFacultyCount">{{ total_instructors|default:0 }}</div></div>
+        <div><div class="info-label">Total Records</div><div class="info-value" id="totalFacultyCount">0</div></div>
       </div>
       <div class="info-item">
         <div class="info-icon success"><i class="bi bi-trophy-fill"></i></div>
@@ -271,7 +271,7 @@
       </div>
       <div class="info-item">
         <div class="info-icon"><i class="bi bi-bar-chart-fill"></i></div>
-        <div><div class="info-label">Dept. Overall Average</div><div class="info-value" id="overallFacultyAverage">{{ dept_avg_score|default:"0.00" }}</div></div>
+        <div><div class="info-label">Dept. Overall Average</div><div class="info-value" id="overallFacultyAverage">0.00</div></div>
       </div>
     </div>
 
@@ -281,11 +281,7 @@
         <div>
           <h2><i class="bi bi-table me-2"></i>Instructor Evaluation Results</h2>
           <p>
-            {% if selected_schedule %}
-              Showing past results for {{ selected_schedule.title }} in {{ logged_in_head.department.name|default:"your department" }}.
-            {% else %}
-              Select a past evaluation schedule to review archived department results.
-            {% endif %}
+            Showing past results for {{ selected_schedule.title }} in {{ logged_in_head.department.name|default:"your department" }}.
           </p>
         </div>
         <div class="d-flex flex-wrap gap-2 no-print"></div>
@@ -295,7 +291,7 @@
         <div class="faculty-search-bar">
           <div class="filter-title-wrap">
             <h5 class="mb-0">Evaluation Results List</h5>
-            <p>Same table flow as admin, but already scoped to the head's department.</p>
+            <p>Archived faculty-only results for your department.</p>
           </div>
 
           <div class="filter-toolbar">
@@ -310,7 +306,6 @@
           <table class="table align-middle" id="historyResultsTable">
             <thead>
               <tr>
-                <th style="min-width:130px;">Type</th>
                 <th style="min-width:240px;">Evaluatee</th>
                 <th style="min-width:130px;">Total Average</th>
                 <th style="min-width:240px;">Management of Teaching <br>and Learning</th>
@@ -522,17 +517,6 @@
       return fallbackText || `Benchmark Statement ${questionNumber}`;
     }
 
-    function formatTypeLabel(type, position = '') {
-      if (type === 'head') return 'Head';
-      const pos = String(position || '').toLowerCase();
-      if (pos.includes('head')) return 'Head';
-      return 'Faculty';
-    }
-
-    function getTypeIcon(type, position = '') {
-      return formatTypeLabel(type, position) === 'Head' ? 'bi-person-badge' : 'bi-person-workspace';
-    }
-
     function getSection(source, key) {
       return Number((source && source.sections && source.sections[key]) || 0);
     }
@@ -549,17 +533,6 @@
       return Number(source?.computed_rating ?? source?.rating_percent ?? 0);
     }
 
-    function formatSubmittedAt(value) {
-      if (!value) return '-';
-      try {
-        const d = new Date(value);
-        if (isNaN(d.getTime())) return String(value);
-        return d.toLocaleString();
-      } catch (e) {
-        return String(value);
-      }
-    }
-
     function sortDetailedAnswers(sectionName, answers = []) {
       return [...answers].sort(
         (a, b) => getContinuousQuestionNumber(sectionName, a.question_number) - getContinuousQuestionNumber(sectionName, b.question_number)
@@ -574,10 +547,15 @@
 
     function renderStats() {
       const values = facultyResults.map(item => getOverallValue(item)).filter(v => v > 0);
-      document.getElementById('totalFacultyCount').textContent = facultyResults.length;
-      document.getElementById('highestAverageGrade').textContent = toFixedGrade(values.length ? Math.max(...values) : 0);
-      document.getElementById('lowestAverageGrade').textContent = toFixedGrade(values.length ? Math.min(...values) : 0);
-      document.getElementById('overallFacultyAverage').textContent = toFixedGrade(values.length ? values.reduce((a, b) => a + b, 0) / values.length : 0);
+      const totalFacultyCount = document.getElementById('totalFacultyCount');
+      const highestAverageGrade = document.getElementById('highestAverageGrade');
+      const lowestAverageGrade = document.getElementById('lowestAverageGrade');
+      const overallFacultyAverage = document.getElementById('overallFacultyAverage');
+
+      if (totalFacultyCount) totalFacultyCount.textContent = facultyResults.length;
+      if (highestAverageGrade) highestAverageGrade.textContent = toFixedGrade(values.length ? Math.max(...values) : 0);
+      if (lowestAverageGrade) lowestAverageGrade.textContent = toFixedGrade(values.length ? Math.min(...values) : 0);
+      if (overallFacultyAverage) overallFacultyAverage.textContent = toFixedGrade(values.length ? values.reduce((a, b) => a + b, 0) / values.length : 0);
     }
 
     function getFilteredResults() {
@@ -587,8 +565,7 @@
           item.name,
           item.department,
           item.email,
-          item.id_number,
-          item.position
+          item.id_number
         ].join(' ').toLowerCase();
 
         return hay.includes(keyword);
@@ -603,7 +580,7 @@
       if (!filtered.length) {
         facultyResultsBody.innerHTML = `
           <tr>
-            <td colspan="7">
+            <td colspan="6">
               <div class="empty-state">
                 <i class="bi bi-search fs-3 d-block mb-2"></i>
                 No result matched your filters.
@@ -617,12 +594,6 @@
       facultyResultsBody.innerHTML = filtered.map(item => `
         <tr>
           <td>
-            <span class="type-badge">
-              <i class="bi ${getTypeIcon(item.result_type, item.position)}"></i>
-              ${formatTypeLabel(item.result_type, item.position)}
-            </span>
-          </td>
-          <td>
             <div class="faculty-name-box">
               <strong>${escapeHtml(item.name || 'No Name Found')}</strong>
               <small>${escapeHtml(item.department || '{{ logged_in_head.department.name|default:"No Department" }}')}</small>
@@ -634,7 +605,7 @@
           <td><span class="grade-pill">${toFixedGrade(getSection(item, 'commitment_transparency'))}</span></td>
           <td class="text-end">
             <div class="action-stack">
-              <button type="button" class="btn-view-more" onclick="openViewMore(${Number(item.id || 0)}, '${String(item.result_type || '')}')">
+              <button type="button" class="btn-view-more" onclick="openViewMore(${Number(item.id || 0)})">
                 <i class="bi bi-eye"></i>
                 <span>View More</span>
               </button>
@@ -654,13 +625,13 @@
         const sections = ev.sections || {};
         return `
           <tr>
-            <td>${escapeHtml(ev.name || 'No Name Found')}</td>
-            <td>${escapeHtml(ev.department || '—')}</td>
+            <td>${escapeHtml(ev.evaluator_name || 'Unknown Evaluator')}</td>
+            <td>${escapeHtml(ev.evaluator_department || '—')}</td>
             <td>${toFixedGrade(Number(sections.management_teaching_learning || 0))}</td>
             <td>${toFixedGrade(Number(sections.content_knowledge_pedagogy_technology || 0))}</td>
             <td>${toFixedGrade(Number(sections.commitment_transparency || 0))}</td>
             <td>${toFixedGrade(Number(ev.total_score || 0))}</td>
-            <td>${toFixedGrade(Number(ev.average_score || ev.total_average || 0))}</td>
+            <td>${toFixedGrade(Number(ev.overall || ev.average_score || ev.total_average || 0))}</td>
             <td>${toFixedGrade(Number(ev.computed_rating || 0))}%</td>
           </tr>
         `;
@@ -725,7 +696,7 @@
               <div class="detail-score-card"><span>Content Knowledge, Pedagogy, and Technology</span><strong>${toFixedGrade(Number(sections.content_knowledge_pedagogy_technology || 0))}</strong></div>
               <div class="detail-score-card"><span>Commitment and Transparency</span><strong>${toFixedGrade(Number(sections.commitment_transparency || 0))}</strong></div>
               <div class="detail-score-card"><span>Total Score</span><strong>${toFixedGrade(Number(ev.total_score || 0))}</strong></div>
-              <div class="detail-score-card"><span>Total Average</span><strong>${toFixedGrade(Number(ev.average_score || ev.total_average || 0))}</strong></div>
+              <div class="detail-score-card"><span>Total Average</span><strong>${toFixedGrade(Number(ev.overall || ev.average_score || ev.total_average || 0))}</strong></div>
               <div class="detail-score-card"><span>Computed Rating</span><strong>${toFixedGrade(Number(ev.computed_rating || 0))}%</strong></div>
             </div>
             ${commentBlock}
@@ -735,10 +706,8 @@
       }).join('');
     }
 
-    function openViewMore(id, resultType) {
-      const item = facultyResults.find(
-        entry => Number(entry.id) === Number(id) && String(entry.result_type || '') === String(resultType || '')
-      );
+    function openViewMore(id) {
+      const item = facultyResults.find(entry => Number(entry.id) === Number(id));
 
       if (!item) return;
 

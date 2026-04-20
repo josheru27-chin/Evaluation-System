@@ -431,6 +431,16 @@
     </div>
 </div>
 
+
+{% if selected_schedule %}
+<div class="content-card">
+    <h5 class="section-title mb-1">Selected Evaluation Period</h5>
+    <p class="muted-note mb-0">
+        {{ selected_schedule.academic_year }} • {{ selected_schedule.semester }} • {{ selected_schedule.title }}
+    </p>
+</div>
+{% endif %}
+
 <div class="content-card">
     <div class="toolbar-row">
         <div>

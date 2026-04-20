@@ -674,8 +674,7 @@
         <div class="mini-stat">
             <h6>Total Records</h6>
             <h3 id="totalFacultyCount">{{ total_faculty_count|default:0 }}</h3>
-            <small>Total faculty/head results with submitted evaluations</small>
-        </div>
+            <small>Total faculty results with submitted evaluations</small>        </div>
     </div>
     <div class="col-md-3">
         <div class="mini-stat">
@@ -710,7 +709,6 @@
             <select id="resultTypeFilter" class="form-select">
                 <option value="all">All Results</option>
                 <option value="faculty">Faculty Only</option>
-                <option value="head">Head Only</option>
             </select>
 
             <select id="departmentFilter" class="form-select">
@@ -826,7 +824,6 @@
                         <thead>
                             <tr>
                                 <th style="width: 70px;">Select</th>
-                                <th>Type</th>
                                 <th>Evaluatee</th>
                                 <th>Department</th>
                                 <th>Total Average</th>
@@ -946,14 +943,6 @@
         return Number((source && source.sections && source.sections[key]) || 0);
     }
 
-    function formatTypeLabel(type) {
-        return type === 'head' ? 'Head' : 'Faculty';
-    }
-
-    function getTypeIcon(type) {
-        return type === 'head' ? 'bi-person-badge' : 'bi-person-workspace';
-    }
-
     function normalizeSectionCode(sectionName = '') {
         const trimmed = String(sectionName || '').trim();
         if (sectionNameToCode[trimmed]) return sectionNameToCode[trimmed];
@@ -1036,8 +1025,7 @@
         return facultyResults.filter(item => {
             const matchesKeyword = String(item.name || '').toLowerCase().includes(keyword);
             const matchesDepartment = selectedDepartment === 'all' || (item.department || '') === selectedDepartment;
-            const matchesType = selectedType === 'all' || (item.result_type || '') === selectedType;
-            return matchesKeyword && matchesDepartment && matchesType;
+            const matchesType = selectedType === 'all' || selectedType === 'faculty';            return matchesKeyword && matchesDepartment && matchesType;
         });
     }
 
@@ -1073,12 +1061,11 @@
                 <td><span class="grade-pill">${toFixedGrade(getSection(item, 'commitment_transparency'))}</span></td>
                 <td class="text-end">
                     <div class="action-stack">
-                        <button type="button" class="btn-view-more" onclick="openViewMore(${item.id}, '${item.result_type}')">
+                       <button type="button" class="btn-view-more" onclick="openViewMore(${item.id})">
                             <i class="bi bi-eye"></i>
                             <span>View More</span>
                         </button>
-                        <button type="button" class="btn-print-person" onclick="printSinglePerson(${item.id}, '${item.result_type}')">
-                            <i class="bi bi-printer"></i>
+                        <button type="button" class="btn-print-person" onclick="printSinglePerson(${item.id})">                            <i class="bi bi-printer"></i>
                             <span>Print</span>
                         </button>
                     </div>
@@ -1087,10 +1074,8 @@
         `).join('');
     }
 
-    function openViewMore(id, resultType) {
-        const item = facultyResults.find(entry =>
-            Number(entry.id) === Number(id) && String(entry.result_type) === String(resultType)
-        );
+        function openViewMore(id) {
+            const item = facultyResults.find(entry => Number(entry.id) === Number(id));
         if (!item) return;
 
         currentModalItem = item;
@@ -1448,7 +1433,7 @@
     }
 
     function evaluateeTypeLabel(item) {
-        return item.result_type === 'head' ? 'Department Head' : 'Faculty';
+        return 'Faculty';
     }
 
     function getOrderedSectionsForPrint() {
@@ -1996,10 +1981,8 @@ function buildBatchIndividualPrintHtml(items) {
         };
     }
 
-    function printSinglePerson(id, resultType) {
-        const item = facultyResults.find(entry =>
-            Number(entry.id) === Number(id) && String(entry.result_type) === String(resultType)
-        );
+        function printSinglePerson(id) {
+            const item = facultyResults.find(entry => Number(entry.id) === Number(id));
 
         if (!item) {
             alert('Result not found.');
@@ -2039,11 +2022,8 @@ function getBatchSelectedItems() {
 
     return Array.from(checked).map(box => {
         const id = Number(box.dataset.id);
-        const resultType = box.dataset.type;
-
-        return facultyResults.find(entry =>
-            Number(entry.id) === id && String(entry.result_type) === String(resultType)
-        );
+        
+        return facultyResults.find(entry => Number(entry.id) === id);
     }).filter(Boolean);
 }
 
@@ -2057,22 +2037,21 @@ function openBatchPrintModal() {
 
     if (!batchPrintModalTableBody) return;
 
-    batchPrintModalTableBody.innerHTML = filtered.map(item => `
+   batchPrintModalTableBody.innerHTML = filtered.map(item => `
         <tr>
             <td>
                 <input
                     type="checkbox"
                     class="batch-print-checkbox"
                     data-id="${item.id}"
-                    data-type="${item.result_type}"
                 >
             </td>
-            <td>${formatTypeLabel(item.result_type)}</td>
             <td>${escapeHtml(item.name || 'Unnamed')}</td>
             <td>${escapeHtml(item.department || 'No Department')}</td>
             <td>${toFixedGrade(item.overall)}</td>
         </tr>
     `).join('');
+
 
     if (modalSelectAllBatch) {
         modalSelectAllBatch.checked = false;
@@ -2118,7 +2097,6 @@ function printSelectedBatchFromModal() {
         }
 
         const rows = [[
-            'Type',
             'Evaluatee Name',
             'Department',
             'Overall Average',
@@ -2132,7 +2110,6 @@ function printSelectedBatchFromModal() {
 
         filtered.forEach(item => {
             rows.push([
-                formatTypeLabel(item.result_type),
                 item.name || '',
                 item.department || '',
                 toFixedGrade(item.overall),
@@ -2209,7 +2186,7 @@ function printSelectedBatchFromModal() {
                 alert('No person selected.');
                 return;
             }
-            printSinglePerson(currentModalItem.id, currentModalItem.result_type);
+            printSinglePerson(currentModalItem.id);
         });
     }
 

@@ -130,7 +130,6 @@
     .faculty-name-box{display:flex; flex-direction:column; gap:4px;}
     .faculty-name-box strong{color:var(--text); font-size:0.98rem;}
     .faculty-name-box small{color:var(--muted); font-size:0.9rem; line-height:1.45;}
-    .type-badge{display:inline-flex; align-items:center; gap:8px; padding:9px 14px; border-radius:999px; font-size:0.84rem; font-weight:800; background:#f8f4f5; color:var(--text); border:1px solid #ead9de;}
     .grade-pill{display:inline-flex; align-items:center; justify-content:center; min-width:68px; padding:9px 13px; border-radius:999px; font-size:0.84rem; font-weight:700; border:1px solid #efd3d9; background:#f9eff2; color:var(--primary);}
     .overall-pill{display:inline-flex; align-items:center; justify-content:center; min-width:80px; padding:10px 15px; border-radius:999px; font-size:0.88rem; font-weight:800; background:linear-gradient(135deg, var(--primary), var(--primary-dark)); color:#fff;}
     .overall-pill.overall-pill-zero{background:#f3f4f6 !important; color:#9ca3af !important;}
@@ -288,7 +287,6 @@
           <table class="table align-middle" id="facultyResultsTable">
             <thead>
               <tr>
-                <th style="min-width:130px;">Type</th>
                 <th style="min-width:240px;">Evaluatee</th>
                 <th style="min-width:130px;">Total Average</th>
                 <th style="min-width:240px;">Management of Teaching <br>and Learning</th>
@@ -311,14 +309,14 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
-            <div class="faculty-summary-box d-none">
+            <div class="faculty-summary-box">
               <h6 id="modalFacultyName">Name</h6>
               <p id="modalFacultySubtitle">Detailed evaluator breakdown and average grades.</p>
             </div>
 
             <div class="d-flex flex-wrap gap-2 mb-3 justify-content-end"></div>
 
-            <div class="sector-gri d-none">
+            <div class="sector-grid">
               <div class="sector-card"><h6>Management of Teaching and Learning</h6><h4 id="modalManagementTeachingAvg">0.00</h4></div>
               <div class="sector-card"><h6>Content Knowledge, Pedagogy, and Technology</h6><h4 id="modalContentKnowledgeAvg">0.00</h4></div>
               <div class="sector-card"><h6>Commitment and Transparency</h6><h4 id="modalCommitmentTransparencyAvg">0.00</h4></div>
@@ -414,7 +412,6 @@
     const facultyResults = Array.isArray(parsedResults) ? parsedResults : Array.isArray(parsedResults?.results) ? parsedResults.results : Object.values(parsedResults || {});
     const facultyResultsBody = document.getElementById('facultyResultsBody');
     const facultySearchInput = document.getElementById('facultySearchInput');
-    const resultTypeFilter = document.getElementById('resultTypeFilter');
     let currentModalItem = null;
 
     function toFixedGrade(value) { return Number(value || 0).toFixed(2); }
@@ -458,15 +455,7 @@
       if (fallbackText && !/^Question\s+\d+$/i.test(String(fallbackText).trim())) return fallbackText;
       return fallbackText || `Benchmark Statement ${questionNumber}`;
     }
-    function formatTypeLabel(type, position = '') {
-      if (type === 'head') return 'Head';
-      const pos = String(position || '').toLowerCase();
-      if (pos.includes('head')) return 'Head';
-      return 'Faculty';
-    }
-    function getTypeIcon(type, position = '') {
-      return formatTypeLabel(type, position) === 'Head' ? 'bi-person-badge' : 'bi-person-workspace';
-    }
+
     function getSection(source, key) {
       return Number((source && source.sections && source.sections[key]) || 0);
     }
@@ -544,47 +533,58 @@
 
     function getFilteredResults() {
       const keyword = facultySearchInput ? facultySearchInput.value.trim().toLowerCase() : '';
-      const selectedType = resultTypeFilter ? resultTypeFilter.value : 'all';
       return facultyResults.filter(item => {
-        const typeLabel = formatTypeLabel(item.result_type, item.position).toLowerCase();
-        const hay = [item.name, item.department, item.email, item.id_number, item.position].join(' ').toLowerCase();
-        const matchesKeyword = hay.includes(keyword);
-        const matchesType = selectedType === 'all' || typeLabel === selectedType;
-        return matchesKeyword && matchesType;
+        const hay = [item.name, item.department, item.email, item.id_number].join(' ').toLowerCase();
+        return hay.includes(keyword);
       });
     }
 
     function renderFacultyTable() {
-      if (!facultyResultsBody) return;
-      const filtered = getFilteredResults();
-      if (!filtered.length) {
-        facultyResultsBody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><i class="bi bi-search fs-3 d-block mb-2"></i>No result matched your filters.</div></td></tr>`;
-        return;
-      }
-      facultyResultsBody.innerHTML = filtered.map(item => {
-        const totalAverage = getOverallValue(item);
-        const isZeroAverage = Number(totalAverage) <= 0;
-        return `
-        <tr>
-          <td><span class="type-badge"><i class="bi ${getTypeIcon(item.result_type, item.position)}"></i>${formatTypeLabel(item.result_type, item.position)}</span></td>
-          <td>
-            <div class="faculty-name-box">
-              <strong>${escapeHtml(item.name || 'Unnamed')}</strong>
-              <small>${escapeHtml(item.department || '{{ logged_in_head.department.name|default:"No Department" }}')}</small>
-            </div>
-          </td>
-          <td><span class="overall-pill ${isZeroAverage ? 'overall-pill-zero' : ''}">${toFixedGrade(totalAverage)}</span></td>
-          <td><span class="grade-pill">${toFixedGrade(getSection(item, 'management_teaching_learning'))}</span></td>
-          <td><span class="grade-pill">${toFixedGrade(getSection(item, 'content_knowledge_pedagogy_technology'))}</span></td>
-          <td><span class="grade-pill">${toFixedGrade(getSection(item, 'commitment_transparency'))}</span></td>
-          <td class="text-end">
-            <div class="action-stack">
-              <button type="button" class="btn-view-more" onclick="openViewMore(${Number(item.id || 0)}, '${String(item.result_type || '')}')"><i class="bi bi-eye"></i><span>View More</span></button>
-            </div>
-          </td>
-        </tr>`;
-      }).join('');
-    }
+  if (!facultyResultsBody) return;
+
+  const filtered = getFilteredResults();
+
+  if (!filtered.length) {
+    facultyResultsBody.innerHTML = `
+      <tr>
+        <td colspan="6">
+          <div class="empty-state">
+            <i class="bi bi-search fs-3 d-block mb-2"></i>
+            No result matched your filters.
+          </div>
+        </td>
+      </tr>`;
+    return;
+  }
+
+  facultyResultsBody.innerHTML = filtered.map(item => {
+    const totalAverage = getOverallValue(item);
+    const isZeroAverage = Number(totalAverage) <= 0;
+
+    return `
+      <tr>
+        <td>
+          <div class="faculty-name-box">
+            <strong>${escapeHtml(item.name || 'Unnamed')}</strong>
+            <small>${escapeHtml(item.department || '{{ logged_in_head.department.name|default:"No Department" }}')}</small>
+          </div>
+        </td>
+        <td><span class="overall-pill ${isZeroAverage ? 'overall-pill-zero' : ''}">${toFixedGrade(totalAverage)}</span></td>
+        <td><span class="grade-pill">${toFixedGrade(getSection(item, 'management_teaching_learning'))}</span></td>
+        <td><span class="grade-pill">${toFixedGrade(getSection(item, 'content_knowledge_pedagogy_technology'))}</span></td>
+        <td><span class="grade-pill">${toFixedGrade(getSection(item, 'commitment_transparency'))}</span></td>
+        <td class="text-end">
+          <div class="action-stack">
+            <button type="button" class="btn-view-more" onclick="openViewMore(${Number(item.id || 0)})">
+              <i class="bi bi-eye"></i>
+              <span>View More</span>
+            </button>
+          </div>
+        </td>
+      </tr>`;
+  }).join('');
+}
+
 
     function buildEvaluatorRows(item) {
       const evaluators = item.evaluators || [];
@@ -595,13 +595,13 @@
         const sections = ev.sections || {};
         return `
           <tr>
-            <td>${escapeHtml(ev.name || 'Unnamed')}</td>
-            <td>${escapeHtml(ev.department || '—')}</td>
+            <td>${escapeHtml(ev.evaluator_name || 'Unknown Evaluator')}</td>
+            <td>${escapeHtml(ev.evaluator_department || '—')}</td>
             <td>${toFixedGrade(Number(sections.management_teaching_learning || 0))}</td>
             <td>${toFixedGrade(Number(sections.content_knowledge_pedagogy_technology || 0))}</td>
             <td>${toFixedGrade(Number(sections.commitment_transparency || 0))}</td>
             <td>${toFixedGrade(Number(ev.total_score || 0))}</td>
-            <td>${toFixedGrade(Number(ev.average_score || ev.total_average || 0))}</td>
+            <td>${toFixedGrade(Number(ev.overall || 0))}</td>
             <td>${toFixedGrade(Number(ev.computed_rating || 0))}%</td>
           </tr>`;
       }).join('');
@@ -616,8 +616,7 @@
         const sections = ev.sections || {};
         const orderedSections = getOrderedSections(ev.detailed_answers || {});
         const commentBlock = ev.comments ? `<div class="comment-box"><strong>Comments and Suggestions:</strong><br>${escapeHtml(ev.comments)}</div>` : '';
-        const avgScore = Number(ev.average_score || ev.total_average || 0);
-        const totalScore = Number(ev.total_score || 0);
+        const avgScore = Number(ev.overall || ev.average_score || ev.total_average || 0);        const totalScore = Number(ev.total_score || 0);
         const computedRating = Number(ev.computed_rating || 0);
 
         const sectionHtml = orderedSections.map(([sectionName, answers]) => {
@@ -663,8 +662,8 @@
       }).join('');
     }
 
-    function openViewMore(id, resultType) {
-      const item = facultyResults.find(entry => Number(entry.id) === Number(id) && String(entry.result_type || '') === String(resultType || ''));
+      function openViewMore(id) {
+        const item = facultyResults.find(entry => Number(entry.id) === Number(id));  
       if (!item) return;
       currentModalItem = item;
 
@@ -675,7 +674,7 @@
       const averageTotalScore = getAverageTotalScore(item);
       const computedRating = getComputedRating(item);
 
-      document.getElementById('modalFacultyName').textContent = `${item.name || 'Unnamed'} (${formatTypeLabel(item.result_type, item.position)})`;
+      document.getElementById('modalFacultyName').textContent = `${item.name || 'Unnamed'}`;
       document.getElementById('modalFacultySubtitle').textContent = `${item.department || '{{ logged_in_head.department.name|default:"No Department" }}'} • ${item.evaluator_count || 0} evaluator(s)`;
 
       const modalManagementTeachingAvg = document.getElementById('modalManagementTeachingAvg');
@@ -704,7 +703,6 @@
     }
 
     facultySearchInput?.addEventListener('input', renderFacultyTable);
-    resultTypeFilter?.addEventListener('change', renderFacultyTable);
 
     renderStats();
     renderFacultyTable();

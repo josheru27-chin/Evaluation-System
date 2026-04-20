@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Head Evaluation Form - Left Rail Layout</title>
+  <title>Faculty Evaluation Form - Left Rail Layout</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
   <style>
@@ -63,9 +63,9 @@
     .instrument-item strong{ font-size:1.05rem; color:var(--primary); }
     .faculty-info-grid{ display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:14px; margin-top:14px; }
     .field-block label{ display:block; font-weight:700; font-size:.9rem; margin-bottom:6px; color:#374151; }
-    .form-shell{ display:grid; grid-template-columns:250px minmax(0,1fr); gap:18px; align-items:start; }
+    .form-shell{ display:grid; grid-template-columns:300px minmax(0,1fr); gap:18px; align-items:start; }
     .form-left-rail{ position:sticky; top:18px; display:flex; flex-direction:column; gap:16px; align-self:start; }
-    .left-rail-card{ padding:16px; }
+    .left-rail-card{ padding:20px; }
     .left-rail-title{ font-size:.82rem; font-weight:800; color:var(--primary); letter-spacing:.04em; text-transform:uppercase; margin-bottom:10px; }
     .left-rail-divider{ height:1px; background:var(--border); margin:14px 0; }
     .left-rail-sub{ color:var(--muted); font-size:.9rem; line-height:1.5; }
@@ -329,6 +329,25 @@
         grid-template-columns:1fr;
       }
     }
+
+    .question-card.readonly {
+      opacity: .7;
+    }
+
+    .form-main-content {
+      background: #fff;
+      border-radius: 24px;
+      padding: 18px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.05);
+    }
+
+    .instrument-card,
+      .action-card,
+      .toolbar-card {
+        background: #fafafa;
+        border: 1px solid #eee;
+      }
+      
   </style>
 </head>
 <body>
@@ -338,15 +357,45 @@
         <div class="hero">
           <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
             <div><br>
-              <h1>Head Evaluation Portal</h1>
-              <p>Evaluate fellow heads and faculty members, complete each category, and track submission progress. Self-evaluation is not included in this version.</p>
+             <h1>
+                {% if logged_in_officer %}
+                  {% if logged_in_officer.role == "OCD" %}
+                    OCD Evaluation Portal
+                  {% else %}
+                    ADAA Evaluation Portal
+                  {% endif %}
+                {% else %}
+                  Faculty Evaluation Portal
+                {% endif %}
+              </h1>
+              <p>
+                {% if logged_in_officer %}
+                  Complete the assigned office-level evaluations and track submission progress.
+                {% else %}
+                  Evaluate faculty members under your department, complete each evaluation, and track submission progress.
+                {% endif %}
+              </p>
             </div>
             <div class="text-md-end">
               <div class="small opacity-75">Welcome</div>
-              <div class="fw-bold fs-5" id="welcomeHeadName">{{ logged_in_head.name }}</div>
-              <div class="small mt-1 opacity-75">Department</div>
-              <div class="fw-semibold" id="welcomeDepartment">{{ logged_in_head.department.name }}</div>
-              <div class="mt-3">
+
+             <div class="fw-bold fs-5" id="welcomeHeadName">
+                    {% if logged_in_officer %}
+                      {{ logged_in_officer.name }}
+                    {% else %}
+                      {{ logged_in_head.name }}
+                    {% endif %}
+                  </div>
+                  <div class="small mt-1 opacity-75">
+                    {% if logged_in_officer %}Office{% else %}Department{% endif %}
+                  </div>
+                  <div class="fw-semibold" id="welcomeDepartment">
+                    {% if logged_in_officer %}
+                      {{ officer_department_label }}
+                    {% else %}
+                      {{ logged_in_head.department.name }}
+                    {% endif %}
+              </div>
                 <button
                   type="button"
                   class="btn btn-light btn-sm px-3 logout-trigger-btn"
@@ -357,7 +406,7 @@
               </div>
             </div>
           </div>
-        </div>
+
 
         <div class="body-wrap">
           <div class="row g-3 mb-4">
@@ -381,14 +430,19 @@
           </div>
 
           <div class="helper-box">
-            <strong>Flow:</strong> Choose a category, answer each person one by one, save each evaluatee, then return to the dashboard when the whole category is done.
+            <strong>Flow:</strong>
+            {% if logged_in_officer %}
+              Select the assigned evaluatee, answer all benchmark statements, submit the evaluation, then continue until all required evaluatees are completed.
+            {% else %}
+              Select a faculty member, answer all benchmark statements, submit the evaluation, then continue until all faculty members in your department are completed.
+            {% endif %}
           </div>
 
           <div class="row g-4" id="categoryCardsContainer"></div>
         </div>
       </div>
 
-      <div id="formView" class="hidden">
+      <div id="formView" hidden>
         <div class="hero">
           <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
             <div>
@@ -440,32 +494,28 @@
             </aside>
 
             <div class="form-main-content">
-
-
               <div class="faculty-info-card mb-3">
                 <div class="fw-bold fs-5 mb-2" id="personInfoTitle">A. Faculty Information</div>
                 <div class="small-text text-muted">To be accomplished by the designated office or pre-filled by the system.</div>
 
                 <div class="faculty-info-grid">
-                 <div class="faculty-info-grid">
-                    <div class="field-block">
-                      <label id="personNameLabel">Name of Faculty Being Evaluated</label>
-                      <input type="text" style="cursor: default;" class="form-control" id="infoFacultyName" readonly />
-                    </div>
+                  <div class="field-block">
+                    <label id="personNameLabel">Name of Faculty Being Evaluated</label>
+                    <input type="text" style="cursor: default;" class="form-control" id="infoFacultyName" readonly />
+                  </div>
 
-                    <div class="field-block">
-                      <label>Department</label>
-                      <input type="text" class="form-control" style="cursor: default;" id="infoDepartment" readonly />
-                    </div>
+                  <div class="field-block">
+                    <label id="personDepartmentLabel">Department / Office</label>
+                    <input type="text" class="form-control" style="cursor: default;" id="infoDepartment" readonly />
                   </div>
                 </div>
               </div>
 
               <div class="instrument-card">
                 <div class="fw-bold fs-5 mb-2">B. Rating Scale</div>
-                <div class="small-text text-muted mb-3">
-                  Carefully read each benchmark statement and rate the faculty member using the scale below.
-                </div>
+                  <div class="small-text text-muted mb-3" id="ratingScaleIntro">
+                    Carefully read each benchmark statement and rate the selected evaluatee using the scale below.
+                  </div>
                 <div class="instrument-grid">
                   <div class="instrument-item"><strong>5</strong> Always manifested<br><span class="text-muted">Evident in nearly all relevant situations (91–100%).</span></div>
                   <div class="instrument-item"><strong>4</strong> Often manifested<br><span class="text-muted">Evident most of the time, with occasional lapses (61–90%).</span></div>
@@ -477,16 +527,16 @@
 
               <div class="instrument-card">
                 <div class="fw-bold fs-5 mb-2">C. Instruction</div>
-                <div class="small-text text-muted">
-                  Carefully read each benchmark statement and rate the faculty member by selecting the appropriate rating based on the scale above.
+                <div class="small-text text-muted" id="instructionIntro">
+                  Carefully read each benchmark statement and rate the selected evaluatee by selecting the appropriate rating based on the scale above.
                 </div>
               </div>
 
               <div id="copyPeersCard" class="action-card hidden">
                 <div class="copy-peers-wrap">
                   <div class="copy-peers-info">
-                    <div class="fw-bold" id="copyPeersTitle">Apply Current Answers to Other Heads</div>
-                    <div class="muted-note" id="copyPeersNote"><strong class="bg-danger" >When Apply to All is on, the answers from the selected head are copied to the other heads automatically.</strong></div>
+                   <div class="fw-bold" id="copyPeersTitle">Apply Current Answers to Other Faculty</div>
+                    <div class="muted-note" id="copyPeersNote"><strong class="bg-danger">When Apply to All is on, the answers from the selected faculty are copied to the other faculty automatically.</strong></div>
                   </div>
                   <div class="copy-peers-actions">
                     <button type="button" class="btn btn-outline-primary copy-peer-btn" id="copyPeersBtn" onclick="copyCurrentEvaluationToOtherPeers()">
@@ -538,8 +588,9 @@
                 <div class="btn-group-wrap">
                   <button class="btn btn-outline-secondary" id="prevBtn" onclick="prevSection()">Previous</button>
                   <button class="btn btn-outline-primary" id="nextBtn" onclick="nextSection()">Next</button>
-                  <button class="btn btn-warning" id="saveEditBtn" onclick="openEditSaveConfirmModal()" style="display:none;">Save Changes</button>
-                  <button class="btn btn-primary" id="submitCategoryBtn" onclick="submitCurrentEvaluateeAndProceed()" style="display:none;">Next Faculty</button>
+                  <button class="btn btn-warning" id="saveEditBtn" onclick="openEditSaveConfirmModal()" style="display:none;">Save Changes</button> 
+                  <button class="btn btn-outline-primary" id="editCategoryBtn" onclick="enableEditMode()" style="display:none;">Edit</button>
+                  <button class="btn btn-primary" id="submitCategoryBtn" onclick="submitCurrentEvaluateeAndProceed()" style="display:none;">Next Evaluatee</button>
                 </div>
               </div>
 
@@ -567,73 +618,81 @@
     </div>
   </div>
 
-  
-<div class="modal fade logout-modal" id="logoutModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <div class="logout-modal-banner">
-          <div class="logout-modal-badge">⎋</div>
-          <h5 class="logout-modal-title">Logout from Evaluation Portal</h5>
-          <p class="logout-modal-subtitle">
-            You are about to end your current session. Make sure your latest evaluation has already been saved before leaving this page.
-          </p>
-        </div>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-
-      <div class="modal-body">
-        <div class="logout-info-card">
-          <div class="logout-info-label">Signed in as</div>
-          <div class="logout-info-value">{{ logged_in_head.name }}</div>
-          <div class="text-muted small mt-1">{{ logged_in_head.department.name }}</div>
+  <div class="modal fade logout-modal" id="logoutModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div class="logout-modal-banner">
+            <div class="logout-modal-badge">⎋</div>
+            <h5 class="logout-modal-title">Logout from Evaluation Portal</h5>
+            <p class="logout-modal-subtitle">
+              You are about to end your current session. Make sure your latest evaluation has already been saved before leaving this page.
+            </p>
+          </div>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
 
-        <div class="logout-warning">
-          Unsaved changes on the current evaluation form may be lost if they were not submitted yet.
-        </div>
-      </div>
+        <div class="modal-body">
+          <div class="logout-info-card">
+            <div class="logout-info-label">Signed in as</div>
+            <div class="logout-info-value">
+              {% if logged_in_officer %}
+                {{ logged_in_officer.name }}
+              {% else %}
+                {{ logged_in_head.name }}
+              {% endif %}
+            </div>
+            <div class="text-muted small mt-1">
+              {% if logged_in_officer %}
+                {{ officer_department_label }}
+              {% else %}
+                {{ logged_in_head.department.name }}
+              {% endif %}
+            </div>
+          </div>
 
-      <div class="modal-footer">
-        <button type="button" class="btn btn-outline-secondary logout-cancel-btn" data-bs-dismiss="modal">
-          Stay Logged In
-        </button>
-        <a href="{% url 'eval_logout' %}" class="btn btn-primary logout-confirm-btn">
-          Yes, Logout
-        </a>
+          <div class="logout-warning">
+            Unsaved changes on the current evaluation form may be lost if they were not submitted yet.
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary logout-cancel-btn" data-bs-dismiss="modal">
+            Stay Logged In
+          </button>
+          <a href="{% url 'eval_logout' %}" class="btn btn-primary logout-confirm-btn">
+            Yes, Logout
+          </a>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
-
-<div class="modal fade" id="submitConfirmModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content border-0 shadow-lg" style="border-radius:22px; overflow:hidden;">
-      <div class="modal-header text-white" style="background:linear-gradient(135deg, #981b2e 0%, #7d1626 100%);">
-        <h5 class="modal-title fw-bold" id="submitConfirmTitle">Confirm Submission</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-
-      <div class="modal-body py-4">
-        <div id="submitConfirmMessage" class="text-muted" style="line-height:1.7;">
-          Are you sure you want to submit this evaluation?
+  <div class="modal fade" id="submitConfirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg" style="border-radius:22px; overflow:hidden;">
+        <div class="modal-header text-white" style="background:linear-gradient(135deg, #981b2e 0%, #7d1626 100%);">
+          <h5 class="modal-title fw-bold" id="submitConfirmTitle">Confirm Submission</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-      </div>
 
-      <div class="modal-footer border-0 pt-0">
-        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-          Cancel
-        </button>
-        <button type="button" class="btn btn-primary" id="confirmSubmitBtn">
-          Yes, Submit
-        </button>
+        <div class="modal-body py-4">
+          <div id="submitConfirmMessage" class="text-muted" style="line-height:1.7;">
+            Are you sure you want to submit this evaluation?
+          </div>
+        </div>
+
+        <div class="modal-footer border-0 pt-0">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            Cancel
+          </button>
+          <button type="button" class="btn btn-primary" id="confirmSubmitBtn">
+            Yes, Submit
+          </button>
+        </div>
       </div>
     </div>
   </div>
-</div>
-
-
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
@@ -654,34 +713,51 @@
     }
   </script>
 
-  <script id="faculty-data" type="application/json">[
-    {% for faculty in department_faculty_members %}
-      {"id":"{{ faculty.id }}","name":"{{ faculty.name|escapejs }}","department":"{{ faculty.department.name|escapejs }}","email":"{{ faculty.email|default:''|escapejs }}"}{% if not forloop.last %},{% endif %}
-    {% endfor %}
-  ]</script>
-
-  <script id="head-data" type="application/json">[
-    {% for head in other_heads %}
-      {"id":"{{ head.id }}","name":"{{ head.name|escapejs }}","department":"{{ head.department.name|escapejs }}","email":"{{ head.email|default:''|escapejs }}"}{% if not forloop.last %},{% endif %}
-    {% endfor %}
-  ]</script>
+  <script id="faculty-data" type="application/json">
+  [
+    {% if logged_in_officer %}
+      {% for person in officer_evaluatees %}
+        {
+          "id":"{{ person.id }}",
+          "name":"{{ person.name|escapejs }}",
+          "department":"{% if person.department %}{{ person.department.name|escapejs }}{% else %}{{ officer_department_label|escapejs }}{% endif %}",
+          "email":"{{ person.email|default:''|escapejs }}"
+        }{% if not forloop.last %},{% endif %}
+      {% endfor %}
+    {% else %}
+      {% for faculty in department_faculty_members %}
+        {
+          "id":"{{ faculty.id }}",
+          "name":"{{ faculty.name|escapejs }}",
+          "department":"{{ faculty.department.name|escapejs }}",
+          "email":"{{ faculty.email|default:''|escapejs }}"
+        }{% if not forloop.last %},{% endif %}
+      {% endfor %}
+    {% endif %}
+  ]
+  </script>
 
   {{ saved_evaluations_json|json_script:"saved-evaluations-data" }}
   {{ dashboard_summary_json|json_script:"dashboard-summary-data" }}
+  {{ is_schedule_open|json_script:"is-schedule-open-data" }}
 
   <script>
   const facultyData = JSON.parse(document.getElementById("faculty-data").textContent || "[]");
-  const headData = JSON.parse(document.getElementById("head-data").textContent || "[]");
   const savedEvaluations = JSON.parse(document.getElementById("saved-evaluations-data").textContent || "{}");
   const dashboardSummary = JSON.parse(document.getElementById("dashboard-summary-data").textContent || "{}");
+  const isScheduleOpen = JSON.parse(document.getElementById("is-schedule-open-data").textContent || "true");
 
-  const CURRENT_USER = { name: "{{ logged_in_head.name|escapejs }}", role: "head" };
+  const CURRENT_USER = {
+    name: "{% if logged_in_officer %}{{ logged_in_officer.name|escapejs }}{% else %}{{ logged_in_head.name|escapejs }}{% endif %}",
+    role: "{% if logged_in_officer %}officer{% else %}head{% endif %}",
+    officerRole: "{% if logged_in_officer %}{{ logged_in_officer.role|escapejs }}{% else %}{% endif %}"
+  };
 
   const sections = [
     {
       key: "management_teaching_learning",
       title: "A. Management of Teaching and Learning",
-      subtitle: "Supervisor's Evaluation of Faculty",
+      subtitle: "Evaluation Form",
       questions: [
         { en: "Comes to class on time.", tl: "Pumapasok sa klase sa tamang oras.", verification: ["Daily time record", "Faculty schedule and timetable", "Informal interview with students"] },
         { en: "Submits updated syllabus, grade sheets, and other required reports on time.", tl: "Nagsusumite ng updated syllabus, grade sheets, at iba pang kinakailangang ulat sa tamang oras.", verification: ["Documents submission log", "Submission receipts or acknowledgment emails"] },
@@ -694,7 +770,7 @@
     {
       key: "content_knowledge_pedagogy_technology",
       title: "B. Content Knowledge, Pedagogy, and Technology",
-      subtitle: "Supervisor's Evaluation of Faculty",
+      subtitle: "Evaluation Form",
       questions: [
         { en: "Demonstrates extensive and broad knowledge of the subject or course.", tl: "Nagpapakita ng malawak at malalim na kaalaman sa asignatura o kurso.", verification: ["Course syllabus", "Learning plan", "Instructional materials developed by faculty", "Informal interview with students"] },
         { en: "Simplifies complex ideas in the lesson for ease of understanding.", tl: "Naipapaliwanag nang simple ang mahihirap na konsepto upang madaling maunawaan ng mga mag-aaral.", verification: ["Learning plan", "Course syllabus", "Classroom observation", "Lecture notes and presentations"] },
@@ -706,7 +782,7 @@
     {
       key: "commitment_transparency",
       title: "C. Commitment and Transparency",
-      subtitle: "Supervisor's Evaluation of Faculty",
+      subtitle: "Evaluation Form",
       questions: [
         { en: "Recognizes and values the unique diversity and individual differences among students.", tl: "Kinikilala at pinahahalagahan ang pagkakaiba-iba at natatanging katangian ng bawat mag-aaral.", verification: ["Course syllabus", "Learning plan", "Instructional materials", "Classroom observation", "Informal interview with students"] },
         { en: "Assists students with their learning challenges during consultation hours.", tl: "Tinutulungan ang mga mag-aaral sa kanilang learning challenges tuwing consultation hours.", verification: ["Faculty consultation log", "Advisory records", "LMS logs", "Official correspondence"] },
@@ -717,21 +793,33 @@
   ];
 
   const categories = [
-    { key: "head_peer", title: "Head Evaluation", desc: "Evaluate fellow department heads only. Self-evaluation is not included.", allowed: CURRENT_USER.role === "head" },
-    { key: "faculty", title: "Faculty Evaluation", desc: "Evaluate faculty members under the department using the supervisor's evaluation instrument.", allowed: CURRENT_USER.role === "head" }
+    {
+      key: "faculty",
+      title:
+        CURRENT_USER.role === "officer"
+          ? (CURRENT_USER.officerRole === "OCD" ? "ADAA Evaluation" : "Department Head Evaluation")
+          : "Faculty Evaluation",
+      desc:
+        CURRENT_USER.role === "officer"
+          ? (CURRENT_USER.officerRole === "OCD"
+              ? "Evaluate the ADAA using the same evaluation instrument."
+              : "Evaluate department heads using the same evaluation instrument.")
+          : "Evaluate faculty members under your department using the supervisor's evaluation instrument.",
+      allowed: true
+    }
   ];
 
-  const ratings = { head_peer: {}, faculty: {} };
-  const commentsData = { head_peer: {}, faculty: {} };
-  const submissionStatus = { head_peer: "not_started", faculty: "not_started" };
-  const evaluateeSubmissionStatus = { head_peer: {}, faculty: {} };
-  const editModeByCategory = { head_peer: false, faculty: false };
+  const ratings = { faculty: {} };
+  const commentsData = { faculty: {} };
+  const submissionStatus = { faculty: "not_started" };
+  const evaluateeSubmissionStatus = { faculty: {} };
+  const editModeByCategory = { faculty: false };
 
   let currentCategory = null;
   let currentSectionIndex = 0;
   let lastSelectedEvaluateeId = null;
   let appModalInstance = null;
-  let activeLiveSourceByCategory = { head_peer: null, faculty: null };
+  let activeLiveSourceByCategory = { faculty: null };
   let submitConfirmModalInstance = null;
   let pendingSubmitHandler = null;
 
@@ -831,11 +919,14 @@
   }
 
   function getCategoryEvaluatees(categoryKey = currentCategory) {
-    if (categoryKey === "head_peer") {
-      return headData.map(item => ({ id: String(item.id), name: item.name, department: item.department || "", email: item.email || "", isHead: true }));
-    }
     if (categoryKey === "faculty") {
-      return facultyData.map(item => ({ id: String(item.id), name: item.name, department: item.department || "", email: item.email || "", isHead: false }));
+      return facultyData.map(item => ({
+        id: String(item.id),
+        name: item.name,
+        department: item.department || "",
+        email: item.email || "",
+        isHead: false
+      }));
     }
     return [];
   }
@@ -863,28 +954,35 @@
     if (!evaluateeSubmissionStatus[categoryKey][evalId]) evaluateeSubmissionStatus[categoryKey][evalId] = "not_started";
   }
 
-  function hydrateSavedEvaluations() {
-    ["head_peer", "faculty"].forEach(categoryKey => {
-      (savedEvaluations[categoryKey] || []).forEach(item => {
-        const evalId = String(item.evaluatee_id || "");
-        if (!evalId) return;
+ function hydrateSavedEvaluations() {
+  ["faculty"].forEach(categoryKey => {
+    (savedEvaluations[categoryKey] || []).forEach(item => {
+      const evalId = String(item.evaluatee_id || "");
+      if (!evalId) return;
 
-        ensureCategoryEvaluateePath(categoryKey, evalId);
+      ensureCategoryEvaluateePath(categoryKey, evalId);
 
-        Object.entries(item.answers || {}).forEach(([sectionKey, sectionAnswers]) => {
-          if (!ratings[categoryKey][evalId][sectionKey]) ratings[categoryKey][evalId][sectionKey] = {};
-          Object.entries(sectionAnswers || {}).forEach(([questionIndex, ratingValue]) => {
-            ratings[categoryKey][evalId][sectionKey][String(questionIndex)] = Number(ratingValue);
-          });
+      Object.entries(item.answers || {}).forEach(([sectionKey, sectionAnswers]) => {
+        if (!ratings[categoryKey][evalId][sectionKey]) {
+          ratings[categoryKey][evalId][sectionKey] = {};
+        }
+
+        Object.entries(sectionAnswers || {}).forEach(([questionIndex, ratingValue]) => {
+          ratings[categoryKey][evalId][sectionKey][String(questionIndex)] = Number(ratingValue);
         });
-
-        commentsData[categoryKey][evalId] = item.comments || "";
-        evaluateeSubmissionStatus[categoryKey][evalId] = item.status === "submitted" ? "submitted" : "in_progress";
       });
 
-      refreshCategoryStatus(categoryKey);
+      commentsData[categoryKey][evalId] = item.comments || "";
+      evaluateeSubmissionStatus[categoryKey][evalId] =
+        item.status === "submitted" ? "submitted" : "in_progress";
     });
-  }
+
+    refreshCategoryStatus(categoryKey);
+  });
+
+  updateReadOnlyState();
+}
+
 
   function populateFacultyInfo() {
     const select = document.getElementById("evaluateeSelect");
@@ -893,9 +991,22 @@
     const department = document.getElementById("infoDepartment");
     const personInfoTitle = document.getElementById("personInfoTitle");
     const personNameLabel = document.getElementById("personNameLabel");
+    const personDepartmentLabel = document.getElementById("personDepartmentLabel");
 
-    if (personInfoTitle) personInfoTitle.textContent = currentCategory === "head_peer" ? "A. Head Information" : "A. Faculty Information";
-    if (personNameLabel) personNameLabel.textContent = currentCategory === "head_peer" ? "Name of Department Head Being Evaluated" : "Name of Faculty Being Evaluated";
+    if (CURRENT_USER.role === "officer") {
+      if (CURRENT_USER.officerRole === "OCD") {
+        if (personInfoTitle) personInfoTitle.textContent = "A. ADAA Information";
+        if (personNameLabel) personNameLabel.textContent = "Name of ADAA Being Evaluated";
+      } else {
+        if (personInfoTitle) personInfoTitle.textContent = "A. Department Head Information";
+        if (personNameLabel) personNameLabel.textContent = "Name of Department Head Being Evaluated";
+      }
+      if (personDepartmentLabel) personDepartmentLabel.textContent = "Office / Department";
+    } else {
+      if (personInfoTitle) personInfoTitle.textContent = "A. Faculty Information";
+      if (personNameLabel) personNameLabel.textContent = "Name of Faculty Being Evaluated";
+      if (personDepartmentLabel) personDepartmentLabel.textContent = "Department";
+    }
 
     if (!selected || !selected.value) {
       if (facultyName) facultyName.value = "";
@@ -1008,15 +1119,25 @@
     if (!currentCategory) return "Submit";
     const activeId = getActiveLiveSourceId();
 
+    const singularLabel =
+      CURRENT_USER.role === "officer"
+        ? (CURRENT_USER.officerRole === "OCD" ? "ADAA" : "Department Head")
+        : "Faculty";
+
+    const pluralLabel =
+      CURRENT_USER.role === "officer"
+        ? (CURRENT_USER.officerRole === "OCD" ? "ADAA Evaluatees" : "Department Heads")
+        : "Faculty";
+
     if (activeId && String(activeId) === getCurrentEvaluateeId()) {
-      return currentCategory === "head_peer" ? "Submit All Heads" : "Submit All Faculty";
+      return `Submit All ${pluralLabel}`;
     }
 
     if (areAllEvaluateesSubmitted(currentCategory) || areAllEvaluateesComplete(currentCategory)) {
       return "Submit Category";
     }
 
-    return currentCategory === "head_peer" ? "Next Department Head" : "Next Faculty";
+    return `Next ${singularLabel}`;
   }
 
   function refreshCategoryStatus(categoryKey) {
@@ -1094,7 +1215,7 @@
     activeLiveSourceByCategory[currentCategory] = null;
     syncPeerCopyAppliedUI();
     renderSection();
-    showInfoModal("Apply to All Turned Off", `Other ${currentCategory === "head_peer" ? "head" : "faculty"} pages can now be edited again.`);
+    showInfoModal("Apply to All Turned Off", "Other faculty pages can now be edited again.");
   }
 
   function applyLiveCopy(categoryKey = currentCategory) {
@@ -1140,72 +1261,115 @@
   }
 
   function updateFormInteractivity() {
-    const questionsContainer = document.getElementById("questionsContainer");
-    const commentsBox = document.getElementById("commentsBox");
-    const submitBtn = document.getElementById("submitCategoryBtn");
-    const saveEditBtn = document.getElementById("saveEditBtn");
-    const copyBtn = document.getElementById("copyPeersBtn");
-    const disableCopyBtn = document.getElementById("disableCopyBtn");
+  const questionsContainer = document.getElementById("questionsContainer");
+  const commentsBox = document.getElementById("commentsBox");
+  const submitBtn = document.getElementById("submitCategoryBtn");
+  const saveEditBtn = document.getElementById("saveEditBtn");
+  const editBtn = document.getElementById("editCategoryBtn");
+  const copyBtn = document.getElementById("copyPeersBtn");
+  const disableCopyBtn = document.getElementById("disableCopyBtn");
+  const currentCategoryStatus = document.getElementById("currentCategoryStatus");
+  const sideCategoryStatusText = document.getElementById("sideCategoryStatusText");
 
-    const evaluateeId = getCurrentEvaluateeId();
-    const editMode = isCategoryEditMode();
-    const categoryReadOnly = isCurrentCategorySubmitted() && !editMode;
-    const evaluateeReadOnly = evaluateeId ? (isEvaluateeSubmitted(currentCategory, evaluateeId) && !editMode) : false;
-    const liveReadOnly = isLiveLockedForCurrentEvaluatee();
-    const isReadOnly = categoryReadOnly || evaluateeReadOnly || liveReadOnly;
+  const evaluateeId = getCurrentEvaluateeId();
+  const editMode = isCategoryEditMode();
+  const categoryReadOnly = !isScheduleOpen || (isCurrentCategorySubmitted() && !editMode);
+  const evaluateeReadOnly = evaluateeId
+    ? (isEvaluateeSubmitted(currentCategory, evaluateeId) && !editMode)
+    : false;
+  const liveReadOnly = isLiveLockedForCurrentEvaluatee();
+  const isReadOnly = (!editMode) && (categoryReadOnly || evaluateeReadOnly || liveReadOnly);
 
-    const labelType = currentCategory === "head_peer" ? "Head Evaluation" : "Faculty Evaluation";
-    const activeId = getActiveLiveSourceId();
+  const labelType =
+    CURRENT_USER.role === "officer"
+      ? (CURRENT_USER.officerRole === "OCD" ? "ADAA Evaluation" : "Department Head Evaluation")
+      : "Faculty Evaluation";
 
-    document.querySelectorAll("#questionsContainer input[type='radio']").forEach(input => {
-      input.disabled = isReadOnly;
-    });
+  const activeId = getActiveLiveSourceId();
 
-    document.querySelectorAll("#questionsContainer .question-card").forEach(card => {
-      card.classList.toggle("readonly", isReadOnly);
-    });
+  document.querySelectorAll("#questionsContainer input[type='radio']").forEach(input => {
+    input.disabled = isReadOnly;
+  });
 
-    document.querySelectorAll("#quickApplyWrap .score-chip, #quickApplyWrap .btn").forEach(btn => {
-      btn.disabled = isReadOnly;
-    });
+  document.querySelectorAll("#questionsContainer .question-card").forEach(card => {
+    card.classList.toggle("readonly", isReadOnly);
+  });
 
-    if (commentsBox) commentsBox.disabled = isReadOnly;
-    if (copyBtn) copyBtn.disabled = isReadOnly;
-    if (disableCopyBtn) disableCopyBtn.disabled = isReadOnly;
+  document.querySelectorAll("#quickApplyWrap .score-chip, #quickApplyWrap .btn").forEach(btn => {
+    btn.disabled = isReadOnly;
+  });
 
-    document.getElementById("liveCopyReadonlyNote")?.remove();
+  if (commentsBox) commentsBox.disabled = isReadOnly;
+  if (copyBtn) copyBtn.disabled = isReadOnly;
+  if (disableCopyBtn) disableCopyBtn.disabled = isReadOnly;
 
-    if (isReadOnly && questionsContainer) {
-      const note = document.createElement("div");
-      note.id = "liveCopyReadonlyNote";
-      note.className = "warning-note";
+  document.getElementById("liveCopyReadonlyNote")?.remove();
 
-      if (categoryReadOnly) {
-        note.innerHTML = `This <strong>${labelType}</strong> has already been fully submitted. The form is now view-only.`;
-      } else if (evaluateeReadOnly) {
-        note.innerHTML = `This selected <strong>${currentCategory === "head_peer" ? "head" : "faculty"}</strong> evaluation has already been submitted. The form is now view-only.`;
-      } else {
-        note.innerHTML = `Apply to All is on. This page is view-only because <strong>${getEvaluateeNameById(currentCategory, activeId)}</strong> is the active source. Turn off Apply to All to edit this form.`;
-      }
+  if (isReadOnly && questionsContainer) {
+    const note = document.createElement("div");
+    note.id = "liveCopyReadonlyNote";
+    note.className = "warning-note";
 
-      questionsContainer.prepend(note);
+    if (!isScheduleOpen) {
+      note.innerHTML = `This <strong>${labelType}</strong> is now view-only because the evaluation schedule is already closed.`;
+    } else if (categoryReadOnly && !editMode) {
+      note.innerHTML = `This <strong>${labelType}</strong> has already been fully submitted. The form is now view-only.`;
+    } else if (evaluateeReadOnly && !editMode) {
+      const selectedLabel =
+        CURRENT_USER.role === "officer"
+          ? (CURRENT_USER.officerRole === "OCD" ? "ADAA" : "department head")
+          : "faculty";
+
+      note.innerHTML = `This selected <strong>${selectedLabel}</strong> evaluation has already been submitted. The form is now view-only.`;
+    } else if (liveReadOnly) {
+      note.innerHTML = `Apply to All is on. This page is view-only because <strong>${getEvaluateeNameById(currentCategory, activeId)}</strong> is the active source. Turn off Apply to All to edit this form.`;
     }
 
-    if (saveEditBtn) {
-      saveEditBtn.style.display = (editMode && evaluateeId) ? "inline-block" : "none";
-      saveEditBtn.disabled = isReadOnly || !evaluateeId;
-    }
+    questionsContainer.prepend(note);
+  }
 
-    if (submitBtn) {
-      if (editMode) {
-        submitBtn.style.display = "none";
-        submitBtn.disabled = true;
-      } else if (categoryReadOnly || evaluateeReadOnly) {
-        submitBtn.style.display = "none";
-        submitBtn.disabled = true;
-      }
+  if (editBtn) {
+    editBtn.style.display = (evaluateeId && isEvaluateeSubmitted(currentCategory, evaluateeId) && isScheduleOpen && !editMode) ? "inline-block" : "none";
+  }
+
+  if (saveEditBtn) {
+    saveEditBtn.style.display = (editMode && evaluateeId && isScheduleOpen) ? "inline-block" : "none";
+    saveEditBtn.disabled = !editMode || !evaluateeId;
+  }
+
+  if (submitBtn) {
+    if (editMode) {
+      submitBtn.style.display = "none";
+      submitBtn.disabled = true;
+    } else if (categoryReadOnly || evaluateeReadOnly || !isScheduleOpen) {
+      submitBtn.style.display = "none";
+      submitBtn.disabled = true;
     }
   }
+
+  if (currentCategoryStatus) {
+    if (!isScheduleOpen) {
+      currentCategoryStatus.className = "status-pill status-not-started";
+      currentCategoryStatus.textContent = "View Only";
+    } else if (editMode) {
+      currentCategoryStatus.className = "status-pill status-progress";
+      currentCategoryStatus.textContent = "Editing Submitted Evaluation";
+    } else if (isCurrentCategorySubmitted()) {
+      currentCategoryStatus.className = "status-pill status-submitted";
+      currentCategoryStatus.textContent = "Submitted";
+    } else {
+      currentCategoryStatus.className = "status-pill status-progress";
+      currentCategoryStatus.textContent = "In Progress";
+    }
+  }
+
+  if (sideCategoryStatusText) {
+    if (!isScheduleOpen) sideCategoryStatusText.textContent = "View Only";
+    else if (editMode) sideCategoryStatusText.textContent = "Editing Submitted Evaluation";
+    else if (isCurrentCategorySubmitted()) sideCategoryStatusText.textContent = "Submitted";
+    else sideCategoryStatusText.textContent = "In Progress";
+  }
+}
 
   function renderDashboard() {
     const container = document.getElementById("categoryCardsContainer");
@@ -1297,6 +1461,7 @@
 
   function openCategory(categoryKey, forceEdit = false) {
     currentCategory = categoryKey;
+
     if (!forceEdit) {
       editModeByCategory[categoryKey] = false;
     }
@@ -1308,8 +1473,7 @@
       submissionStatus[currentCategory] = getSubmittedCount(currentCategory) > 0 ? "in_progress" : submissionStatus[currentCategory];
     }
 
-    document.getElementById("dashboardView").classList.add("hidden");
-    document.getElementById("formView").classList.remove("hidden");
+    setViewMode("form");
 
     const categoryObj = categories.find(c => c.key === categoryKey);
     document.getElementById("formTitle").textContent = categoryObj.title + (isCategoryEditMode(categoryKey) ? " - Edit Mode" : "");
@@ -1321,15 +1485,14 @@
     document.getElementById("currentCategoryStatus").className = "status-pill " + getStatusClass(submissionStatus[currentCategory]);
     document.getElementById("currentCategoryStatus").textContent = getStatusLabel(submissionStatus[currentCategory]);
     document.getElementById("sideCategoryStatusText").textContent = getStatusLabel(submissionStatus[currentCategory]);
-    document.getElementById("personInfoTitle").textContent = categoryKey === "head_peer" ? "A. Head Information" : "A. Faculty Information";
-    document.getElementById("personNameLabel").textContent = categoryKey === "head_peer" ? "Name of Department Head Being Evaluated" : "Name of Faculty Being Evaluated";
 
     populateEvaluatees();
+    populateFacultyInfo();
     togglePeerCopyCard();
     renderSectionStepper();
     renderSection();
-    renderDashboard();
-    scrollFormToTop();
+    updateReadOnlyState();
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   function togglePeerCopyCard() {
@@ -1340,9 +1503,14 @@
 
     card.classList.remove("hidden");
 
-    if (currentCategory === "head_peer") {
-      titleEl.textContent = "Apply Current Answers to Other Heads";
-      noteEl.textContent = "When Apply to All is on, the answers from the selected head are copied to the other heads automatically.";
+    if (CURRENT_USER.role === "officer") {
+      if (CURRENT_USER.officerRole === "OCD") {
+        titleEl.textContent = "Apply Current Answers to Other ADAA Evaluatees";
+        noteEl.textContent = "When Apply to All is on, the answers from the selected ADAA evaluatee are copied to the other evaluatees automatically.";
+      } else {
+        titleEl.textContent = "Apply Current Answers to Other Department Heads";
+        noteEl.textContent = "When Apply to All is on, the answers from the selected department head are copied to the other evaluatees automatically.";
+      }
     } else {
       titleEl.textContent = "Apply Current Answers to Other Faculty";
       noteEl.textContent = "When Apply to All is on, the answers from the selected faculty member are copied to the other faculty automatically.";
@@ -1359,16 +1527,15 @@
     const available = getCategoryEvaluatees(currentCategory);
     const activeId = getActiveLiveSourceId(currentCategory);
 
-    let placeholder = "Select person to evaluate";
-    let labelText = "Choose Evaluatee";
+    const placeholder =
+      CURRENT_USER.role === "officer"
+        ? (CURRENT_USER.officerRole === "OCD" ? "Select ADAA" : "Select department head")
+        : "Select faculty member";
 
-    if (currentCategory === "head_peer") {
-      placeholder = "Select department head";
-      labelText = "Choose Department Head";
-    } else if (currentCategory === "faculty") {
-      placeholder = "Select faculty member";
-      labelText = "Choose Faculty Member";
-    }
+    const labelText =
+      CURRENT_USER.role === "officer"
+        ? (CURRENT_USER.officerRole === "OCD" ? "Choose ADAA" : "Choose Department Head")
+        : "Choose Faculty Member";
 
     label.textContent = labelText;
     const previousValue = lastSelectedEvaluateeId ? String(lastSelectedEvaluateeId) : "";
@@ -1420,6 +1587,7 @@
     populateFacultyInfo();
     loadComments();
     updateSubmitButtonState();
+    updateReadOnlyState();
 
     select.onchange = () => {
       saveComments();
@@ -1432,6 +1600,7 @@
       renderSectionStepper();
       renderSection();
       updateSubmitButtonState();
+      updateReadOnlyState();
     };
   }
 
@@ -1477,8 +1646,13 @@
     if (!container) return;
 
     if (!evaluateeId) {
-      container.innerHTML = `<div class="alert alert-warning rounded-4">Please select ${currentCategory === "head_peer" ? "a department head" : "a faculty member"} first.</div>`;
-      document.getElementById("pageCompletionLabel").textContent = `0 / 0 answered`;
+      const emptyLabel =
+        CURRENT_USER.role === "officer"
+          ? (CURRENT_USER.officerRole === "OCD" ? "Please select an ADAA first." : "Please select a department head first.")
+          : "Please select a faculty member first.";
+
+      container.innerHTML = `<div class="alert alert-warning rounded-4">${emptyLabel}</div>`;
+
       document.getElementById("sectionFooterTitle").textContent = "";
       document.getElementById("sectionFooterText").textContent = "";
       document.getElementById("sectionFooterSubtext").textContent = "";
@@ -1567,6 +1741,10 @@
     updateSubmitButtonState();
     updateFormInteractivity();
     syncPeerCopyAppliedUI();
+  }
+
+  function updateReadOnlyState() {
+    updateFormInteractivity();
   }
 
   function setQuestionScore(questionIndex, score) {
@@ -1727,156 +1905,199 @@
     renderDashboard();
   }
 
-  async function confirmAndSubmitCurrentEvaluateeAndProceed() {
-    saveComments();
+ async function confirmAndSubmitCurrentEvaluateeAndProceed() {
+  const evaluateeId = getCurrentEvaluateeId();
+  const submitBtn = document.getElementById("submitCategoryBtn");
 
-    if (!getCurrentEvaluateeId()) return showInfoModal("No Evaluatee Selected", "Please select a person to evaluate first.");
-    if (!isCurrentEvaluateeComplete()) return showInfoModal("Incomplete Evaluation", "Please answer all questions before proceeding.");
-    if (isCurrentCategorySubmitted() && !isCategoryEditMode()) return showInfoModal("Already Submitted", "This category has already been submitted and is now view-only.");
-    if (isEvaluateeSubmitted(currentCategory, getCurrentEvaluateeId()) && !isCategoryEditMode()) return showInfoModal("Already Submitted", "This evaluation form has already been submitted and is now view-only.");
-    if (isLiveLockedForCurrentEvaluatee()) return showInfoModal("Apply to All Is On", getLockedEvaluateeMessage());
+  if (!currentCategory) {
+    showInfoModal("No Category", "Please open a category first.");
+    return;
+  }
 
-    const evaluateeId = getCurrentEvaluateeId();
-    const csrftoken = getCookie("csrftoken");
-    const activeId = getActiveLiveSourceId();
-    const isLiveSource = !!activeId && String(activeId) === String(evaluateeId);
+  if (!evaluateeId) {
+    showInfoModal("No Evaluatee Selected", "Please select a person to evaluate first.");
+    return;
+  }
 
-    if (isLiveSource) applyLiveCopy(currentCategory);
+  if (!isCurrentEvaluateeComplete()) {
+    showInfoModal(
+      "Incomplete Evaluation",
+      "Please answer all benchmark statements before submitting this evaluation."
+    );
+    return;
+  }
 
-    const targets = isLiveSource
-      ? getCategoryEvaluatees(currentCategory).map(person => String(person.id))
-      : [String(evaluateeId)];
+  saveComments();
 
-    const submitBtn = document.getElementById("submitCategoryBtn");
-    submitBtn.disabled = true;
-    submitBtn.textContent = isLiveSource ? "Submitting All..." : "Saving...";
+  const payload = {
+    evaluatee_id: evaluateeId,
+    comments: commentsData[currentCategory]?.[evaluateeId] || "",
+    answers: ratings[currentCategory]?.[evaluateeId] || {}
+  };
 
-    try {
-      for (const targetId of targets) {
-        ensureCategoryEvaluateePath(currentCategory, targetId);
+  const oldText = submitBtn ? submitBtn.textContent : "Next Evaluatee";
 
-        const payload = {
-          category: currentCategory,
-          evaluatee_id: targetId,
-          comments: commentsData[currentCategory]?.[targetId] || "",
-          answers: ratings[currentCategory]?.[targetId] || {}
-        };
+  try {
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Saving...";
+    }
 
-        const response = await fetch("{% url 'save_evaluation' %}", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": csrftoken
-          },
-          body: JSON.stringify(payload)
-        });
+    const response = await fetch("{% url 'save_evaluation' %}", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": getCookie("csrftoken")
+      },
+      body: JSON.stringify(payload)
+    });
 
-        const rawText = await response.text();
-        const data = JSON.parse(rawText);
+    const data = await response.json();
 
-        if (!response.ok || !data.success) {
-          throw new Error(data.message || "Something went wrong while saving.");
-        }
+    if (!response.ok || !data.success) {
+      throw new Error(data.message || "Something went wrong while saving.");
+    }
 
-        evaluateeSubmissionStatus[currentCategory][String(targetId)] = "submitted";
-      }
+    ensureCategoryEvaluateePath(currentCategory, evaluateeId);
+    evaluateeSubmissionStatus[currentCategory][evaluateeId] = "submitted";
 
-      markCategoryCompletedIfDone();
+    refreshCategoryStatus(currentCategory);
+    renderDashboard();
+    populateEvaluatees();
+    renderSectionStepper();
+    renderSection();
+    updateSubmitButtonState();
+    updateReadOnlyState();
+    scrollFormToTop();
 
-      if (isLiveSource || areAllEvaluateesSubmitted(currentCategory)) {
-        document.getElementById("formView").classList.add("hidden");
-        document.getElementById("dashboardView").classList.remove("hidden");
-        window.location.reload();
-        return;
-      }
+    const nextEvaluatee = getNextEvaluateeAfter(currentCategory, evaluateeId);
 
-      const nextPerson = getNextEvaluateeAfter(currentCategory, evaluateeId);
+    showInfoModal(
+      "Evaluation Submitted",
+      nextEvaluatee
+        ? `The evaluation for <strong>${getEvaluateeNameById(currentCategory, evaluateeId)}</strong> has been submitted successfully. You may continue with the next evaluatee.`
+        : `The evaluation for <strong>${getEvaluateeNameById(currentCategory, evaluateeId)}</strong> has been submitted successfully.`
+    );
 
-      if (nextPerson) {
-        lastSelectedEvaluateeId = String(nextPerson.id);
-        currentSectionIndex = 0;
+  } catch (error) {
+    showInfoModal(
+      "Save Failed",
+      error.message || "Something went wrong while saving."
+    );
 
-        populateEvaluatees();
-        renderSectionStepper();
-        renderSection();
-        updateSubmitButtonState();
-        scrollFormToTop();
-
-        showInfoModal("Evaluation Saved", `Saved successfully. You may now continue with <strong>${nextPerson.name}</strong>.`);
-      } else {
-        document.getElementById("formView").classList.add("hidden");
-        document.getElementById("dashboardView").classList.remove("hidden");
-        window.location.reload();
-      }
-
-    } catch (error) {
-      showInfoModal("Save Failed", error.message || "Something went wrong while saving.");
+    if (submitBtn) {
       submitBtn.disabled = false;
-      updateSubmitButtonState();
+      submitBtn.textContent = oldText;
     }
+
+    updateSubmitButtonState();
+    updateReadOnlyState();
+  }
+}
+
+async function saveEditedEvaluation() {
+  const evaluateeId = getCurrentEvaluateeId();
+  const saveBtn = document.getElementById("saveEditBtn");
+
+  if (!currentCategory) {
+    showInfoModal("No Category", "Please open a category first.");
+    return;
   }
 
-  async function saveEditedEvaluation() {
-    saveComments();
-
-    const evaluateeId = getCurrentEvaluateeId();
-    if (!evaluateeId) return showInfoModal("No Evaluatee Selected", "Please select a person to evaluate first.");
-
-    const csrftoken = getCookie("csrftoken");
-    const saveBtn = document.getElementById("saveEditBtn");
-    saveBtn.disabled = true;
-    saveBtn.textContent = "Saving...";
-
-    try {
-      const payload = {
-        category: currentCategory,
-        evaluatee_id: String(evaluateeId),
-        comments: commentsData[currentCategory]?.[evaluateeId] || "",
-        answers: ratings[currentCategory]?.[evaluateeId] || {}
-      };
-
-      const response = await fetch("{% url 'save_evaluation' %}", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRFToken": csrftoken
-        },
-        body: JSON.stringify(payload)
-      });
-
-      const rawText = await response.text();
-      const data = JSON.parse(rawText);
-
-      if (!response.ok || !data.success) {
-        throw new Error(data.message || "Something went wrong while saving.");
-      }
-
-      evaluateeSubmissionStatus[currentCategory][String(evaluateeId)] = "submitted";
-      editModeByCategory[currentCategory] = false;
-
-      renderSectionStepper();
-      renderSection();
-      updateSubmitButtonState();
-      renderDashboard();
-
-      showInfoModal("Changes Saved", "Your edited submitted evaluation has been saved successfully.");
-
-    } catch (error) {
-      showInfoModal("Save Failed", error.message || "Something went wrong while saving.");
-    } finally {
-      saveBtn.textContent = "Save Changes";
-      updateSubmitButtonState();
-    }
+  if (!evaluateeId) {
+    showInfoModal("No Evaluatee Selected", "Please select a person to evaluate first.");
+    return;
   }
+
+  if (!isScheduleOpen) {
+    showInfoModal(
+      "View Only",
+      "This evaluation can no longer be edited because the schedule is already closed."
+    );
+    return;
+  }
+
+  if (!isCurrentEvaluateeComplete()) {
+    showInfoModal(
+      "Incomplete Evaluation",
+      "Please answer all benchmark statements before saving your changes."
+    );
+    return;
+  }
+
+  saveComments();
+
+  const payload = {
+    evaluatee_id: evaluateeId,
+    comments: commentsData[currentCategory]?.[evaluateeId] || "",
+    answers: ratings[currentCategory]?.[evaluateeId] || {}
+  };
+
+  const oldText = saveBtn ? saveBtn.textContent : "Save Changes";
+
+  try {
+    if (saveBtn) {
+      saveBtn.disabled = true;
+      saveBtn.textContent = "Saving...";
+    }
+
+    const response = await fetch("{% url 'save_evaluation' %}", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": getCookie("csrftoken")
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      throw new Error(data.message || "Something went wrong while saving the edited evaluation.");
+    }
+
+    ensureCategoryEvaluateePath(currentCategory, evaluateeId);
+    evaluateeSubmissionStatus[currentCategory][evaluateeId] = "submitted";
+    editModeByCategory[currentCategory] = false;
+
+    refreshCategoryStatus(currentCategory);
+    renderDashboard();
+    populateEvaluatees();
+    renderSectionStepper();
+    renderSection();
+    updateSubmitButtonState();
+    updateReadOnlyState();
+
+    showInfoModal(
+      "Changes Saved",
+      "Your edited submitted evaluation has been saved successfully."
+    );
+
+  } catch (error) {
+    showInfoModal(
+      "Save Failed",
+      error.message || "Something went wrong while saving the edited evaluation."
+    );
+  } finally {
+    if (saveBtn) {
+      saveBtn.textContent = oldText;
+    }
+    updateSubmitButtonState();
+    updateReadOnlyState();
+  }
+}
+
 
   function copyCurrentEvaluationToOtherPeers() {
     const sourceId = getCurrentEvaluateeId();
 
     if (!sourceId) {
-      showInfoModal(
-        currentCategory === "head_peer" ? "No Head Selected" : "No Faculty Selected",
-        `Please select ${currentCategory === "head_peer" ? "a department head" : "a faculty member"} first.`
-      );
+      const selectLabel =
+        CURRENT_USER.role === "officer"
+          ? (CURRENT_USER.officerRole === "OCD" ? "Please select an ADAA first." : "Please select a department head first.")
+          : "Please select a faculty member first.";
+
+      showInfoModal("No Evaluatee Selected", selectLabel);
       return;
     }
 
@@ -1893,14 +2114,25 @@
     ensureCategoryEvaluateePath(currentCategory, sourceId);
     activateLiveCopy(currentCategory, sourceId);
 
+    const sourceLabel =
+      CURRENT_USER.role === "officer"
+        ? (CURRENT_USER.officerRole === "OCD" ? "ADAA evaluatee" : "department head")
+        : "faculty member";
+
+    const targetLabel =
+      CURRENT_USER.role === "officer"
+        ? (CURRENT_USER.officerRole === "OCD" ? "other evaluatees" : "other department heads")
+        : "other faculty members";
+
     showInfoModal(
       "Apply to All Enabled",
-      `This ${currentCategory === "head_peer" ? "head" : "faculty"} is now the Apply to All source. Its answers will be copied to the other ${currentCategory === "head_peer" ? "heads" : "faculty members"} while Apply to All is active.`
+      `This ${sourceLabel} is now the Apply to All source. Its answers will be copied to the ${targetLabel} while Apply to All is active.`
     );
 
     renderSectionStepper();
     renderSection();
     renderDashboard();
+    updateReadOnlyState();
   }
 
   function goBackToDashboard() {
@@ -1923,20 +2155,98 @@
     }
 
     exitCategoryEditMode(currentCategory);
-
-    document.getElementById("formView").classList.add("hidden");
-    document.getElementById("dashboardView").classList.remove("hidden");
+    setViewMode("dashboard");
     renderDashboard();
-    scrollFormToTop();
   }
 
   document.addEventListener("DOMContentLoaded", () => {
     initModal();
+    setViewMode("dashboard");
     hydrateSavedEvaluations();
     document.getElementById("commentsBox")?.addEventListener("input", saveComments);
     renderDashboard();
   });
-</script>
 
+
+function setViewMode(mode) {
+  const dashboardView = document.getElementById("dashboardView");
+  const formView = document.getElementById("formView");
+
+  if (!dashboardView || !formView) return;
+
+  if (mode === "form") {
+    dashboardView.hidden = true;
+    dashboardView.style.display = "none";
+    dashboardView.style.maxHeight = "0";
+    dashboardView.style.overflow = "hidden";
+
+    const dashboardHero = dashboardView.querySelector(".hero");
+    const dashboardBody = dashboardView.querySelector(".body-wrap");
+    if (dashboardHero) dashboardHero.style.display = "none";
+    if (dashboardBody) dashboardBody.style.display = "none";
+
+    formView.hidden = false;
+    formView.style.display = "block";
+    formView.style.maxHeight = "none";
+    formView.style.overflow = "visible";
+  } else {
+    formView.hidden = true;
+    formView.style.display = "none";
+    formView.style.maxHeight = "0";
+    formView.style.overflow = "hidden";
+
+    dashboardView.hidden = false;
+    dashboardView.style.display = "block";
+    dashboardView.style.maxHeight = "none";
+    dashboardView.style.overflow = "visible";
+
+    const dashboardHero = dashboardView.querySelector(".hero");
+    const dashboardBody = dashboardView.querySelector(".body-wrap");
+    if (dashboardHero) dashboardHero.style.display = "";
+    if (dashboardBody) dashboardBody.style.display = "";
+  }
+
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+function enableEditMode() {
+  if (!currentCategory) return;
+
+  if (!isScheduleOpen) {
+    showInfoModal(
+      "View Only",
+      "This evaluation can no longer be edited because the schedule is already closed."
+    );
+    return;
+  }
+
+  const evaluateeId = getCurrentEvaluateeId();
+  if (!evaluateeId) {
+    showInfoModal("No Evaluatee Selected", "Please select a person to evaluate first.");
+    return;
+  }
+
+  if (!isEvaluateeSubmitted(currentCategory, evaluateeId)) {
+    return;
+  }
+
+  editModeByCategory[currentCategory] = true;
+
+  const sectionFooterText = document.getElementById("sectionFooterText");
+  const sectionFooterSubtext = document.getElementById("sectionFooterSubtext");
+
+  if (sectionFooterText) {
+    sectionFooterText.textContent = "You are editing a previously submitted evaluation.";
+  }
+
+  if (sectionFooterSubtext) {
+    sectionFooterSubtext.textContent = "Update the answers you want, then click Save Changes.";
+  }
+
+  renderSectionStepper();
+  renderSection();
+  updateSubmitButtonState();
+  updateReadOnlyState();
+}
+  </script>
 </body>
 </html>

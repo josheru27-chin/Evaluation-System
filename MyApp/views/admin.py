@@ -25,15 +25,15 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
+
 from ..models import (
     Department,
     FacultyMember,
     DepartmentHead,
+    EvaluationOfficer,
     EvaluationSchedule,
     FacultyEvaluation,
     FacultyEvaluationResponse,
-    HeadEvaluation,
-    HeadEvaluationResponse,
 )
 
 LOGIN_LINK_MAX_AGE = 300
@@ -238,21 +238,19 @@ def _get_latest_schedule_with_submitted_evaluations():
             schedule=schedule,
             status="submitted"
         ).exists()
-        has_head_eval = HeadEvaluation.objects.filter(
-            schedule=schedule,
-            status="submitted"
-        ).exists()
 
-        if has_faculty_eval or has_head_eval:
+        if has_faculty_eval:
             return schedule
 
     return None
+
 
 def admin_required(view_func):
     return user_passes_test(
         lambda u: u.is_authenticated and u.is_staff,
         login_url='admin_login'
     )(view_func)
+
 
 @admin_required
 def admin_department(request):
@@ -278,7 +276,8 @@ def admin_department(request):
             for sheet_name in wb.sheetnames:
                 code = str(sheet_name).strip().upper()
 
-                if code == "HEAD":
+                # skip non-department sheets here
+                if code in ["HEAD", "OFFICES"]:
                     continue
 
                 if code not in DEPARTMENT_MAP:
@@ -298,6 +297,33 @@ def admin_department(request):
                     ws, department, selected_schedule
                 )
 
+            if "OFFICES" in wb.sheetnames:
+                ws = wb["OFFICES"]
+
+                EvaluationOfficer.objects.filter(schedule=selected_schedule).delete()
+
+                for row in ws.iter_rows(min_row=2, values_only=True):
+                    role = str(row[0]).strip().upper() if row and len(row) > 0 and row[0] else ""
+                    officer_name = str(row[1]).strip() if row and len(row) > 1 and row[1] else ""
+                    officer_email = str(row[2]).strip() if row and len(row) > 2 and row[2] else ""
+
+                    if not role or not officer_name or not officer_email:
+                        continue
+
+                    if role not in ["OCD", "ADAA"]:
+                        continue
+
+                    EvaluationOfficer.objects.update_or_create(
+                        schedule=selected_schedule,
+                        role=role,
+                        defaults={
+                            "name": officer_name,
+                            "email": officer_email,
+                        },
+                    )
+                    
+                    
+            # import HEAD
             if "HEAD" in wb.sheetnames:
                 ws = wb["HEAD"]
 
@@ -401,6 +427,8 @@ def admin_department(request):
         },
     )
     return render(request, "admin/admin_department.html", context)
+
+
 @admin_required
 def admin_manage(request):
     if request.method == "POST":
@@ -637,6 +665,7 @@ def delete_department(request, dept_id):
     messages.success(request, f"Department '{department_name}' was deleted successfully.")
     return redirect("admin_department")
 
+
 @admin_required
 def admin_results_summary(request):
     schedules = EvaluationSchedule.objects.all().order_by("-start_datetime", "-created_at")
@@ -686,23 +715,6 @@ def admin_results_summary(request):
             Prefetch(
                 "responses",
                 queryset=_ordered_response_queryset(FacultyEvaluationResponse),
-            )
-        )
-        .order_by("evaluatee_name", "evaluator_name", "submitted_at")
-    )
-
-    head_evaluations = (
-        HeadEvaluation.objects
-        .filter(status="submitted", schedule=selected_schedule)
-        .select_related(
-            "evaluatee_head__department",
-            "evaluator_head__department",
-            "schedule",
-        )
-        .prefetch_related(
-            Prefetch(
-                "responses",
-                queryset=_ordered_response_queryset(HeadEvaluationResponse),
             )
         )
         .order_by("evaluatee_name", "evaluator_name", "submitted_at")
@@ -827,36 +839,6 @@ def admin_results_summary(request):
             responses=evaluation.responses.all(),
         )
 
-    for evaluation in head_evaluations:
-        target_id = evaluation.evaluatee_head.id if evaluation.evaluatee_head else f"head-eval-{evaluation.id}"
-        target_name = (
-            evaluation.evaluatee_name
-            or (evaluation.evaluatee_head.name if evaluation.evaluatee_head else "Unknown Department Head")
-        )
-        target_department = (
-            evaluation.evaluatee_department
-            or (
-                evaluation.evaluatee_head.department.name
-                if evaluation.evaluatee_head and evaluation.evaluatee_head.department
-                else ""
-            )
-        )
-
-        add_evaluation_to_group(
-            grouped=grouped_results,
-            result_type="head",
-            schedule_obj=evaluation.schedule,
-            target_id=target_id,
-            target_name=target_name,
-            target_department=target_department,
-            evaluator_name=evaluation.evaluator_name,
-            evaluator_department=evaluation.evaluator_department,
-            average_score=evaluation.average_score,
-            total_score=evaluation.total_score,
-            comments=evaluation.comments,
-            submitted_at=evaluation.submitted_at,
-            responses=evaluation.responses.all(),
-        )
 
     for _, item in grouped_results.items():
         section_averages = {}
@@ -895,16 +877,6 @@ def admin_results_summary(request):
         .values_list("name", flat=True)
         .distinct()
     )
-
-    head_departments = list(
-        Department.objects
-        .filter(heads__schedule=selected_schedule)
-        .order_by("name")
-        .values_list("name", flat=True)
-        .distinct()
-    )
-
-    departments = sorted(set(departments + head_departments))
 
     context = _admin_context(
         "results_summary",
@@ -1000,67 +972,6 @@ def admin_login(request):
                 .order_by("-schedule__start_datetime", "-id")
                 .first()
             )
-
-            if not head:
-                if faculty:
-                    request.session["login_modal"] = {
-                        "type": "danger",
-                        "message": "This account is registered as faculty only. Faculty members are not allowed to access the department head portal."
-                    }
-                else:
-                    request.session["login_modal"] = {
-                        "type": "danger",
-                        "message": "This email is not registered as a department head in the evaluation system."
-                    }
-                return redirect("admin_login")
-
-            signer = TimestampSigner(salt=LINK_SALT)
-            token = signer.sign(str(head.id))
-
-            verify_url = request.build_absolute_uri(
-                reverse("verify_head_login_link", args=[token])
-            )
-
-            subject = "Department Head Portal Login Link"
-
-            context = {
-                "head": head,
-                "verify_url": verify_url,
-                "expires_minutes": LOGIN_LINK_MAX_AGE // 60,
-                "open_schedule": open_schedule,
-            }
-
-            text_body = (
-                f"Hello {head.name},\n\n"
-                f"Click the link below to access the Department Head Portal:\n\n"
-                f"{verify_url}\n\n"
-                f"This link will expire in {LOGIN_LINK_MAX_AGE // 60} minutes.\n"
-                f"If you did not request this, please ignore this email."
-            )
-
-            html_body = render_to_string("head/email_head_portal_link.html", context)
-
-            try:
-                msg = EmailMultiAlternatives(
-                    subject=subject,
-                    body=text_body,
-                    from_email=getattr(settings, "DEFAULT_FROM_EMAIL", None),
-                    to=[head.email],
-                )
-                msg.attach_alternative(html_body, "text/html")
-                msg.send()
-
-                request.session["login_modal"] = {
-                    "type": "success",
-                    "message": f"A secure login link has been sent to {head.email}."
-                }
-            except Exception:
-                request.session["login_modal"] = {
-                    "type": "danger",
-                    "message": "The login link could not be sent. Please check your email settings."
-                }
-
-            return redirect("admin_login")
 
             if not head:
                 if faculty:
@@ -1296,7 +1207,6 @@ def admin_past_evaluations(request):
         selected_schedule = past_schedules.first()
 
     faculty_history_results = []
-    head_history_results = []
     history_results = []
 
     if selected_schedule:
@@ -1317,25 +1227,7 @@ def admin_past_evaluations(request):
             .order_by("evaluatee_name", "evaluator_name", "submitted_at")
         )
 
-        head_evaluations = (
-            HeadEvaluation.objects
-            .filter(schedule=selected_schedule, status="submitted")
-            .select_related(
-                "evaluatee_head__department",
-                "evaluator_head__department",
-                "schedule",
-            )
-            .prefetch_related(
-                Prefetch(
-                    "responses",
-                    queryset=_ordered_response_queryset(HeadEvaluationResponse),
-                )
-            )
-            .order_by("evaluatee_name", "evaluator_name", "submitted_at")
-        )
-
         grouped_faculty = {}
-        grouped_heads = {}
 
         def add_to_group(
             grouped,
@@ -1449,31 +1341,6 @@ def admin_past_evaluations(request):
                 evaluation=evaluation,
             )
 
-        for evaluation in head_evaluations:
-            target_id = evaluation.evaluatee_head.id if evaluation.evaluatee_head else f"head-eval-{evaluation.id}"
-            target_name = (
-                evaluation.evaluatee_name
-                or (evaluation.evaluatee_head.name if evaluation.evaluatee_head else "Unknown Department Head")
-            )
-            target_department = (
-                evaluation.evaluatee_department
-                or (
-                    evaluation.evaluatee_head.department.name
-                    if evaluation.evaluatee_head and evaluation.evaluatee_head.department
-                    else ""
-                )
-            )
-
-            add_to_group(
-                grouped=grouped_heads,
-                result_type="head",
-                schedule_obj=evaluation.schedule,
-                group_key=f"head-{selected_schedule.id}-{target_id}",
-                target_id=target_id,
-                target_name=target_name,
-                target_department=target_department,
-                evaluation=evaluation,
-            )
 
         for _, item in grouped_faculty.items():
             section_averages = {}
@@ -1502,50 +1369,22 @@ def admin_past_evaluations(request):
                 "evaluators": item["evaluators"],
             })
 
-        for _, item in grouped_heads.items():
-            section_averages = {}
-            for section_key, values in item["section_values"].items():
-                section_averages[section_key] = round(sum(values) / len(values), 2) if values else 0
-
-            overall_average = round(sum(item["overall_values"]) / len(item["overall_values"]), 2) if item["overall_values"] else 0
-            average_total_score = round(sum(item["total_scores"]) / len(item["total_scores"]), 2) if item["total_scores"] else 0
-            computed_rating = round(sum(item["computed_ratings"]) / len(item["computed_ratings"]), 2) if item["computed_ratings"] else 0
-
-            head_history_results.append({
-                "id": item["id"],
-                "result_type": item["result_type"],
-                "name": item["name"],
-                "department": item["department"],
-                "schedule_id": item["schedule_id"],
-                "schedule_label": item["schedule_label"],
-                "academic_year": item["academic_year"],
-                "semester": item["semester"],
-                "title": item["title"],
-                "sections": section_averages,
-                "overall": overall_average,
-                "average_total_score": average_total_score,
-                "computed_rating": computed_rating,
-                "evaluator_count": len(item["evaluators"]),
-                "evaluators": item["evaluators"],
-            })
+        
 
         faculty_history_results.sort(key=lambda x: str(x["name"]).lower())
-        head_history_results.sort(key=lambda x: str(x["name"]).lower())
 
-        history_results = faculty_history_results + head_history_results
+        history_results = faculty_history_results
         history_results.sort(key=lambda x: (x["result_type"], str(x["name"]).lower()))
 
     context = _admin_context("past_evaluations", {
         "past_schedules": past_schedules,
         "selected_schedule": selected_schedule,
         "faculty_history_results": faculty_history_results,
-        "head_history_results": head_history_results,
         "history_results": history_results,
         "faculty_count": len(faculty_history_results),
-        "head_count": len(head_history_results),
         "total_count": len(history_results),
     })
-
+    
     return render(request, "admin/admin_past_evaluations.html", context)
 
 
@@ -1553,7 +1392,6 @@ def admin_past_evaluations(request):
 def admin_logout(request):
     logout(request)
     return redirect("admin_login")
-
 
 
 
@@ -1621,154 +1459,8 @@ def admin_pending(request):
                     departments_map[dept_name]['pending_count'] += 1
                     total_pending_evaluatees += 1
 
-        # Finalize totals per department
         for dept_name, dept_data in departments_map.items():
             dept_data['total_faculty'] = dept_data['pending_count'] + dept_data['done_count']
-
-        department_tabs = sorted(departments_map.values(), key=lambda x: x['name'])
-
-    context = {
-        'active_page': 'pending',
-        'selected_schedule': selected_schedule,
-        'schedules': schedules,
-        'department_tabs': department_tabs,
-        'total_pending_evaluatees': total_pending_evaluatees,
-        'total_done_evaluatees': total_done_evaluatees,
-    }
-
-    return render(request, 'admin/admin_pending.html', context)
-    schedules = EvaluationSchedule.objects.order_by('-start_datetime')
-    selected_schedule = schedules.first()
-
-    total_pending_evaluatees = 0
-    total_done_evaluatees = 0
-    total_heads = 0
-    department_tabs = []
-
-    if selected_schedule:
-        department_heads = DepartmentHead.objects.filter(
-            schedule=selected_schedule
-        ).select_related('department').order_by('department__name', 'name')
-
-        total_heads = department_heads.count()
-
-        departments_map = {}
-
-        for head in department_heads:
-            dept = head.department
-            dept_name = dept.name if dept else "No Department"
-
-            if dept_name not in departments_map:
-                departments_map[dept_name] = {
-                    'name': dept_name,
-                    'slug': slugify(dept_name) or f"department-{len(departments_map)+1}",
-                    'pending_rows': [],
-                    'done_rows': [],
-                    'pending_count': 0,
-                    'done_count': 0,
-                }
-
-            faculty_members = FacultyMember.objects.filter(
-                schedule=selected_schedule,
-                department=dept
-            ).select_related('department').order_by('name')
-
-            for faculty in faculty_members:
-                evaluation = FacultyEvaluation.objects.filter(
-                    schedule=selected_schedule,
-                    evaluator_head=head,
-                    evaluatee_faculty=faculty
-                ).first()
-
-                if evaluation and evaluation.status == 'submitted':
-                    departments_map[dept_name]['done_rows'].append({
-                        'evaluator_name': evaluation.evaluator_name or head.name,
-                        'evaluator_department': evaluation.evaluator_department or dept_name,
-                        'evaluatee_name': evaluation.evaluatee_name or faculty.name,
-                        'evaluatee_department': evaluation.evaluatee_department or dept_name,
-                        'status': 'Done',
-                        'submitted_at': evaluation.submitted_at.strftime('%b %d, %Y %I:%M %p') if evaluation.submitted_at else '—',
-                    })
-                    departments_map[dept_name]['done_count'] += 1
-                    total_done_evaluatees += 1
-                else:
-                    departments_map[dept_name]['pending_rows'].append({
-                        'evaluator_name': head.name,
-                        'evaluator_department': dept_name,
-                        'evaluatee_name': faculty.name,
-                        'evaluatee_department': dept_name,
-                        'status': 'In Progress' if evaluation and evaluation.status == 'in_progress' else 'Not Yet Finished',
-                    })
-                    departments_map[dept_name]['pending_count'] += 1
-                    total_pending_evaluatees += 1
-
-        department_tabs = sorted(departments_map.values(), key=lambda x: x['name'])
-
-    context = {
-        'active_page': 'pending',
-        'selected_schedule': selected_schedule,
-        'schedules': schedules,
-        'department_tabs': department_tabs,
-        'total_heads': total_heads,
-        'total_pending_evaluatees': total_pending_evaluatees,
-        'total_done_evaluatees': total_done_evaluatees,
-    }
-
-    return render(request, 'admin/admin_pending.html', context)
-    schedules = EvaluationSchedule.objects.order_by('-start_datetime')
-    selected_schedule = schedules.first()
-
-    total_pending_evaluatees = 0
-    total_done_evaluatees = 0
-    department_tabs = []
-
-    if selected_schedule:
-        faculty_members = FacultyMember.objects.filter(schedule=selected_schedule).select_related('department')
-        department_heads = DepartmentHead.objects.filter(schedule=selected_schedule).select_related('department')
-
-        departments_map = {}
-
-        for faculty in faculty_members:
-            dept_name = faculty.department.name if faculty.department else "No Department"
-
-            if dept_name not in departments_map:
-                departments_map[dept_name] = {
-                    'name': dept_name,
-                    'slug': slugify(dept_name) or f"department-{len(departments_map)+1}",
-                    'pending_rows': [],
-                    'done_rows': [],
-                    'pending_count': 0,
-                    'done_count': 0,
-                }
-
-            for head in department_heads:
-                evaluation = FacultyEvaluation.objects.filter(
-                    schedule=selected_schedule,
-                    evaluator_head=head,
-                    evaluatee_faculty=faculty
-                ).first()
-
-                if evaluation and evaluation.status == 'submitted':
-                    departments_map[dept_name]['done_rows'].append({
-                        'evaluator_name': evaluation.evaluator_name or head.name,
-                        'evaluator_department': evaluation.evaluator_department or (head.department.name if head.department else ''),
-                        'evaluatee_name': evaluation.evaluatee_name or faculty.name,
-                        'evaluatee_department': evaluation.evaluatee_department or dept_name,
-                        'status': 'Done',
-                        'submitted_at': evaluation.submitted_at.strftime('%b %d, %Y %I:%M %p') if evaluation.submitted_at else '—',
-                    })
-                    departments_map[dept_name]['done_count'] += 1
-                    total_done_evaluatees += 1
-                else:
-                    departments_map[dept_name]['pending_rows'].append({
-                        'evaluator_name': head.name,
-                        'evaluator_department': head.department.name if head.department else '',
-                        'evaluatee_name': faculty.name,
-                        'evaluatee_department': dept_name,
-                        'status': 'In Progress' if evaluation and evaluation.status == 'in_progress' else 'Not Yet Finished',
-                    })
-                    departments_map[dept_name]['pending_count'] += 1
-                    total_pending_evaluatees += 1
 
         department_tabs = sorted(departments_map.values(), key=lambda x: x['name'])
 

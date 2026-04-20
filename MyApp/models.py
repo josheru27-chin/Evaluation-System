@@ -94,137 +94,6 @@ class DepartmentHead(models.Model):
 # FOR EVALUATION RESULTS
 # =========================
 
-class HeadEvaluation(models.Model):
-    STATUS_CHOICES = [
-        ("draft", "Draft"),
-        ("submitted", "Submitted"),
-    ]
-
-    schedule = models.ForeignKey(
-        EvaluationSchedule,
-        on_delete=models.CASCADE,
-        related_name="head_evaluations"
-    )
-
-    evaluator_head = models.ForeignKey(
-        DepartmentHead,
-        on_delete=models.CASCADE,
-        related_name="submitted_head_evaluations"
-    )
-    evaluator_name = models.CharField(max_length=255, blank=True, default="")
-    evaluator_department = models.CharField(max_length=255, blank=True, default="")
-
-    evaluatee_head = models.ForeignKey(
-        DepartmentHead,
-        on_delete=models.CASCADE,
-        related_name="received_head_evaluations"
-    )
-    evaluatee_name = models.CharField(max_length=255, blank=True, default="")
-    evaluatee_department = models.CharField(max_length=255, blank=True, default="")
-
-    comments = models.TextField(blank=True, default="")
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="submitted")
-
-    total_score = models.DecimalField(
-        max_digits=8,
-        decimal_places=2,
-        null=True,
-        blank=True
-    )
-    average_score = models.DecimalField(
-        max_digits=5,
-        decimal_places=2,
-        null=True,
-        blank=True
-    )
-
-    created_at = models.DateTimeField(default=timezone.now)
-    submitted_at = models.DateTimeField(default=timezone.now)
-    updated_at = models.DateTimeField(default=timezone.now)
-
-    class Meta:
-        ordering = ["-submitted_at"]
-        unique_together = ("schedule", "evaluator_head", "evaluatee_head")
-        indexes = [
-            models.Index(fields=["status"]),
-            models.Index(fields=["submitted_at"]),
-            models.Index(fields=["evaluator_head"]),
-            models.Index(fields=["evaluatee_head"]),
-        ]
-
-    def __str__(self):
-        return f"{self.evaluator_name} evaluated head {self.evaluatee_name}"
-
-    def save(self, *args, **kwargs):
-        if self.evaluator_head:
-            if not self.evaluator_name:
-                self.evaluator_name = self.evaluator_head.name
-            if not self.evaluator_department:
-                self.evaluator_department = self.evaluator_head.department.name
-
-        if self.evaluatee_head:
-            if not self.evaluatee_name:
-                self.evaluatee_name = self.evaluatee_head.name
-            if not self.evaluatee_department:
-                self.evaluatee_department = self.evaluatee_head.department.name
-
-        self.updated_at = timezone.now()
-        super().save(*args, **kwargs)
-
-
-class HeadEvaluationResponse(models.Model):
-    evaluation = models.ForeignKey(
-        HeadEvaluation,
-        on_delete=models.CASCADE,
-        related_name="responses"
-    )
-
-    section_code = models.CharField(max_length=100, blank=True, default="")
-    section_name = models.CharField(max_length=255)
-    question_number = models.PositiveIntegerField()
-    question_text = models.TextField(blank=True, default="")
-
-    rating = models.PositiveSmallIntegerField(
-        validators=[MinValueValidator(1), MaxValueValidator(5)]
-    )
-
-    evaluator_name = models.CharField(max_length=255, blank=True, default="")
-    evaluator_department = models.CharField(max_length=255, blank=True, default="")
-    evaluatee_name = models.CharField(max_length=255, blank=True, default="")
-    evaluatee_department = models.CharField(max_length=255, blank=True, default="")
-
-    created_at = models.DateTimeField(default=timezone.now)
-    updated_at = models.DateTimeField(default=timezone.now)
-
-    class Meta:
-        ordering = ["section_name", "question_number"]
-        unique_together = ("evaluation", "section_name", "question_number")
-        indexes = [
-            models.Index(fields=["section_code"]),
-            models.Index(fields=["rating"]),
-            models.Index(fields=["evaluatee_name"]),
-            models.Index(fields=["evaluatee_department"]),
-            models.Index(fields=["evaluator_name"]),
-        ]
-
-    def __str__(self):
-        return f"{self.evaluatee_name} - {self.section_name} Q{self.question_number}: {self.rating}"
-
-    def save(self, *args, **kwargs):
-        if self.evaluation:
-            if not self.evaluator_name:
-                self.evaluator_name = self.evaluation.evaluator_name
-            if not self.evaluator_department:
-                self.evaluator_department = self.evaluation.evaluator_department
-            if not self.evaluatee_name:
-                self.evaluatee_name = self.evaluation.evaluatee_name
-            if not self.evaluatee_department:
-                self.evaluatee_department = self.evaluation.evaluatee_department
-
-        self.updated_at = timezone.now()
-        super().save(*args, **kwargs)
-
-
 class FacultyEvaluation(models.Model):
     STATUS_CHOICES = [
         ("draft", "Draft"),
@@ -355,7 +224,6 @@ class FacultyEvaluationResponse(models.Model):
 
 class EvaluationSection(models.Model):
     CATEGORY_CHOICES = [
-        ("head", "Head Evaluation"),
         ("faculty", "Faculty Evaluation"),
     ]
 
@@ -368,7 +236,6 @@ class EvaluationSection(models.Model):
 
     def __str__(self):
         return f"{self.category} - {self.name}"
-
 
 class EvaluationQuestion(models.Model):
     section = models.ForeignKey(
@@ -385,3 +252,162 @@ class EvaluationQuestion(models.Model):
 
     def __str__(self):
         return f"{self.section.name} Q{self.question_number}"
+
+
+class EvaluationOfficer(models.Model):
+    ROLE_CHOICES = [
+        ("OCD", "OCD"),
+        ("ADAA", "ADAA"),
+    ]
+
+    schedule = models.ForeignKey(
+        EvaluationSchedule,
+        on_delete=models.CASCADE,
+        related_name="evaluation_officers",
+        null=True,
+        blank=True
+    )
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES)
+    name = models.CharField(max_length=255)
+    email = models.EmailField(blank=True, default="")
+
+    class Meta:
+        ordering = ["role", "name"]
+        unique_together = ("schedule", "role", "email")
+
+    def __str__(self):
+        return f"{self.role} - {self.name}"
+    
+    
+class OfficeEvaluation(models.Model):
+    STATUS_CHOICES = [
+        ("draft", "Draft"),
+        ("submitted", "Submitted"),
+    ]
+
+    schedule = models.ForeignKey(
+        EvaluationSchedule,
+        on_delete=models.CASCADE,
+        related_name="office_evaluations"
+    )
+
+    evaluator_officer = models.ForeignKey(
+        "EvaluationOfficer",
+        on_delete=models.CASCADE,
+        related_name="submitted_office_evaluations"
+    )
+    evaluator_name = models.CharField(max_length=255, blank=True, default="")
+    evaluator_role = models.CharField(max_length=50, blank=True, default="")
+
+    evaluatee_officer = models.ForeignKey(
+        "EvaluationOfficer",
+        on_delete=models.CASCADE,
+        related_name="received_office_evaluations"
+    )
+    evaluatee_name = models.CharField(max_length=255, blank=True, default="")
+    evaluatee_role = models.CharField(max_length=50, blank=True, default="")
+
+    comments = models.TextField(blank=True, default="")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="draft")
+    total_score = models.DecimalField(max_digits=8, decimal_places=2, default=0)
+    average_score = models.DecimalField(max_digits=8, decimal_places=2, default=0)
+    submitted_at = models.DateTimeField(null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ("schedule", "evaluator_officer", "evaluatee_officer")
+        ordering = ["-submitted_at", "-id"]
+
+    def __str__(self):
+        return f"{self.evaluator_name} -> {self.evaluatee_name}"
+
+
+class OfficeEvaluationResponse(models.Model):
+    evaluation = models.ForeignKey(
+        OfficeEvaluation,
+        on_delete=models.CASCADE,
+        related_name="responses"
+    )
+    section_code = models.CharField(max_length=255)
+    section_name = models.CharField(max_length=255)
+    question_number = models.PositiveIntegerField()
+    question_text = models.TextField(blank=True, default="")
+    rating = models.PositiveIntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)]
+    )
+
+    evaluator_name = models.CharField(max_length=255, blank=True, default="")
+    evaluator_role = models.CharField(max_length=50, blank=True, default="")
+    evaluatee_name = models.CharField(max_length=255, blank=True, default="")
+    evaluatee_role = models.CharField(max_length=50, blank=True, default="")
+
+    class Meta:
+        ordering = ["section_name", "question_number"]
+
+
+class HeadEvaluation(models.Model):
+    STATUS_CHOICES = [
+        ("draft", "Draft"),
+        ("submitted", "Submitted"),
+    ]
+
+    schedule = models.ForeignKey(
+        EvaluationSchedule,
+        on_delete=models.CASCADE,
+        related_name="head_evaluations"
+    )
+
+    evaluator_officer = models.ForeignKey(
+        "EvaluationOfficer",
+        on_delete=models.CASCADE,
+        related_name="submitted_head_evaluations"
+    )
+    evaluator_name = models.CharField(max_length=255, blank=True, default="")
+    evaluator_role = models.CharField(max_length=50, blank=True, default="")
+
+    evaluatee_head = models.ForeignKey(
+        DepartmentHead,
+        on_delete=models.CASCADE,
+        related_name="received_head_evaluations"
+    )
+    evaluatee_name = models.CharField(max_length=255, blank=True, default="")
+    evaluatee_department = models.CharField(max_length=255, blank=True, default="")
+
+    comments = models.TextField(blank=True, default="")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="draft")
+    total_score = models.DecimalField(max_digits=8, decimal_places=2, default=0)
+    average_score = models.DecimalField(max_digits=8, decimal_places=2, default=0)
+    submitted_at = models.DateTimeField(null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ("schedule", "evaluator_officer", "evaluatee_head")
+        ordering = ["-submitted_at", "-id"]
+
+    def __str__(self):
+        return f"{self.evaluator_name} -> {self.evaluatee_name}"
+
+
+class HeadEvaluationResponse(models.Model):
+    evaluation = models.ForeignKey(
+        HeadEvaluation,
+        on_delete=models.CASCADE,
+        related_name="responses"
+    )
+    section_code = models.CharField(max_length=255)
+    section_name = models.CharField(max_length=255)
+    question_number = models.PositiveIntegerField()
+    question_text = models.TextField(blank=True, default="")
+    rating = models.PositiveIntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)]
+    )
+
+    evaluator_name = models.CharField(max_length=255, blank=True, default="")
+    evaluator_role = models.CharField(max_length=50, blank=True, default="")
+    evaluatee_name = models.CharField(max_length=255, blank=True, default="")
+    evaluatee_department = models.CharField(max_length=255, blank=True, default="")
+
+    class Meta:
+        ordering = ["section_name", "question_number"]
+
+    
