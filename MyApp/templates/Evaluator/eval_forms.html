@@ -720,7 +720,7 @@
         {
           "id":"{{ person.id }}",
           "name":"{{ person.name|escapejs }}",
-          "department":"{% if person.department %}{{ person.department.name|escapejs }}{% else %}{{ officer_department_label|escapejs }}{% endif %}",
+         "department":"{{ person.department.name|default_if_none:''|escapejs }}",
           "email":"{{ person.email|default:''|escapejs }}"
         }{% if not forloop.last %},{% endif %}
       {% endfor %}
@@ -1014,8 +1014,15 @@
       return;
     }
 
-    if (facultyName) facultyName.value = selected.dataset.name || "";
-    if (department) department.value = selected.dataset.department || "";
+   if (facultyName) facultyName.value = selected.dataset.name || "";
+
+    if (department) {
+      if (CURRENT_USER.role === "officer" && CURRENT_USER.officerRole === "OCD") {
+        department.value = "Office of the ADAA";
+      } else {
+        department.value = selected.dataset.department || "";
+      }
+    }
   }
 
   function loadComments() {
@@ -1554,7 +1561,7 @@
       option.dataset.department = person.department || "";
       option.dataset.email = person.email || "";
 
-      if (submitted) option.textContent = `${person.name} (Done)`;
+      if (submitted) option.textContent = `${person.name} - (Done)`;
       else if (complete) option.textContent = `${person.name} (Complete)`;
       else if (activeId && String(activeId) === personId) option.textContent = `${person.name} (Apply to All Source)`;
       else option.textContent = person.name;
