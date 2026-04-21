@@ -445,7 +445,8 @@
 
     .evaluator-table-wrap {
         max-height: 260px;
-        overflow: auto;
+        overflow-x: hidden;
+        overflow-y: auto;
         border: 1px solid var(--border-soft);
         border-radius: 18px;
         background: #fff;
@@ -453,7 +454,45 @@
 
     .evaluator-table-wrap table {
         margin-bottom: 0;
-        min-width: 1450px;
+        width: 100%;
+        min-width: 0;
+        table-layout: fixed;
+    }
+
+    .evaluator-table-wrap thead th {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background: #fff;
+        white-space: normal;
+    }
+
+    .evaluator-table-wrap th,
+    .evaluator-table-wrap td {
+        white-space: normal;
+        word-break: break-word;
+        overflow-wrap: break-word;
+        vertical-align: middle;
+    }
+
+    .evaluator-table-wrap th:nth-child(1),
+    .evaluator-table-wrap td:nth-child(1) {
+        width: 42%;
+    }
+
+    .evaluator-table-wrap th:nth-child(2),
+    .evaluator-table-wrap td:nth-child(2) {
+        width: 58%;
+    }
+
+    .evaluator-table-wrap th:nth-child(1),
+    .evaluator-table-wrap td:nth-child(1) {
+        width: 42%;
+    }
+
+    .evaluator-table-wrap th:nth-child(2),
+    .evaluator-table-wrap td:nth-child(2) {
+        width: 58%;
     }
 
     .evaluator-table-wrap thead th {
@@ -493,10 +532,10 @@
         margin-top: 4px;
         font-size: 0.92rem;
     }
-
+    
     .detail-score-grid {
         display: grid;
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 10px;
         margin-bottom: 16px;
     }
@@ -545,14 +584,36 @@
         border-bottom: 1px solid var(--border-soft);
     }
 
-    .question-table-wrap {
-        overflow-x: auto;
-    }
+        .question-table-wrap {
+            overflow-x: hidden;
+            width: 100%;
+        }
 
-    .question-table-wrap table {
-        margin-bottom: 0;
-        min-width: 600px;
-    }
+        .question-table-wrap table {
+            margin-bottom: 0;
+            width: 100%;
+            min-width: 0;
+            table-layout: fixed;
+        }
+
+        .question-table-wrap th,
+        .question-table-wrap td {
+            white-space: normal;
+            word-break: break-word;
+            overflow-wrap: break-word;
+            vertical-align: top;
+        }
+
+        .question-table-wrap th:nth-child(1),
+        .question-table-wrap td:nth-child(1) {
+            width: 90px;
+        }
+
+        .question-table-wrap th:nth-child(3),
+        .question-table-wrap td:nth-child(3) {
+            width: 110px;
+            text-align: center;
+        }
 
     .question-no-badge {
         display: inline-flex;
@@ -652,6 +713,113 @@
             overflow: visible !important;
         }
     }
+
+    #viewMoreModal .modal-body {
+        overflow-x: hidden;
+    }
+
+    #viewMoreModal .detail-box,
+    #viewMoreModal .faculty-summary-box,
+    #viewMoreModal .content-card {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    #viewMoreModal .detail-box-header {
+        align-items: flex-start;
+    }
+
+    #viewMoreModal .detail-meta {
+        white-space: normal;
+        word-break: break-word;
+        overflow-wrap: break-word;
+    }
+
+    #viewMoreModal .grade-pill,
+    #viewMoreModal .overall-pill {
+        white-space: nowrap;
+    }
+
+            @media (max-width: 991px) {
+            .sector-grid,
+            .detail-score-grid {
+                grid-template-columns: 1fr;
+            }
+
+            #viewMoreModal .modal-dialog {
+                margin: 0.75rem;
+            }
+        }
+
+        @media (max-width: 767px) {
+            .filter-toolbar .form-select,
+            .search-wrap {
+                width: 100%;
+                min-width: 100%;
+                flex: 1 1 100%;
+            }
+
+            .sector-grid,
+            .detail-score-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .action-stack {
+                align-items: stretch;
+            }
+
+            .btn-view-more,
+            .btn-print-person {
+                width: 100%;
+            }
+
+            #viewMoreModal .modal-body {
+                padding: 16px;
+            }
+
+            .question-no-badge {
+                min-width: 38px;
+                padding: 5px 8px;
+                font-size: 0.76rem;
+            }
+        }
+
+
+        .sector-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .modal-summary-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .sector-card {
+            border: 1px solid var(--border-soft);
+            background: #fff;
+            border-radius: 18px;
+            padding: 16px;
+        }
+
+        .sector-card h6 {
+            margin: 0 0 8px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            line-height: 1.45;
+        }
+
+        .sector-card h4 {
+            margin: 0;
+            font-weight: 800;
+            color: var(--text-dark);
+        }
+
+        #viewMoreModal .modal-dialog {
+    max-width: 1100px;
+}
 </style>
 
 {% endblock %}
@@ -748,7 +916,7 @@
 </div>
 
 <div class="modal fade" id="viewMoreModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+   <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">
@@ -773,6 +941,33 @@
                     </button>
                 </div>
 
+                <div class="sector-grid modal-summary-grid">
+                    <div class="sector-card">
+                        <h6> A. Management of Teaching and Learning</h6>
+                        <h4 id="modalManagementTeachingAvg">0.00</h4>
+                    </div>
+                    <div class="sector-card">
+                        <h6>B.Content Knowledge, Pedagogy, and Technology</h6>
+                        <h4 id="modalContentKnowledgeAvg">0.00</h4>
+                    </div>
+                    <div class="sector-card">
+                        <h6>C.Commitment and Transparency</h6>
+                        <h4 id="modalCommitmentTransparencyAvg">0.00</h4>
+                    </div>
+                    <div class="sector-card">
+                        <h6>Total Average Grade</h6>
+                        <h4 id="modalOverallAvg">0.00</h4>
+                    </div>
+                    <div class="sector-card">
+                        <h6>Average Total Score</h6>
+                        <h4 id="modalAverageTotalScore">0.00</h4>
+                    </div>
+                    <div class="sector-card">
+                        <h6>Computed Rating (%)</h6>
+                        <h4 id="modalComputedRating">0.00%</h4>
+                    </div>
+                </div>
+
                 <div class="content-card section-blockless">
                     <h5 class="section-title mb-3">Evaluators for This Result</h5>
 
@@ -780,8 +975,8 @@
                         <table class="table align-middle">
                             <thead>
                                 <tr>
-                                    <th style="min-width: 220px;">Evaluator Name</th>
-                                    <th style="min-width: 180px;">Department</th>
+                                    <th>Evaluator Name</th>
+                                    <th>Office / Department</th>
                                 </tr>
                             </thead>
                             <tbody id="modalEvaluatorTableBody"></tbody>
@@ -803,7 +998,7 @@
 </div>
 
 <div class="modal fade" id="batchPrintModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">
@@ -1113,6 +1308,25 @@
                         : `${item.position || 'Faculty Member'} • ${item.department || 'No Department'}`
             } • ${item.evaluator_count || 0} evaluator(s)`;
 
+            document.getElementById('modalManagementTeachingAvg').textContent =
+                toFixedGrade(getSection(item, 'management_teaching_learning'));
+
+            document.getElementById('modalContentKnowledgeAvg').textContent =
+                toFixedGrade(getSection(item, 'content_knowledge_pedagogy_technology'));
+
+            document.getElementById('modalCommitmentTransparencyAvg').textContent =
+                toFixedGrade(getSection(item, 'commitment_transparency'));
+
+            document.getElementById('modalOverallAvg').textContent =
+                toFixedGrade(getOverallValue(item));
+
+            document.getElementById('modalAverageTotalScore').textContent =
+                toFixedGrade(getAverageTotalScore(item));
+
+            document.getElementById('modalComputedRating').textContent =
+                toFixedGrade(item.computed_rating) + '%';
+
+
         const tbody = document.getElementById('modalEvaluatorTableBody');
         const detailContainer = document.getElementById('modalDetailedAnswersContainer');
 
@@ -1144,9 +1358,9 @@
                             <table class="table table-sm align-middle mb-0">
                                 <thead>
                                     <tr>
-                                        <th style="min-width: 90px;">No.</th>
+                                        <th style="width: 90px;">No.</th>
                                         <th>Benchmark Statement</th>
-                                        <th style="min-width: 110px;">Rating</th>
+                                        <th style="width: 110px;">Rating</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -1177,8 +1391,16 @@
 
                         <div class="detail-score-grid">
                             <div class="detail-score-card">
+                                <span>Total Score</span>
+                                <strong>${toFixedGrade(evaluator.total_score)}</strong>
+                            </div>
+                            <div class="detail-score-card">
                                 <span>Total Average</span>
-                               <strong>${toFixedGrade(getOverallValue(evaluator))}</strong>
+                                <strong>${toFixedGrade(getOverallValue(evaluator))}</strong>
+                            </div>
+                            <div class="detail-score-card">
+                                <span>Computed Rating</span>
+                                <strong>${toFixedGrade(evaluator.computed_rating)}%</strong>
                             </div>
                         </div>
 
@@ -1656,6 +1878,23 @@ function buildSetRatingBlock(evaluator) {
     `;
 }
 
+
+function formatPrintDate(value) {
+    if (!value) return '-';
+
+    const date = new Date(value);
+    if (isNaN(date.getTime())) return value;
+
+    return date.toLocaleString('en-PH', {
+        year: 'numeric',
+        month: 'long',
+        day: '2-digit',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+    });
+}
+
 function buildSignatureTable(evaluatorName = '', evaluatorDepartment = '', submittedAt = '', comments = '') {
     return `
         <div class="subsection-title">Other Comments and Suggestions</div>
@@ -1670,13 +1909,13 @@ function buildSignatureTable(evaluatorName = '', evaluatorDepartment = '', submi
                     <td style="width: 50%;"></td>
                 </tr>
                 <tr>
-                    <td colspan="2"><strong>Name of Supervisor:</strong> ${escapeHtml(evaluatorName || '')}</td>
+                    <td colspan="2"><strong>Name of Supervisor:</strong> ${escapeHtml(evaluatorName || '-')}</td>
                 </tr>
                 <tr>
-                    <td colspan="2"><strong>Designation:</strong> ${escapeHtml(evaluatorDepartment || '')}</td>
+                    <td colspan="2"><strong>Designation:</strong> ${escapeHtml(evaluatorDepartment || '-')}</td>
                 </tr>
                 <tr>
-                    <td colspan="2"><strong>Date:</strong> ${escapeHtml(submittedAt || '')}</td>
+                    <td colspan="2"><strong>Date:</strong> ${escapeHtml(formatPrintDate(submittedAt))}</td>
                 </tr>
             </tbody>
         </table>
@@ -2230,6 +2469,23 @@ function printSelectedBatchFromModal() {
 
 function getOverallValue(source) {
     return Number(source?.overall ?? source?.average_score ?? source?.total_average ?? source?.average ?? 0);
+}
+
+
+function formatPrintDate(value) {
+    if (!value) return '-';
+
+    const date = new Date(value);
+    if (isNaN(date.getTime())) return value;
+
+    return date.toLocaleString('en-PH', {
+        year: 'numeric',
+        month: 'long',
+        day: '2-digit',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+    });
 }
 </script>
 {% endblock %}

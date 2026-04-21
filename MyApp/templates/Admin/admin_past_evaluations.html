@@ -357,26 +357,47 @@
         color: var(--text-muted);
     }
 
-    .evaluator-table-wrap {
-        max-height: 260px;
-        overflow: auto;
-        border: 1px solid var(--border-soft);
-        border-radius: 18px;
-        background: #fff;
-    }
+        .evaluator-table-wrap {
+            max-height: 260px;
+            overflow-x: hidden;
+            overflow-y: auto;
+            border: 1px solid var(--border-soft);
+            border-radius: 18px;
+            background: #fff;
+        }
 
-    .evaluator-table-wrap table {
-        margin-bottom: 0;
-        min-width: 1450px;
-    }
+        .evaluator-table-wrap table {
+            margin-bottom: 0;
+            width: 100%;
+            min-width: 0;
+            table-layout: fixed;
+        }
 
-    .evaluator-table-wrap thead th {
-        position: sticky;
-        top: 0;
-        z-index: 2;
-        background: #fff;
-        white-space: nowrap;
-    }
+        .evaluator-table-wrap thead th {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            background: #fff;
+            white-space: normal;
+        }
+
+        .evaluator-table-wrap th,
+        .evaluator-table-wrap td {
+            white-space: normal;
+            word-break: break-word;
+            overflow-wrap: break-word;
+            vertical-align: middle;
+        }
+
+        .evaluator-table-wrap th:nth-child(1),
+        .evaluator-table-wrap td:nth-child(1) {
+            width: 42%;
+        }
+
+        .evaluator-table-wrap th:nth-child(2),
+        .evaluator-table-wrap td:nth-child(2) {
+            width: 58%;
+        }
 
     .detail-box {
         border: 1px solid var(--border-soft);
@@ -460,12 +481,34 @@
     }
 
     .question-table-wrap {
-        overflow-x: auto;
+        overflow-x: hidden;
+        width: 100%;
     }
 
     .question-table-wrap table {
         margin-bottom: 0;
-        min-width: 600px;
+        width: 100%;
+        min-width: 0;
+        table-layout: fixed;
+    }
+
+    .question-table-wrap th,
+    .question-table-wrap td {
+        white-space: normal;
+        word-break: break-word;
+        overflow-wrap: break-word;
+        vertical-align: top;
+    }
+
+    .question-table-wrap th:nth-child(1),
+    .question-table-wrap td:nth-child(1) {
+        width: 90px;
+    }
+
+    .question-table-wrap th:nth-child(3),
+    .question-table-wrap td:nth-child(3) {
+        width: 110px;
+        text-align: center;
     }
 
     .question-no-badge {
@@ -564,6 +607,14 @@
             overflow: visible !important;
         }
     }
+
+    .modal-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+} 
+
+#viewMoreModal .modal-dialog {
+    max-width: 1100px;
+}
 </style>
 {% endblock %}
 
@@ -602,7 +653,8 @@
         <div class="mini-stat">
             <h6>Total Records</h6>
             <h3 id="totalFacultyCount">{{ total_count|default:0 }}</h3>
-            <small>Total faculty results with submitted evaluations</small>        </div>
+            <small>Total archived results with submitted evaluations</small>
+        </div>
     </div>
     <div class="col-md-3">
         <div class="mini-stat">
@@ -640,6 +692,8 @@
         <div class="filter-toolbar">
             <select id="resultTypeFilter" class="form-select">
                 <option value="all">All Results</option>
+                <option value="office">Office Only</option>
+                <option value="head">Department Heads Only</option>
                 <option value="faculty">Faculty Only</option>
             </select>
 
@@ -689,7 +743,7 @@
                     </button>
                 </div>
 
-                <div class="sector-grid">
+               <div class="sector-grid modal-summary-grid">
                     <div class="sector-card">
                         <h6>Management of Teaching and Learning</h6>
                         <h4 id="modalManagementTeachingAvg">0.00</h4>
@@ -723,14 +777,8 @@
                         <table class="table align-middle">
                             <thead>
                                 <tr>
-                                    <th style="min-width: 220px;">Evaluator Name</th>
-                                    <th style="min-width: 180px;">Department</th>
-                                    <th style="min-width: 220px;">Management of Teaching and Learning</th>
-                                    <th style="min-width: 250px;">Content Knowledge, Pedagogy, and Technology</th>
-                                    <th style="min-width: 200px;">Commitment and Transparency</th>
-                                    <th style="min-width: 130px;">Total Score</th>
-                                    <th style="min-width: 150px;">Total Average</th>
-                                    <th style="min-width: 150px;">Computed Rating</th>
+                                    <th>Evaluator Name</th>
+                                    <th>Office / Department</th>
                                 </tr>
                             </thead>
                             <tbody id="modalEvaluatorTableBody"></tbody>
@@ -830,9 +878,9 @@
     };
 
     const historyResultsElement = document.getElementById('history-results-data');
-    const facultyResults = historyResultsElement ? JSON.parse(historyResultsElement.textContent || '[]') : [];
+    const historyResults = historyResultsElement ? JSON.parse(historyResultsElement.textContent || '[]') : [];
 
-    const facultyResultsBody = document.getElementById('historyResultsBody');
+    const historyResultsBody = document.getElementById('historyResultsBody');
     const facultySearchInput = document.getElementById('facultySearchInput');
     const resultTypeFilter = document.getElementById('resultTypeFilter');
     const modalPrintPersonBtn = document.getElementById('modalPrintPersonBtn');
@@ -845,6 +893,14 @@
 
     function getSection(source, key) {
         return Number((source && source.sections && source.sections[key]) || 0);
+    }
+
+    function getOverallValue(source) {
+        return Number(source?.overall ?? source?.average_score ?? source?.total_average ?? source?.average ?? 0);
+    }
+
+    function getAverageTotalScore(source) {
+        return Number(source?.average_total_score ?? source?.average_total ?? source?.avg_total_score ?? 0);
     }
 
     function normalizeSectionCode(sectionName = '') {
@@ -898,12 +954,41 @@
             .replace(/'/g, '&#039;');
     }
 
+    function getItemRoleLabel(item) {
+        if ((item.result_type || '') === 'office') return 'Evaluation Officer';
+        if ((item.result_type || '') === 'head') return 'Department Head';
+        return 'Faculty Member';
+    }
+
+    function getPrintRoleTitle(item) {
+        if ((item.result_type || '') === 'office') return "Office Evaluation Summary Report";
+        if ((item.result_type || '') === 'head') return "Department Head Evaluation Summary Report";
+        return "Evaluation Summary Report";
+    }
+
+    function getPrintRoleSubtitle(item) {
+        if ((item.result_type || '') === 'office') return "Supervisor's Evaluation of Evaluation Officer";
+        if ((item.result_type || '') === 'head') return "Supervisor's Evaluation of Department Head";
+        return "Supervisor's Evaluation of Faculty";
+    }
+
+    function getPrintEvaluateeLabel(item) {
+        if ((item.result_type || '') === 'office') return "Name of Officer being Evaluated";
+        if ((item.result_type || '') === 'head') return "Name of Department Head being Evaluated";
+        return "Name of Faculty being Evaluated";
+    }
+
+    function getPrintUnitLabel(item) {
+        if ((item.result_type || '') === 'office') return "Office";
+        return "College/Department";
+    }
+
     function renderStats() {
-        const values = facultyResults
-            .map(item => Number(item.overall || 0))
+        const values = historyResults
+            .map(item => getOverallValue(item))
             .filter(value => value > 0);
 
-        const total = facultyResults.length;
+        const total = historyResults.length;
         const highest = values.length ? Math.max(...values) : 0;
         const lowest = values.length ? Math.min(...values) : 0;
         const average = values.length
@@ -925,19 +1010,20 @@
         const keyword = facultySearchInput ? facultySearchInput.value.trim().toLowerCase() : '';
         const selectedType = resultTypeFilter ? resultTypeFilter.value : 'all';
 
-        return facultyResults.filter(item => {
+        return historyResults.filter(item => {
             const matchesKeyword = String(item.name || '').toLowerCase().includes(keyword);
-            const matchesType = selectedType === 'all' || selectedType === 'faculty';            return matchesKeyword && matchesType;
+            const matchesType = selectedType === 'all' || (item.result_type || '') === selectedType;
+            return matchesKeyword && matchesType;
         });
     }
 
     function renderFacultyTable() {
-        if (!facultyResultsBody) return;
+        if (!historyResultsBody) return;
 
         const filtered = getFilteredResults();
 
         if (!filtered.length) {
-            facultyResultsBody.innerHTML = `
+            historyResultsBody.innerHTML = `
                 <tr>
                     <td colspan="6">
                         <div class="empty-state">
@@ -950,15 +1036,15 @@
             return;
         }
 
-        facultyResultsBody.innerHTML = filtered.map(item => `
+        historyResultsBody.innerHTML = filtered.map(item => `
             <tr>
                 <td>
                     <div class="faculty-name-box">
                         <strong>${escapeHtml(item.name || 'Unnamed')}</strong>
-                        <small>${escapeHtml(item.department || 'No Department')}</small>
+                        <small>${escapeHtml(getItemRoleLabel(item))} • ${escapeHtml(item.department || 'No Department')}</small>
                     </div>
                 </td>
-                <td><span class="overall-pill">${toFixedGrade(item.overall)}</span></td>
+                <td><span class="overall-pill">${toFixedGrade(getOverallValue(item))}</span></td>
                 <td><span class="grade-pill">${toFixedGrade(getSection(item, 'management_teaching_learning'))}</span></td>
                 <td><span class="grade-pill">${toFixedGrade(getSection(item, 'content_knowledge_pedagogy_technology'))}</span></td>
                 <td><span class="grade-pill">${toFixedGrade(getSection(item, 'commitment_transparency'))}</span></td>
@@ -967,6 +1053,10 @@
                         <button type="button" class="btn-view-more" onclick="openViewMore(${item.id})">
                             <i class="bi bi-eye"></i>
                             <span>View More</span>
+                        </button>
+                        <button type="button" class="btn-print-person" onclick="printSinglePerson(${item.id})">
+                            <i class="bi bi-printer"></i>
+                            <span>Print</span>
                         </button>
                     </div>
                 </td>
@@ -991,16 +1081,14 @@
     }
 
     function openViewMore(id) {
-        const item = facultyResults.find(entry => Number(entry.id) === Number(id));
+        const item = historyResults.find(entry => Number(entry.id) === Number(id));
         if (!item) return;
 
         currentModalItem = item;
 
-        document.getElementById('modalFacultyName').textContent =
-            `${item.name || 'Unnamed'}`;
-            
+        document.getElementById('modalFacultyName').textContent = `${item.name || 'Unnamed'}`;
         document.getElementById('modalFacultySubtitle').textContent =
-            `${item.department || 'No Department'} • ${item.evaluator_count || 0} evaluator(s)`;
+            `${getItemRoleLabel(item)} • ${item.department || 'No Department'} • ${item.evaluator_count || 0} evaluator(s)`;
 
         document.getElementById('modalManagementTeachingAvg').textContent =
             toFixedGrade(getSection(item, 'management_teaching_learning'));
@@ -1012,10 +1100,10 @@
             toFixedGrade(getSection(item, 'commitment_transparency'));
 
         document.getElementById('modalOverallAvg').textContent =
-            toFixedGrade(item.overall);
+            toFixedGrade(getOverallValue(item));
 
         document.getElementById('modalAverageTotalScore').textContent =
-            toFixedGrade(item.average_total_score);
+            toFixedGrade(getAverageTotalScore(item));
 
         document.getElementById('modalComputedRating').textContent =
             toFixedGrade(item.computed_rating) + '%';
@@ -1037,12 +1125,6 @@
                 <tr>
                     <td><strong>${escapeHtml(evaluator.evaluator_name || 'Unknown Evaluator')}</strong></td>
                     <td>${escapeHtml(evaluator.evaluator_department || '')}</td>
-                    <td>${toFixedGrade(getSection(evaluator, 'management_teaching_learning'))}</td>
-                    <td>${toFixedGrade(getSection(evaluator, 'content_knowledge_pedagogy_technology'))}</td>
-                    <td>${toFixedGrade(getSection(evaluator, 'commitment_transparency'))}</td>
-                    <td>${toFixedGrade(evaluator.total_score)}</td>
-                    <td><span class="overall-pill">${toFixedGrade(evaluator.overall)}</span></td>
-                    <td><span class="overall-pill">${toFixedGrade(evaluator.computed_rating)}%</span></td>
                 </tr>
             `).join('');
 
@@ -1095,7 +1177,7 @@
                             </div>
                             <div class="detail-score-card">
                                 <span>Total Average</span>
-                                <strong>${toFixedGrade(evaluator.overall)}</strong>
+                                <strong>${toFixedGrade(getOverallValue(evaluator))}</strong>
                             </div>
                             <div class="detail-score-card">
                                 <span>Computed Rating</span>
@@ -1142,9 +1224,11 @@
 
                 .doc-header {
                     text-align: center;
-                    margin-bottom: 18px;
-                    border-bottom: 2px solid #7f1d2d;
-                    padding-bottom: 10px;
+                    margin-bottom: 16px;
+                    padding: 12px 12px 10px;
+                    background: linear-gradient(135deg, #fff7f9, #fdecef);
+                    border: 1px solid #edd5db;
+                    border-radius: 12px;
                 }
 
                 .doc-header h1 {
@@ -1152,14 +1236,14 @@
                     margin: 0 0 4px;
                     font-weight: 700;
                     text-transform: uppercase;
-                    color: #5f1020;
+                    color: #7f1d2d;
                     letter-spacing: 0.5px;
                 }
 
                 .doc-header h2 {
                     font-size: 12pt;
                     margin: 0;
-                    font-weight: 400;
+                    font-weight: 700;
                     color: #374151;
                 }
 
@@ -1178,8 +1262,8 @@
                 }
 
                 .instruction-box {
-                    border: 1px solid #d7dce3;
-                    background: #fafafa;
+                    border: 1px solid #e6d8dd;
+                    background: #fff8fa;
                     border-radius: 8px;
                     padding: 10px 12px;
                     margin: 8px 0 16px;
@@ -1200,7 +1284,7 @@
                 }
 
                 th {
-                    background: #f3f4f6;
+                    background: #f7eef1;
                     font-weight: 700;
                     text-align: left;
                     color: #1f2937;
@@ -1249,83 +1333,113 @@
                 }
 
                 .signature-table td {
-                    border: 1px solid #bfc8d4;
-                    font-size: 10.6pt;
+                    padding: 4px 8px;
                     vertical-align: middle;
                 }
 
+                .compact-signature-table td {
+                    height: auto !important;
+                }
+
+                .compact-signature-table tr:first-child td {
+                    height: 42px !important;
+                    padding-top: 10px !important;
+                    padding-bottom: 4px !important;
+                    vertical-align: bottom !important;
+                }
+
+                .compact-signature-table tr:not(:first-child) td {
+                    padding-top: 4px !important;
+                    padding-bottom: 4px !important;
+                }
+
+                .signature-cell {
+                    text-align: center !important;
+                }
+
                 .signature-line {
+                    display: block;
+                    width: 100%;
                     border-top: 1px solid #000;
                     padding-top: 4px;
-                    text-align: center;
+                    text-align: center !important;
                     font-size: 10pt;
+                    line-height: 1.2;
+                    box-sizing: border-box;
                 }
 
                 .page-break {
                     page-break-before: always;
                 }
 
-                .faculty-info-card {
-                    border: 1px solid #cfd6df;
-                    border-radius: 10px;
+                .footer-note {
+                    margin-top: 20px;
+                    font-size: 10pt;
+                    color: #6b7280;
+                    text-align: right;
+                }
+
+                .faculty-info-print {
+                    border: 1px solid #ead5db;
+                    border-radius: 12px;
                     overflow: hidden;
                     margin-bottom: 16px;
+                    background: #fff;
                 }
 
-                .faculty-info-header {
-                    background: #f7ecef;
-                    color: #5f1020;
-                    font-weight: 700;
+                .faculty-info-print-header {
+                    background: linear-gradient(135deg, #fff2f6, #fdecef);
+                    color: #7f1d2d;
+                    font-weight: 800;
                     padding: 10px 12px;
-                    border-bottom: 1px solid #cfd6df;
+                    border-bottom: 1px solid #ead5db;
                 }
 
-                .faculty-info-grid {
-                    display: grid;
-                    grid-template-columns: 1fr 1fr;
-                }
-
-                .faculty-info-item {
+                .faculty-info-print-body {
                     padding: 10px 12px;
-                    border-right: 1px solid #e5e7eb;
-                    border-bottom: 1px solid #e5e7eb;
                 }
 
-                .faculty-info-item:nth-child(2n) {
-                    border-right: none;
-                }
-
-                .faculty-info-label {
-                    font-size: 9.6pt;
-                    color: #6b7280;
-                    font-weight: 700;
-                    margin-bottom: 4px;
-                }
-
-                .faculty-info-value {
+                .faculty-info-print-table td {
+                    border: none;
+                    padding: 6px 4px;
                     font-size: 10.8pt;
-                    color: #111827;
-                    font-weight: 600;
-                    min-height: 18px;
+                }
+
+                .faculty-info-print-table td:first-child {
+                    width: 38%;
+                    font-weight: 700;
+                }
+
+                .set-rating-box {
+                    margin-top: 14px;
+                    margin-bottom: 16px;
+                    border: 1px solid #ead5db;
+                    border-radius: 12px;
+                    background: linear-gradient(135deg, #fff8fa, #fff1f4);
+                    padding: 12px 14px;
+                }
+
+                .set-rating-title {
+                    color: #7f1d2d;
+                    font-size: 12pt;
+                    font-weight: 800;
+                    margin-bottom: 8px;
+                    text-transform: uppercase;
+                }
+
+                .set-rating-formula {
+                    font-size: 10.8pt;
+                    margin: 6px 0;
+                }
+
+                .set-rating-final {
+                    margin-top: 8px;
+                    font-size: 12pt;
+                    font-weight: 800;
+                    color: #5f1020;
                 }
             </style>
         `;
-    }
-
-    function evaluatorTypeLabel() {
-        return 'Supervisor';
-    }
-
-    function evaluateeTypeLabel(item) {
-        return 'Faculty';
-    }
-
-    function getOrderedSectionsForPrint() {
-        return [
-            'management_teaching_learning',
-            'content_knowledge_pedagogy_technology',
-            'commitment_transparency'
-        ];
     }
 
     function buildRatingScaleTable() {
@@ -1383,68 +1497,56 @@
             9: 'Learning plan; Course syllabus; Classroom observation; Informal interview with students; Lecture notes and presentations; LMS logs',
             10: 'Course syllabus; Learning plan; Classroom observation; Informal interview with students; LMS logs; Multimedia lecture materials',
             11: 'Course syllabus; Learning plan; Assessment tools and rubrics; Exam and quiz samples; Graded student work samples; LMS records',
-            12: 'Course syllabus; Learning plan; IMs developed by the faculty; Classroom observation',
-            13: 'Consultation logs; Messages; Advising records; Student interview',
-            14: 'Checked student outputs; Feedback logs; LMS comments',
-            15: 'Rubrics; Grading criteria; Course guide'
+            12: 'Course syllabus; Learning plan; IMs developed by the faculty; Classroom observation; Informal interview with students',
+            13: 'Faculty consultation log; Advisory records; LMS logs; Emails or official correspondence',
+            14: 'Graded student work samples; Assessment tools and rubrics; Informal interview with students; LMS logs; Emails or official correspondence',
+            15: 'Faculty consultation log; Advising reports; Course syllabus; Assessment tools and rubrics; Informal interview with students; LMS records; Grade sheets and records'
         };
-        return means[questionNumber] || 'Supporting documents and observation';
+        return means[Number(questionNumber)] || '-';
     }
 
     function buildFacultyInfoBlock(item, evaluator = null) {
-        const evaluatorType = evaluatorTypeLabel();
-
         return `
-            <div class="faculty-info-card">
-                <div class="faculty-info-header">Faculty Information</div>
-                <div class="faculty-info-grid">
-                    <div class="faculty-info-item">
-                        <div class="faculty-info-label">Academic Year</div>
-                        <div class="faculty-info-value">${escapeHtml(item.academic_year || '-')}</div>
-                    </div>
-                    <div class="faculty-info-item">
-                        <div class="faculty-info-label">Semester</div>
-                        <div class="faculty-info-value">${escapeHtml(item.semester || '-')}</div>
-                    </div>
-
-                    <div class="faculty-info-item">
-                        <div class="faculty-info-label">Name of Evaluatee</div>
-                        <div class="faculty-info-value">${escapeHtml(item.name || '-')}</div>
-                    </div>
-                    <div class="faculty-info-item">
-                        <div class="faculty-info-label">Type</div>
-                        <div class="faculty-info-value">${escapeHtml(evaluateeTypeLabel(item))}</div>
-                    </div>
-
-                    <div class="faculty-info-item">
-                        <div class="faculty-info-label">Department</div>
-                        <div class="faculty-info-value">${escapeHtml(item.department || '-')}</div>
-                    </div>
-                    <div class="faculty-info-item">
-                        <div class="faculty-info-label">Schedule Title</div>
-                        <div class="faculty-info-value">${escapeHtml(item.title || '-')}</div>
-                    </div>
-
-                    <div class="faculty-info-item">
-                        <div class="faculty-info-label">Evaluator Name</div>
-                        <div class="faculty-info-value">${escapeHtml(evaluator?.evaluator_name || '-')}</div>
-                    </div>
-                    <div class="faculty-info-item">
-                        <div class="faculty-info-label">Evaluator Type</div>
-                        <div class="faculty-info-value">${escapeHtml(evaluator ? evaluatorType : '-')}</div>
-                    </div>
-
-                    <div class="faculty-info-item">
-                        <div class="faculty-info-label">Evaluator Department</div>
-                        <div class="faculty-info-value">${escapeHtml(evaluator?.evaluator_department || '-')}</div>
-                    </div>
-                    <div class="faculty-info-item">
-                        <div class="faculty-info-label">Date Submitted</div>
-                        <div class="faculty-info-value">${escapeHtml(evaluator?.submitted_at || '-')}</div>
-                    </div>
+            <div class="faculty-info-print">
+                <div class="faculty-info-print-header">A. Information (to be accomplished by the Designated Office)</div>
+                <div class="faculty-info-print-body">
+                    <table class="faculty-info-print-table">
+                        <tr>
+                            <td>${getPrintEvaluateeLabel(item)}</td>
+                            <td>: ${escapeHtml(item.name || '-')}</td>
+                        </tr>
+                        <tr>
+                            <td>Academic Rank / Position</td>
+                            <td>: __________________________</td>
+                        </tr>
+                        <tr>
+                            <td>${getPrintUnitLabel(item)}</td>
+                            <td>: ${escapeHtml(item.department || '-')}</td>
+                        </tr>
+                        <tr>
+                            <td>Course Code/Title</td>
+                            <td>: __________________________</td>
+                        </tr>
+                        <tr>
+                            <td>Program Year</td>
+                            <td>: __________________________</td>
+                        </tr>
+                        <tr>
+                            <td>Semester or Term/Academic Year</td>
+                            <td>: ${escapeHtml(item.semester || '-')} / ${escapeHtml(item.academic_year || '-')}</td>
+                        </tr>
+                    </table>
                 </div>
             </div>
         `;
+    }
+
+    function getOrderedSectionsForPrint() {
+        return [
+            'management_teaching_learning',
+            'content_knowledge_pedagogy_technology',
+            'commitment_transparency'
+        ];
     }
 
     function buildDetailedSectionTables(evaluator) {
@@ -1454,7 +1556,7 @@
         let content = `
             <div class="subsection-title">Instruction</div>
             <div class="instruction-box">
-                Carefully read each benchmark statement and rate the faculty member based on the appropriate rating scale.
+                Carefully read each benchmark statement and rate the person being evaluated based on the appropriate rating scale.
                 The Suggested Means for Verification column may serve as a guide in conducting an objective assessment.
             </div>
 
@@ -1521,27 +1623,54 @@
         return content;
     }
 
+    function buildSetRatingBlock(evaluator) {
+        return `
+            <div class="set-rating-box">
+                <div class="set-rating-title">SET Rating Computation</div>
+                <div class="set-rating-formula"><strong>Total Score:</strong> ${toFixedGrade(evaluator.total_score)}</div>
+                <div class="set-rating-formula"><strong>Formula:</strong> Rating = (Total Score / 75) × 100</div>
+                <div class="set-rating-final">COMPUTED RATING: ${toFixedGrade(evaluator.computed_rating)}%</div>
+            </div>
+        `;
+    }
+
+    function formatPrintDate(value) {
+        if (!value) return '-';
+
+        const date = new Date(value);
+        if (isNaN(date.getTime())) return value;
+
+        return date.toLocaleString('en-PH', {
+            year: 'numeric',
+            month: 'long',
+            day: '2-digit',
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+        });
+    }
+
     function buildSignatureTable(evaluatorName = '', evaluatorDepartment = '', submittedAt = '', comments = '') {
         return `
             <div class="subsection-title">Other Comments and Suggestions</div>
             <div class="comment-box-print">${comments ? escapeHtml(comments) : '&nbsp;'}</div>
 
-            <table class="signature-table">
+            <table class="signature-table compact-signature-table">
                 <tbody>
                     <tr>
-                        <td style="width: 50%;"><br><br>
+                        <td style="width: 50%;" class="signature-cell"><br><br>
                             <div class="signature-line">Signature of Supervisor</div>
                         </td>
                         <td style="width: 50%;"></td>
                     </tr>
                     <tr>
-                        <td colspan="2"><strong>Name of Supervisor:</strong> ${escapeHtml(evaluatorName || '')}</td>
+                        <td colspan="2"><strong>Name of Supervisor:</strong> ${escapeHtml(evaluatorName || '-')}</td>
                     </tr>
                     <tr>
-                        <td colspan="2"><strong>Designation:</strong> ${escapeHtml(evaluatorDepartment || '')}</td>
+                        <td colspan="2"><strong>Designation:</strong> ${escapeHtml(evaluatorDepartment || '-')}</td>
                     </tr>
                     <tr>
-                        <td colspan="2"><strong>Date:</strong> ${escapeHtml(submittedAt || '')}</td>
+                        <td colspan="2"><strong>Date:</strong> ${escapeHtml(formatPrintDate(submittedAt))}</td>
                     </tr>
                 </tbody>
             </table>
@@ -1552,12 +1681,11 @@
         const evaluatorPages = (item.evaluators || []).map((evaluator, index) => `
             <div class="${index > 0 ? 'page-break' : ''}">
                 <div class="doc-header">
-                    <h1>Evaluation Summary Report</h1>
-                    <h2>Supervisor's Evaluation of Faculty</h2>
+                    <h1>${escapeHtml(getPrintRoleTitle(item))}</h1>
+                    <h2>${escapeHtml(getPrintRoleSubtitle(item))}</h2>
                 </div>
 
                 ${buildFacultyInfoBlock(item, evaluator)}
-
                 ${buildRatingScaleTable()}
 
                 <div class="subsection-title">Summary</div>
@@ -1581,17 +1709,13 @@
                         </tr>
                         <tr>
                             <th>Total Average</th>
-                            <td class="rating-score-col">${toFixedGrade(evaluator.overall)}</td>
-                        </tr>
-                        <tr class="computed-rating-row">
-                            <th>Computed Rating</th>
-                            <td class="rating-score-col computed-rating-value">${toFixedGrade(evaluator.computed_rating)}%</td>
+                            <td class="rating-score-col">${toFixedGrade(getOverallValue(evaluator))}</td>
                         </tr>
                     </tbody>
                 </table>
 
                 ${buildDetailedSectionTables(evaluator)}
-
+                ${buildSetRatingBlock(evaluator)}
                 ${buildSignatureTable(
                     evaluator.evaluator_name || '',
                     evaluator.evaluator_department || '',
@@ -1604,12 +1728,49 @@
         return `
             <html>
             <head>
-                <title>Evaluation Summary Report - ${escapeHtml(item.name || 'Evaluatee')}</title>
+                <title>${escapeHtml(getPrintRoleTitle(item))} - ${escapeHtml(item.name || 'Evaluatee')}</title>
                 ${buildDocumentStyles()}
             </head>
             <body>
                 <div class="doc-shell">
-                    ${evaluatorPages}
+                    ${evaluatorPages || `
+                        <div class="doc-header">
+                            <h1>${escapeHtml(getPrintRoleTitle(item))}</h1>
+                            <h2>${escapeHtml(getPrintRoleSubtitle(item))}</h2>
+                        </div>
+
+                        ${buildFacultyInfoBlock(item, null)}
+                        ${buildRatingScaleTable()}
+
+                        <div class="subsection-title">Summary</div>
+                        <table>
+                            <tbody>
+                                <tr>
+                                    <th style="width: 70%;">A. Management of Teaching and Learning</th>
+                                    <td class="rating-score-col">${toFixedGrade(getSection(item, 'management_teaching_learning'))}</td>
+                                </tr>
+                                <tr>
+                                    <th>B. Content Knowledge, Pedagogy, and Technology</th>
+                                    <td class="rating-score-col">${toFixedGrade(getSection(item, 'content_knowledge_pedagogy_technology'))}</td>
+                                </tr>
+                                <tr>
+                                    <th>C. Commitment and Transparency</th>
+                                    <td class="rating-score-col">${toFixedGrade(getSection(item, 'commitment_transparency'))}</td>
+                                </tr>
+                                <tr>
+                                    <th>Total Score</th>
+                                    <td class="rating-score-col">${toFixedGrade(getAverageTotalScore(item))}</td>
+                                </tr>
+                                <tr>
+                                    <th>Total Average</th>
+                                    <td class="rating-score-col">${toFixedGrade(getOverallValue(item))}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        ${buildSetRatingBlock({ total_score: getAverageTotalScore(item), computed_rating: item.computed_rating || 0 })}
+                        ${buildSignatureTable('', '', '', '')}
+                    `}
                 </div>
             </body>
             </html>
@@ -1635,16 +1796,16 @@
         };
     }
 
-        function printSinglePerson(id) {
-            const item = facultyResults.find(entry => Number(entry.id) === Number(id));
+    function printSinglePerson(id) {
+        const item = historyResults.find(entry => Number(entry.id) === Number(id));
 
-            if (!item) {
-                alert('Result not found.');
-                return;
-            }
-
-            openPrintWindow(buildSinglePersonPrintHtml(item));
+        if (!item) {
+            alert('Result not found.');
+            return;
         }
+
+        openPrintWindow(buildSinglePersonPrintHtml(item));
+    }
 
     if (facultySearchInput) {
         facultySearchInput.addEventListener('input', renderFacultyTable);
@@ -1660,7 +1821,7 @@
                 alert('No person selected.');
                 return;
             }
-           printSinglePerson(currentModalItem.id);
+            printSinglePerson(currentModalItem.id);
         });
     }
 
