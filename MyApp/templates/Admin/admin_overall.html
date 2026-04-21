@@ -22,6 +22,7 @@
 {% endblock %}
 
 {% block extra_css %}
+
 <style>
     .results-hero {
         background: linear-gradient(135deg, #fff, #fcf3f5);
@@ -97,7 +98,7 @@
     }
 
     .filter-toolbar .form-select {
-        width: 160px;
+        width: 180px;
         min-width: 160px;
         border-radius: 14px;
         min-height: 46px;
@@ -652,6 +653,7 @@
         }
     }
 </style>
+
 {% endblock %}
 
 {% block content %}
@@ -708,6 +710,8 @@
         <div class="filter-toolbar">
             <select id="resultTypeFilter" class="form-select">
                 <option value="all">All Results</option>
+                <option value="office">Office Only</option>
+                <option value="head">Department Heads Only</option>
                 <option value="faculty">Faculty Only</option>
             </select>
 
@@ -943,6 +947,14 @@
         return Number((source && source.sections && source.sections[key]) || 0);
     }
 
+    function getAverageTotalScore(source) {
+    return Number(source?.average_total_score ?? source?.average_total ?? source?.avg_total_score ?? 0);
+    }
+
+    function getOverallValue(source) {
+        return Number(source?.overall ?? source?.average_score ?? source?.total_average ?? source?.average ?? 0);
+    }
+
     function normalizeSectionCode(sectionName = '') {
         const trimmed = String(sectionName || '').trim();
         if (sectionNameToCode[trimmed]) return sectionNameToCode[trimmed];
@@ -996,7 +1008,7 @@
 
     function renderStats() {
         const values = facultyResults
-            .map(item => Number(item.overall || 0))
+            .map(item => getOverallValue(item))
             .filter(value => value > 0);
 
         const total = facultyResults.length;
@@ -1025,7 +1037,7 @@
         return facultyResults.filter(item => {
             const matchesKeyword = String(item.name || '').toLowerCase().includes(keyword);
             const matchesDepartment = selectedDepartment === 'all' || (item.department || '') === selectedDepartment;
-            const matchesType = selectedType === 'all' || selectedType === 'faculty';            return matchesKeyword && matchesDepartment && matchesType;
+            const matchesType = selectedType === 'all' || (item.result_type || '') === selectedType;            return matchesKeyword && matchesDepartment && matchesType;
         });
     }
 
@@ -1053,9 +1065,18 @@
                 <td>
                     <div class="faculty-name-box">
                         <strong>${escapeHtml(item.name || 'Unnamed')}</strong>
+                        <small>
+                            ${
+                                item.result_type === 'office'
+                                    ? `${escapeHtml(item.position || 'Evaluation Officer')} • ${escapeHtml(item.department || 'Office')}`
+                                    : item.result_type === 'head'
+                                        ? `${escapeHtml(item.position || 'Department Head')} • ${escapeHtml(item.department || 'No Department')}`
+                                        : `${escapeHtml(item.position || 'Faculty Member')} • ${escapeHtml(item.department || 'No Department')}`
+                            }
+                        </small>
                     </div>
                 </td>
-                <td><span class="overall-pill">${toFixedGrade(item.overall)}</span></td>
+                <td><span class="overall-pill">${toFixedGrade(getOverallValue(item))}</span></td>
                 <td><span class="grade-pill">${toFixedGrade(getSection(item, 'management_teaching_learning'))}</span></td>
                 <td><span class="grade-pill">${toFixedGrade(getSection(item, 'content_knowledge_pedagogy_technology'))}</span></td>
                 <td><span class="grade-pill">${toFixedGrade(getSection(item, 'commitment_transparency'))}</span></td>
@@ -1084,7 +1105,13 @@
             `${item.name || 'Unnamed'}`;
 
         document.getElementById('modalFacultySubtitle').textContent =
-            `${item.evaluator_count || 0} evaluator(s)`;
+            `${
+                item.result_type === 'office'
+                    ? `${item.position || 'Evaluation Officer'} • ${item.department || 'Office'}`
+                    : item.result_type === 'head'
+                        ? `${item.position || 'Department Head'} • ${item.department || 'No Department'}`
+                        : `${item.position || 'Faculty Member'} • ${item.department || 'No Department'}`
+            } • ${item.evaluator_count || 0} evaluator(s)`;
 
         const tbody = document.getElementById('modalEvaluatorTableBody');
         const detailContainer = document.getElementById('modalDetailedAnswersContainer');
@@ -1151,7 +1178,7 @@
                         <div class="detail-score-grid">
                             <div class="detail-score-card">
                                 <span>Total Average</span>
-                                <strong>${toFixedGrade(evaluator.overall)}</strong>
+                               <strong>${toFixedGrade(getOverallValue(evaluator))}</strong>
                             </div>
                         </div>
 
@@ -1735,7 +1762,7 @@ function buildBatchSignatories(item) {
                         </tr>
                         <tr>
                             <th>Total Average</th>
-                            <td class="rating-score-col">${toFixedGrade(evaluator.overall)}</td>
+                            <td class="rating-score-col">${toFixedGrade(getOverallValue(evaluator))}</td>
                         </tr>
 
                     </tbody>
@@ -1793,7 +1820,7 @@ function buildBatchSignatories(item) {
                                 </tr>
                                 <tr>
                                     <th>Total Average</th>
-                                    <td class="rating-score-col">${toFixedGrade(item.overall)}</td>
+                                    <td class="rating-score-col">${toFixedGrade(getOverallValue(item))}</td>
                                 </tr>
 
                             </tbody>
@@ -1848,7 +1875,7 @@ function buildBatchIndividualPrintHtml(items) {
                     <td>${escapeHtml(evaluator.evaluator_department || '-')}</td>
                     <td>${escapeHtml(evaluatorTypeLabel())}</td>
                     <td class="rating-score-col">${toFixedGrade(evaluator.total_score)}</td>
-                    <td class="rating-score-col">${toFixedGrade(evaluator.overall)}</td>
+                    <td class="rating-score-col">${toFixedGrade(getOverallValue(evaluator))}</td>
                     <td class="rating-score-col">${toFixedGrade(evaluator.computed_rating)}%</td>
                 </tr>
             `).join('');
@@ -1892,7 +1919,7 @@ function buildBatchIndividualPrintHtml(items) {
                             </tr>
                             <tr>
                                 <th>Total Average</th>
-                                <td class="rating-score-col">${toFixedGrade(item.overall)}</td>
+                                <td class="rating-score-col">${toFixedGrade(getOverallValue(item))}</td>
                             </tr>
                             <tr class="computed-rating-row">
                                 <th>Computed Rating</th>
@@ -2048,7 +2075,7 @@ function openBatchPrintModal() {
             </td>
             <td>${escapeHtml(item.name || 'Unnamed')}</td>
             <td>${escapeHtml(item.department || 'No Department')}</td>
-            <td>${toFixedGrade(item.overall)}</td>
+            <td>${toFixedGrade(getOverallValue(item))}</td>
         </tr>
     `).join('');
 
@@ -2112,7 +2139,7 @@ function printSelectedBatchFromModal() {
             rows.push([
                 item.name || '',
                 item.department || '',
-                toFixedGrade(item.overall),
+                toFixedGrade(getOverallValue(item)),
                 toFixedGrade(item.average_total_score),
                 toFixedGrade(item.computed_rating),
                 toFixedGrade(getSection(item, 'management_teaching_learning')),
@@ -2198,5 +2225,11 @@ function printSelectedBatchFromModal() {
     window.openBatchPrintModal = openBatchPrintModal;
     window.printBatchSummary = printBatchSummary;
     window.exportResultsToCSV = exportResultsToCSV;
+
+
+
+function getOverallValue(source) {
+    return Number(source?.overall ?? source?.average_score ?? source?.total_average ?? source?.average ?? 0);
+}
 </script>
 {% endblock %}

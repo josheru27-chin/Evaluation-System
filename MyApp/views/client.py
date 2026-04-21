@@ -189,7 +189,12 @@ def eval_login(request):
             f"If you did not request this, please ignore this email."
         )
 
-        html_body = render_to_string("evaluator/email_login_link.html", context)
+        if officer:
+            template_name = "evaluator/email_login_link.html"
+        else:
+            template_name = "evaluator/email_head_portal_link.html"
+
+        html_body = render_to_string(template_name, context)
 
         try:
             msg = EmailMultiAlternatives(
