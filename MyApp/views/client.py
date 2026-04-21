@@ -177,8 +177,6 @@ def eval_login(request):
         context = {
             "recipient_name": recipient_name,
             "verify_url": verify_url,
-            "expires_minutes": LOGIN_LINK_MAX_AGE // 60,
-            "open_schedule": open_schedule,
         }
 
         text_body = (
@@ -189,10 +187,7 @@ def eval_login(request):
             f"If you did not request this, please ignore this email."
         )
 
-        if officer:
-            template_name = "evaluator/email_login_link.html"
-        else:
-            template_name = "evaluator/email_head_portal_link.html"
+        template_name = "evaluator/email_login_link.html"
 
         html_body = render_to_string(template_name, context)
 
@@ -576,7 +571,7 @@ def save_evaluation(request):
 
     total_score = sum(item["rating"] for item in cleaned_answers)
     average_score = round(total_score / len(cleaned_answers), 2) if cleaned_answers else 0
-
+    
     # -------------------------------------------------
     # HEAD -> FACULTY
     # -------------------------------------------------
@@ -594,6 +589,70 @@ def save_evaluation(request):
                 "message": "Head session not found."
             }, status=403)
 
+        # 🔥 NEW: support apply to all
+        apply_to_all = bool(payload.get("apply_to_all"))
+        all_evaluatee_ids = payload.get("all_evaluatee_ids") or []
+
+        # =====================================================
+        # APPLY TO ALL (MULTIPLE FACULTY SAVE)
+        # =====================================================
+        if apply_to_all and all_evaluatee_ids:
+            saved_count = 0
+
+            with transaction.atomic():
+                faculty_members = FacultyMember.objects.select_related("department").filter(
+                    id__in=all_evaluatee_ids,
+                    schedule=open_schedule,
+                    department=logged_in_head.department
+                )
+
+                for faculty in faculty_members:
+                    evaluation, _ = FacultyEvaluation.objects.update_or_create(
+                        schedule=open_schedule,
+                        evaluator_head=logged_in_head,
+                        evaluatee_faculty=faculty,
+                        defaults={
+                            "evaluator_name": logged_in_head.name,
+                            "evaluator_department": logged_in_head.department.name,
+                            "evaluatee_name": faculty.name,
+                            "evaluatee_department": faculty.department.name,
+                            "comments": comments,
+                            "status": "submitted",
+                            "total_score": total_score,
+                            "average_score": average_score,
+                            "submitted_at": timezone.now(),
+                        }
+                    )
+
+                    FacultyEvaluationResponse.objects.filter(evaluation=evaluation).delete()
+
+                    FacultyEvaluationResponse.objects.bulk_create([
+                        FacultyEvaluationResponse(
+                            evaluation=evaluation,
+                            section_code=item["section_code"],
+                            section_name=item["section_name"],
+                            question_number=item["question_number"],
+                            question_text=item["question_text"],
+                            rating=item["rating"],
+                            evaluator_name=evaluation.evaluator_name,
+                            evaluator_department=evaluation.evaluator_department,
+                            evaluatee_name=evaluation.evaluatee_name,
+                            evaluatee_department=evaluation.evaluatee_department,
+                        )
+                        for item in cleaned_answers
+                    ])
+
+                    saved_count += 1
+
+            return JsonResponse({
+                "success": True,
+                "message": f"{saved_count} faculty evaluations saved successfully.",
+                "saved_count": saved_count,
+            })
+
+        # =====================================================
+        # SINGLE SAVE (NORMAL BEHAVIOR)
+        # =====================================================
         evaluatee_faculty = (
             FacultyMember.objects
             .select_related("department")
@@ -630,6 +689,7 @@ def save_evaluation(request):
             )
 
             FacultyEvaluationResponse.objects.filter(evaluation=evaluation).delete()
+
             FacultyEvaluationResponse.objects.bulk_create([
                 FacultyEvaluationResponse(
                     evaluation=evaluation,
@@ -651,10 +711,7 @@ def save_evaluation(request):
             "message": "Faculty evaluation saved successfully.",
             "evaluation_id": evaluation.id,
             "evaluatee_name": evaluation.evaluatee_name,
-            "total_score": total_score,
-            "average_score": average_score,
         })
-
     # -------------------------------------------------
     # OFFICER FLOW
     # -------------------------------------------------
@@ -859,4 +916,4 @@ def verify_head_login_link(request, token):
     request.session["is_head_authenticated"] = True
 
     messages.success(request, f"Welcome, {logged_in_head.name}.")
-    return redirect("head_monitor")
+    return redirect("eval_forms")

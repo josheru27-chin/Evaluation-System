@@ -512,8 +512,9 @@ def admin_manage(request):
                 schedule.notes = notes
                 schedule.save()
                 messages.success(request, "Evaluation schedule updated successfully.")
+                return redirect("admin_manage")
             else:
-                EvaluationSchedule.objects.create(
+                schedule = EvaluationSchedule.objects.create(
                     title=title,
                     academic_year=academic_year,
                     semester=semester,
@@ -522,8 +523,7 @@ def admin_manage(request):
                     notes=notes,
                 )
                 messages.success(request, "Evaluation schedule created successfully.")
-
-            return redirect("admin_manage")
+                return redirect(f"{reverse('admin_department')}?schedule={schedule.id}")
 
         elif action == "delete_schedule":
             schedule_id = request.POST.get("schedule_id")

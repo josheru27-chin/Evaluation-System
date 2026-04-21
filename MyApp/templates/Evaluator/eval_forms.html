@@ -1936,10 +1936,17 @@
 
   saveComments();
 
+  const activeLiveSourceId = getActiveLiveSourceId();
+  const isApplyToAllActive = !!activeLiveSourceId && String(activeLiveSourceId) === String(evaluateeId);
+
   const payload = {
     evaluatee_id: evaluateeId,
     comments: commentsData[currentCategory]?.[evaluateeId] || "",
-    answers: ratings[currentCategory]?.[evaluateeId] || {}
+    answers: ratings[currentCategory]?.[evaluateeId] || {},
+    apply_to_all: isApplyToAllActive,
+    all_evaluatee_ids: isApplyToAllActive
+      ? getCategoryEvaluatees(currentCategory).map(person => String(person.id))
+      : []
   };
 
   const oldText = submitBtn ? submitBtn.textContent : "Next Evaluatee";
