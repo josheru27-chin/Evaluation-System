@@ -1562,27 +1562,6 @@
             </div>
            <div class="detail-score-grid">
               <div class="detail-score-card">
-                <span>Management of Teaching and Learning</span>
-                <strong class="${Number(sections.management_teaching_learning || 0) <= 0 ? 'zero-average' : ''}">
-                  ${toFixedGrade(Number(sections.management_teaching_learning || 0))}
-                </strong>
-              </div>
-
-              <div class="detail-score-card">
-                <span>Content Knowledge, Pedagogy, and Technology</span>
-                <strong class="${Number(sections.content_knowledge_pedagogy_technology || 0) <= 0 ? 'zero-average' : ''}">
-                  ${toFixedGrade(Number(sections.content_knowledge_pedagogy_technology || 0))}
-                </strong>
-              </div>
-
-              <div class="detail-score-card">
-                <span>Commitment and Transparency</span>
-                <strong class="${Number(sections.commitment_transparency || 0) <= 0 ? 'zero-average' : ''}">
-                  ${toFixedGrade(Number(sections.commitment_transparency || 0))}
-                </strong>
-              </div>
-
-              <div class="detail-score-card">
                 <span>Total Score</span>
                 <strong class="${totalScore <= 0 ? 'zero-average' : ''}">
                   ${toFixedGrade(totalScore)}

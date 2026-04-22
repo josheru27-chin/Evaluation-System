@@ -608,9 +608,9 @@
         }
     }
 
-    .modal-summary-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    } 
+.modal-summary-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
 
     #viewMoreModal .modal-dialog {
         max-width: 1100px;
@@ -734,18 +734,6 @@
                 </div>
 
                <div class="sector-grid modal-summary-grid">
-                    <div class="sector-card">
-                        <h6>Management of Teaching and Learning</h6>
-                        <h4 id="modalManagementTeachingAvg">0.00</h4>
-                    </div>
-                    <div class="sector-card">
-                        <h6>Content Knowledge, Pedagogy, and Technology</h6>
-                        <h4 id="modalContentKnowledgeAvg">0.00</h4>
-                    </div>
-                    <div class="sector-card">
-                        <h6>Commitment and Transparency</h6>
-                        <h4 id="modalCommitmentTransparencyAvg">0.00</h4>
-                    </div>
                     <div class="sector-card">
                         <h6>Total Average Grade</h6>
                         <h4 id="modalOverallAvg">0.00</h4>
@@ -1079,15 +1067,6 @@
         document.getElementById('modalFacultyName').textContent = `${item.name || 'Unnamed'}`;
         document.getElementById('modalFacultySubtitle').textContent =
             `${getItemRoleLabel(item)} • ${item.department || 'No Department'} • ${item.evaluator_count || 0} evaluator(s)`;
-
-        document.getElementById('modalManagementTeachingAvg').textContent =
-            toFixedGrade(getSection(item, 'management_teaching_learning'));
-
-        document.getElementById('modalContentKnowledgeAvg').textContent =
-            toFixedGrade(getSection(item, 'content_knowledge_pedagogy_technology'));
-
-        document.getElementById('modalCommitmentTransparencyAvg').textContent =
-            toFixedGrade(getSection(item, 'commitment_transparency'));
 
         document.getElementById('modalOverallAvg').textContent =
             toFixedGrade(getOverallValue(item));

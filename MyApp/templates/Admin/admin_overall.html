@@ -792,9 +792,9 @@
             margin-bottom: 18px;
         }
 
-        .modal-summary-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
+.modal-summary-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
 
         .sector-card {
             border: 1px solid var(--border-soft);
@@ -847,40 +847,12 @@
 </div>
 {% endif %}
 
-<div class="row g-4 mb-4">
-    <div class="col-md-3">
-        <div class="mini-stat">
-            <h6>Total Records</h6>
-            <h3 id="totalFacultyCount">{{ total_faculty_count|default:0 }}</h3>
-            <small>Total faculty results with submitted evaluations</small>        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="mini-stat">
-            <h6>Highest Average Grade</h6>
-            <h3 id="highestAverageGrade">{{ highest_average_grade|default:"0.00" }}</h3>
-            <small>Top overall average grade</small>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="mini-stat">
-            <h6>Lowest Average Grade</h6>
-            <h3 id="lowestAverageGrade">{{ lowest_average_grade|default:"0.00" }}</h3>
-            <small>Lowest overall average grade</small>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="mini-stat">
-            <h6>Average of All Results</h6>
-            <h3 id="overallFacultyAverage">{{ overall_faculty_average|default:"0.00" }}</h3>
-            <small>Institution-wide computed average</small>
-        </div>
-    </div>
-</div>
 
 <div class="content-card">
     <div class="faculty-search-bar">
         <div class="filter-title-wrap">
             <h5 class="section-title mb-0">Evaluation Results List</h5>
+            <p><h8 class="text-mute" id="totalFacultyCount">Total Records: <strong>{{ total_faculty_count|default:0 }}</strong></h8></p>
         </div>
 
         <div class="filter-toolbar">
@@ -950,18 +922,7 @@
                 </div>
 
                 <div class="sector-grid modal-summary-grid">
-                    <div class="sector-card">
-                        <h6> A. Management of Teaching and Learning</h6>
-                        <h4 id="modalManagementTeachingAvg">0.00</h4>
-                    </div>
-                    <div class="sector-card">
-                        <h6>B.Content Knowledge, Pedagogy, and Technology</h6>
-                        <h4 id="modalContentKnowledgeAvg">0.00</h4>
-                    </div>
-                    <div class="sector-card">
-                        <h6>C.Commitment and Transparency</h6>
-                        <h4 id="modalCommitmentTransparencyAvg">0.00</h4>
-                    </div>
+                   
                     <div class="sector-card">
                         <h6>Total Average Grade</h6>
                         <h4 id="modalOverallAvg">0.00</h4>
@@ -1330,14 +1291,6 @@
                         : `${item.position || 'Faculty Member'} • ${item.department || 'No Department'}`
             } • ${item.evaluator_count || 0} evaluator(s)`;
 
-            document.getElementById('modalManagementTeachingAvg').textContent =
-                toFixedGrade(getSection(item, 'management_teaching_learning'));
-
-            document.getElementById('modalContentKnowledgeAvg').textContent =
-                toFixedGrade(getSection(item, 'content_knowledge_pedagogy_technology'));
-
-            document.getElementById('modalCommitmentTransparencyAvg').textContent =
-                toFixedGrade(getSection(item, 'commitment_transparency'));
 
             document.getElementById('modalOverallAvg').textContent =
                 toFixedGrade(getOverallValue(item));
@@ -1549,14 +1502,17 @@
                     font-weight: 700;
                 }
 
-                .comment-box-print {
-                    border-left: 4px solid #7f1d2d;
-                    background: #faf5f6;
-                    padding: 10px 12px;
-                    margin: 10px 0 12px;
-                    min-height: 52px;
-                    white-space: pre-wrap;
-                }
+            .comment-box-print {
+                border-left: 4px solid #7f1d2d;
+                background: #faf5f6;
+                padding: 10px 12px;
+                margin: 10px 0 12px;
+                min-height: 52px;
+                white-space: pre-wrap;
+                page-break-inside: avoid;
+                break-inside: avoid;
+                break-inside: avoid-page;
+            }
 
                 .computed-rating-row th,
                 .computed-rating-row td {
@@ -1576,6 +1532,12 @@
                 .signature-table td {
                     padding: 4px 8px;
                     vertical-align: middle;
+                }
+
+                .signature-table {
+                    page-break-inside: avoid;
+                    break-inside: avoid;
+                    break-inside: avoid-page;
                 }
 
                 .compact-signature-table td {
@@ -1658,6 +1620,9 @@
                     border-radius: 12px;
                     background: linear-gradient(135deg, #fff8fa, #fff1f4);
                     padding: 12px 14px;
+                    page-break-inside: avoid;
+                    break-inside: avoid;
+                    break-inside: avoid-page;
                 }
 
                 .set-rating-title {
@@ -1678,6 +1643,12 @@
                     font-size: 12pt;
                     font-weight: 800;
                     color: #5f1020;
+                }
+
+                .print-bottom-block {
+                    page-break-inside: avoid;
+                    break-inside: avoid;
+                    break-inside: avoid-page;
                 }
             </style>
         `;
@@ -2002,43 +1973,17 @@ function buildBatchSignatories(item) {
 
                 ${buildRatingScaleTable()}
 
-                <div class="subsection-title">Summary</div>
-                <table>
-                    <tbody>
-                        <tr>
-                            <th style="width: 70%;">A. Management of Teaching and Learning</th>
-                            <td class="rating-score-col">${toFixedGrade(getSection(evaluator, 'management_teaching_learning'))}</td>
-                        </tr>
-                        <tr>
-                            <th>B. Content Knowledge, Pedagogy, and Technology</th>
-                            <td class="rating-score-col">${toFixedGrade(getSection(evaluator, 'content_knowledge_pedagogy_technology'))}</td>
-                        </tr>
-                        <tr>
-                            <th>C. Commitment and Transparency</th>
-                            <td class="rating-score-col">${toFixedGrade(getSection(evaluator, 'commitment_transparency'))}</td>
-                        </tr>
-                        <tr>
-                            <th>Total Score</th>
-                            <td class="rating-score-col">${toFixedGrade(evaluator.total_score)}</td>
-                        </tr>
-                        <tr>
-                            <th>Total Average</th>
-                            <td class="rating-score-col">${toFixedGrade(getOverallValue(evaluator))}</td>
-                        </tr>
-
-                    </tbody>
-                </table>
-
                 ${buildDetailedSectionTables(evaluator)}
 
-                ${buildSetRatingBlock(evaluator)}
-
-                ${buildSignatureTable(
-                    evaluator.evaluator_name || '',
-                    evaluator.evaluator_department || '',
-                    evaluator.submitted_at || '',
-                    evaluator.comments || ''
-                )}
+                <div class="print-bottom-block">
+                    ${buildSetRatingBlock(evaluator)}
+                    ${buildSignatureTable(
+                        evaluator.evaluator_name || '',
+                        evaluator.evaluator_department || '',
+                        evaluator.submitted_at || '',
+                        evaluator.comments || ''
+                    )}
+                </div>
             </div>
         `).join('');
 
@@ -2060,36 +2005,12 @@ function buildBatchSignatories(item) {
 
                         ${buildRatingScaleTable()}
 
-                        <div class="subsection-title">Summary</div>
-                        <table>
-                            <tbody>
-                                <tr>
-                                    <th style="width: 70%;">A. Management of Teaching and Learning</th>
-                                    <td class="rating-score-col">${toFixedGrade(getSection(item, 'management_teaching_learning'))}</td>
-                                </tr>
-                                <tr>
-                                    <th>B. Content Knowledge, Pedagogy, and Technology</th>
-                                    <td class="rating-score-col">${toFixedGrade(getSection(item, 'content_knowledge_pedagogy_technology'))}</td>
-                                </tr>
-                                <tr>
-                                    <th>C. Commitment and Transparency</th>
-                                    <td class="rating-score-col">${toFixedGrade(getSection(item, 'commitment_transparency'))}</td>
-                                </tr>
-                                <tr>
-                                    <th>Total Score</th>
-                                    <td class="rating-score-col">${toFixedGrade(item.average_total_score)}</td>
-                                </tr>
-                                <tr>
-                                    <th>Total Average</th>
-                                    <td class="rating-score-col">${toFixedGrade(getOverallValue(item))}</td>
-                                </tr>
+                       
 
-                            </tbody>
-                        </table>
-
-                        ${buildSetRatingBlock({ total_score: item.average_total_score || 0, computed_rating: item.computed_rating || 0 })}
-
-                        ${buildSignatureTable('', '', '', '')}
+                        <div class="print-bottom-block">
+                            ${buildSetRatingBlock({ total_score: item.average_total_score || 0, computed_rating: item.computed_rating || 0 })}
+                            ${buildSignatureTable('', '', '', '')}
+                        </div>
                     `}
                 </div>
             </body>
@@ -2158,35 +2079,7 @@ function buildBatchIndividualPrintHtml(items, documentTitle = 'Batch Individual 
 
                     ${buildRatingScaleTable()}
 
-                    <div class="subsection-title">Summary</div>
-                    <table>
-                        <tbody>
-                            <tr>
-                                <th style="width: 70%;">A. Management of Teaching and Learning</th>
-                                <td class="rating-score-col">${toFixedGrade(getSection(item, 'management_teaching_learning'))}</td>
-                            </tr>
-                            <tr>
-                                <th>B. Content Knowledge, Pedagogy, and Technology</th>
-                                <td class="rating-score-col">${toFixedGrade(getSection(item, 'content_knowledge_pedagogy_technology'))}</td>
-                            </tr>
-                            <tr>
-                                <th>C. Commitment and Transparency</th>
-                                <td class="rating-score-col">${toFixedGrade(getSection(item, 'commitment_transparency'))}</td>
-                            </tr>
-                            <tr>
-                                <th>Total Score</th>
-                                <td class="rating-score-col">${toFixedGrade(item.average_total_score)}</td>
-                            </tr>
-                            <tr>
-                                <th>Total Average</th>
-                                <td class="rating-score-col">${toFixedGrade(getOverallValue(item))}</td>
-                            </tr>
-                            <tr class="computed-rating-row">
-                                <th>Computed Rating</th>
-                                <td class="rating-score-col computed-rating-value">${toFixedGrade(item.computed_rating)}%</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                   
 
                     <div class="subsection-title">Evaluator Summary</div>
                     <table>
