@@ -727,9 +727,68 @@ def save_evaluation(request):
                 "success": False,
                 "message": "Officer session not found."
             }, status=403)
+            
+        apply_to_all = bool(payload.get("apply_to_all"))
+        all_evaluatee_ids = payload.get("all_evaluatee_ids") or []
 
         # OCD -> ADAA
+        # OCD -> ADAA
         if logged_in_officer.role == "OCD":
+            # APPLY TO ALL
+            if apply_to_all and all_evaluatee_ids:
+                saved_count = 0
+
+                with transaction.atomic():
+                    evaluatees = EvaluationOfficer.objects.filter(
+                        id__in=all_evaluatee_ids,
+                        schedule=open_schedule,
+                        role="ADAA"
+                    ).order_by("name")
+
+                    for evaluatee_officer in evaluatees:
+                        evaluation, _ = OfficeEvaluation.objects.update_or_create(
+                            schedule=open_schedule,
+                            evaluator_officer=logged_in_officer,
+                            evaluatee_officer=evaluatee_officer,
+                            defaults={
+                                "evaluator_name": logged_in_officer.name,
+                                "evaluator_role": logged_in_officer.role,
+                                "evaluatee_name": evaluatee_officer.name,
+                                "evaluatee_role": evaluatee_officer.role,
+                                "comments": comments,
+                                "status": "submitted",
+                                "total_score": total_score,
+                                "average_score": average_score,
+                                "submitted_at": timezone.now(),
+                            }
+                        )
+
+                        OfficeEvaluationResponse.objects.filter(evaluation=evaluation).delete()
+                        OfficeEvaluationResponse.objects.bulk_create([
+                            OfficeEvaluationResponse(
+                                evaluation=evaluation,
+                                section_code=item["section_code"],
+                                section_name=item["section_name"],
+                                question_number=item["question_number"],
+                                question_text=item["question_text"],
+                                rating=item["rating"],
+                                evaluator_name=evaluation.evaluator_name,
+                                evaluator_role=evaluation.evaluator_role,
+                                evaluatee_name=evaluation.evaluatee_name,
+                                evaluatee_role=evaluation.evaluatee_role,
+                            )
+                            for item in cleaned_answers
+                        ])
+
+                        saved_count += 1
+
+                return JsonResponse({
+                    "success": True,
+                    "message": f"{saved_count} ADAA evaluations saved successfully.",
+                    "saved_count": saved_count,
+                })
+
+            # SINGLE SAVE
             evaluatee_officer = (
                 EvaluationOfficer.objects
                 .filter(
@@ -791,7 +850,67 @@ def save_evaluation(request):
             })
 
         # ADAA -> HEAD
+        # ADAA -> HEAD
         if logged_in_officer.role == "ADAA":
+            # APPLY TO ALL
+            if apply_to_all and all_evaluatee_ids:
+                saved_count = 0
+
+                with transaction.atomic():
+                    evaluatees = (
+                        DepartmentHead.objects
+                        .select_related("department")
+                        .filter(
+                            id__in=all_evaluatee_ids,
+                            schedule=open_schedule
+                        )
+                        .order_by("department__name", "name")
+                    )
+
+                    for evaluatee_head in evaluatees:
+                        evaluation, _ = HeadEvaluation.objects.update_or_create(
+                            schedule=open_schedule,
+                            evaluator_officer=logged_in_officer,
+                            evaluatee_head=evaluatee_head,
+                            defaults={
+                                "evaluator_name": logged_in_officer.name,
+                                "evaluator_role": logged_in_officer.role,
+                                "evaluatee_name": evaluatee_head.name,
+                                "evaluatee_department": evaluatee_head.department.name,
+                                "comments": comments,
+                                "status": "submitted",
+                                "total_score": total_score,
+                                "average_score": average_score,
+                                "submitted_at": timezone.now(),
+                            }
+                        )
+
+                        HeadEvaluationResponse.objects.filter(evaluation=evaluation).delete()
+                        HeadEvaluationResponse.objects.bulk_create([
+                            HeadEvaluationResponse(
+                                evaluation=evaluation,
+                                section_code=item["section_code"],
+                                section_name=item["section_name"],
+                                question_number=item["question_number"],
+                                question_text=item["question_text"],
+                                rating=item["rating"],
+                                evaluator_name=evaluation.evaluator_name,
+                                evaluator_role=evaluation.evaluator_role,
+                                evaluatee_name=evaluation.evaluatee_name,
+                                evaluatee_department=evaluation.evaluatee_department,
+                            )
+                            for item in cleaned_answers
+                        ])
+
+                        saved_count += 1
+
+                return JsonResponse({
+                    "success": True,
+                    "message": f"{saved_count} department head evaluations saved successfully.",
+                    "saved_count": saved_count,
+                })
+
+            # SINGLE SAVE
             evaluatee_head = (
                 DepartmentHead.objects
                 .select_related("department")
@@ -848,11 +967,6 @@ def save_evaluation(request):
                 "total_score": total_score,
                 "average_score": average_score,
             })
-
-    return JsonResponse({
-        "success": False,
-        "message": "You are not authorized to save this evaluation."
-    }, status=403)
     
 
 def eval_logout(request):

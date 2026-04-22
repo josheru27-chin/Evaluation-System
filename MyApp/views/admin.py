@@ -1095,6 +1095,7 @@ def admin_login(request):
             subject = "Department Head Portal Login Link"
 
             context = {
+                "recipient_name": head.name,
                 "head": head,
                 "verify_url": verify_url,
                 "expires_minutes": LOGIN_LINK_MAX_AGE // 60,
