@@ -610,11 +610,11 @@
 
     .modal-summary-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-} 
+    } 
 
-#viewMoreModal .modal-dialog {
-    max-width: 1100px;
-}
+    #viewMoreModal .modal-dialog {
+        max-width: 1100px;
+    }
 </style>
 {% endblock %}
 
@@ -636,19 +636,9 @@
     </form>
 </div>
 
-{% if selected_schedule %}
-<div class="selected-period-card">
-    <h6><i class="bi bi-calendar2-range me-2"></i>Selected Evaluation Period</h6>
-    <p>
-        {{ selected_schedule.academic_year }} • {{ selected_schedule.semester }} • {{ selected_schedule.title }}<br>
-        <span class="small">
-            {{ selected_schedule.start_datetime|date:"M d, Y h:i A" }} to {{ selected_schedule.end_datetime|date:"M d, Y h:i A" }}
-        </span>
-    </p>
-</div>
-{% endif %}
 
-<div class="row g-4 mb-4">
+
+<div class="row g-4 mb-4 d-none">
     <div class="col-md-3">
         <div class="mini-stat">
             <h6>Total Records</h6>

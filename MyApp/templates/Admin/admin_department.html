@@ -336,38 +336,12 @@
 </div>
 
 
-<div class="row g-4 mb-4">
-    <div class="col-md-4">
-        <div class="mini-stat">
-            <h6>Total Departments</h6>
-            <h3 id="totalDepartmentsCount">{{ total_departments|default:0 }}</h3>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="mini-stat">
-            <h6>Total Faculty Members</h6>
-            <h3 id="totalFacultyCount">{{ total_faculty|default:0 }}</h3>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="mini-stat">
-            <h6>Latest Uploaded Department</h6>
-            <h3 id="latestDepartmentLabel">
-                {% if latest_department %}
-                    {{ latest_department.name }}
-                {% else %}
-                    No Department
-                {% endif %}
-            </h3>
-        </div>
-    </div>
-</div>
-
 <div class="content-card">
     <div class="table-card-header">
         <div class="left">
             <h5 class="section-title mb-0">Department List</h5>
-            <p>Search departments, review faculty members, update department details, or remove departments.</p>
+            <p><h8 class="text-mute" id="totalDepartmentsCount">No. of Departments: <strong> {{ total_departments|default:0 }}</strong></h8><br><h8 id="totalFacultyCount">No. of Faculty: <strong>{{ total_faculty|default:0 }} </strong></h8></p>
+            
         </div>
 
         <div class="toolbar-right">

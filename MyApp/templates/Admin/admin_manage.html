@@ -317,29 +317,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="row g-4 mb-4">
-    <div class="col-md-4">
-        <div class="mini-card">
-            <h6>Total Evaluation Periods</h6>
-            <h3>{{ total_periods }}</h3>
-            <small>All created faculty evaluation schedules</small>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="mini-card">
-            <h6>Currently Open</h6>
-            <h3>{{ open_periods }}</h3>
-            <small>Evaluation periods currently accepting responses</small>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="mini-card">
-            <h6>Currently Closed</h6>
-            <h3>{{ closed_periods }}</h3>
-            <small>Schedules outside the active date and time</small>
-        </div>
-    </div>
-</div>
+
 
 <div class="schedule-form-card">
     <h5 class="section-title">Set Faculty Evaluation Period</h5>
@@ -399,7 +377,7 @@
             <div class="col-12">
                 <div class="d-flex flex-wrap gap-2 mt-2">
                     <button type="submit" class="btn btn-red">
-                        <i class="bi bi-save me-1"></i> Save Evaluation Period
+                        <i class="bi bi-save me-1"></i> Save
                     </button>
                     <button type="button" class="btn btn-soft" id="resetScheduleForm">
                         <i class="bi bi-arrow-counterclockwise me-1"></i> Reset
@@ -414,7 +392,6 @@
     <div class="table-header-row">
         <div>
             <h5 class="section-title mb-0">Faculty Evaluation Period List</h5>
-            <p class="muted-note mb-0">Review, edit, and delete scheduled evaluation periods for faculty evaluation.</p>
         </div>
 
         <div class="filter-row">
@@ -430,7 +407,7 @@
             </select>
         </div>
     </div>
-
+<hr>
     <div class="table-responsive">
         <table class="table align-middle" id="scheduleTable">
             <thead>
