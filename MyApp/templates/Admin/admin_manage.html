@@ -352,7 +352,7 @@
         <div class="row g-3">
             <div class="col-md-6">
                 <label class="form-label">Evaluation Title</label>
-                <input type="text" id="evaluationTitle" name="title" class="form-control" placeholder="Evaluation Period" required>
+                <input type="text" id="evaluationTitle" name="title" class="form-control" placeholder="Evaluation Title" required>
             </div>
 
             <div class="col-md-3">
@@ -375,11 +375,13 @@
             <div class="col-md-6">
                 <label class="form-label">Opening Date and Time</label>
                 <input type="datetime-local" id="start_datetime" name="start_datetime" class="form-control" required>
+                <small class="text-muted mt-1 d-block" id="startDateHint">Cannot select past dates.</small>
             </div>
 
             <div class="col-md-6">
                 <label class="form-label">Closing Date and Time</label>
                 <input type="datetime-local" id="end_datetime" name="end_datetime" class="form-control" required>
+                <small class="text-muted mt-1 d-block" id="endDateHint">Must be at least 1 day after the opening date.</small>
             </div>
 
             <div class="col-lg-8">
@@ -584,11 +586,13 @@
                         <div class="col-md-6">
                             <label class="form-label">Opening Date and Time</label>
                             <input type="datetime-local" id="edit_start_datetime" name="start_datetime" class="form-control" required>
+                            <small class="text-muted mt-1 d-block" id="editStartDateHint">Cannot select past dates.</small>
                         </div>
 
                         <div class="col-md-6">
                             <label class="form-label">Closing Date and Time</label>
                             <input type="datetime-local" id="edit_end_datetime" name="end_datetime" class="form-control" required>
+                            <small class="text-muted mt-1 d-block" id="editEndDateHint">Must be at least 1 day after the opening date.</small>
                         </div>
 
                         <div class="col-lg-8">
@@ -718,6 +722,8 @@
             durationText.textContent = 'Select an opening and closing schedule to calculate the duration period.';
         }
         if (endInput) endInput.min = '';
+        // Re-apply min constraints after reset
+        setMinDateConstraints();
     }
 
     function filterTable() {
@@ -775,6 +781,65 @@
         fillAcademicYearOptions(editAcademicYearInput, editAcademicYearInput ? (editAcademicYearInput.getAttribute('data-current') || editAcademicYearInput.value || '') : '');
     }
 
+    // ─── Date constraint helpers ─────────────────────────────────────────────────
+
+    function toLocalISOString(date) {
+        const pad = (n) => String(n).padStart(2, '0');
+        return date.getFullYear() + '-' + pad(date.getMonth() + 1) + '-' + pad(date.getDate()) +
+               'T' + pad(date.getHours()) + ':' + pad(date.getMinutes());
+    }
+
+    function setMinDateConstraints() {
+        const now = new Date();
+        const todayLocalISO = toLocalISOString(now);
+
+        // Main form: start cannot be in the past
+        if (startInput) {
+            startInput.min = todayLocalISO;
+        }
+        // Main form: end initially cannot be in the past either
+        if (endInput) {
+            endInput.min = todayLocalISO;
+        }
+
+        // Edit modal: same rules
+        if (editStartInput) {
+            editStartInput.min = todayLocalISO;
+        }
+        if (editEndInput) {
+            editEndInput.min = todayLocalISO;
+        }
+    }
+
+    function addOneDay(dateStr) {
+        if (!dateStr) return '';
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return '';
+        d.setDate(d.getDate() + 1);
+        return toLocalISOString(d);
+    }
+
+    function updateEndMinFromStart(startEl, endEl) {
+        if (!startEl || !endEl) return;
+
+        const startVal = startEl.value;
+        if (startVal) {
+            const minEnd = addOneDay(startVal);
+            endEl.min = minEnd;
+
+            // If current end value is before the new minimum, clear it
+            if (endEl.value && new Date(endEl.value) < new Date(minEnd)) {
+                endEl.value = '';
+            }
+        } else {
+            // If start is cleared, reset end min to today
+            const now = new Date();
+            endEl.min = toLocalISOString(now);
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────────
+
     function openEditModal(button) {
         if (!button) return;
 
@@ -788,8 +853,17 @@
         if (editEndInput) editEndInput.value = button.dataset.end || '';
         if (editEvaluationNotesInput) editEvaluationNotesInput.value = button.dataset.notes || '';
 
-        if (editEndInput) {
-            editEndInput.min = button.dataset.start || '';
+        // Apply date constraints for edit modal
+        if (editStartInput) {
+            const now = new Date();
+            editStartInput.min = toLocalISOString(now);
+
+            // Set end min to 1 day after start (or today if no start)
+            if (editStartInput.value) {
+                editEndInput.min = addOneDay(editStartInput.value);
+            } else {
+                editEndInput.min = toLocalISOString(now);
+            }
         }
 
         updateEditDurationPreview();
@@ -877,6 +951,7 @@
 
     document.addEventListener('DOMContentLoaded', function () {
         generateAcademicYears();
+        setMinDateConstraints();
         updateDurationPreview();
         updateEditDurationPreview();
         filterTable();
@@ -886,9 +961,7 @@
 
         if (startInput) {
             startInput.addEventListener('change', function () {
-                if (endInput) {
-                    endInput.min = this.value || '';
-                }
+                updateEndMinFromStart(startInput, endInput);
                 updateDurationPreview();
             });
 
@@ -902,9 +975,7 @@
 
         if (editStartInput) {
             editStartInput.addEventListener('change', function () {
-                if (editEndInput) {
-                    editEndInput.min = this.value || '';
-                }
+                updateEndMinFromStart(editStartInput, editEndInput);
                 updateEditDurationPreview();
             });
 

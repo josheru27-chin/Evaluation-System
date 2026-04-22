@@ -11,11 +11,11 @@
         <i class="bi bi-printer me-1"></i> Print Summary
     </button>
 
-    <button class="btn btn-soft" type="button" id="openBatchSelectionBtn">
+    <button class="btn btn-soft" type="button" id="openBatchSelectionBtn" disabled>
         <i class="bi bi-collection me-1"></i> Batch Print
     </button>
 
-    <button class="btn btn-red" type="button" id="exportResultsBtn">
+    <button class="btn btn-red" type="button" id="exportResultsBtn" disabled>
         <i class="bi bi-file-earmark-arrow-down me-1"></i> Export Results
     </button>
 </div>
@@ -820,6 +820,14 @@
         #viewMoreModal .modal-dialog {
     max-width: 1100px;
 }
+
+    /* Disabled state for topbar action buttons */
+    #openBatchSelectionBtn:disabled,
+    #exportResultsBtn:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
 </style>
 
 {% endblock %}
@@ -1199,6 +1207,20 @@
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#039;');
+    }
+
+    function updateActionButtonsState() {
+        const hasData = facultyResults.length > 0;
+        
+        if (openBatchSelectionBtn) {
+            openBatchSelectionBtn.disabled = !hasData;
+        }
+        if (exportResultsBtn) {
+            exportResultsBtn.disabled = !hasData;
+        }
+        if (printBatchBtn) {
+            printBatchBtn.disabled = !hasData;
+        }
     }
 
     function renderStats() {
@@ -2456,8 +2478,23 @@ function printSelectedBatchFromModal() {
         });
     }
 
+    function updateActionButtonStates() {
+        const hasData = facultyResults.length > 0;
+
+        if (openBatchSelectionBtn) {
+            openBatchSelectionBtn.disabled = !hasData;
+            openBatchSelectionBtn.title = hasData ? '' : 'No evaluation results available';
+        }
+
+        if (exportResultsBtn) {
+            exportResultsBtn.disabled = !hasData;
+            exportResultsBtn.title = hasData ? '' : 'No evaluation results available';
+        }
+    }
+
     renderStats();
     renderFacultyTable();
+    updateActionButtonStates();
 
     window.openViewMore = openViewMore;
     window.printSinglePerson = printSinglePerson;

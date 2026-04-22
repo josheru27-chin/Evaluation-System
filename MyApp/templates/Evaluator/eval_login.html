@@ -504,7 +504,7 @@
         }
 
         .modal-body.custom-modal-body {
-            padding: 8px 22px 22px;
+            padding:10px;
         }
 
         .modal-footer.custom-modal-footer {
@@ -553,6 +553,8 @@
             font-size: 0.94rem;
             line-height: 1.7;
             margin-bottom: 0;
+            word-break: break-word;
+            overflow-wrap: anywhere;
         }
 
         .modal-close-btn {
@@ -571,6 +573,37 @@
         .modal-close-btn:hover {
             background: #eef2f7;
             color: #0f172a;
+        }
+
+        /* ─── Timer styles ─────────────────────────────────────────── */
+        .modal-timer-wrap {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 12px;
+            padding: 10px 16px;
+            border-radius: 12px;
+            background: var(--primary-red-light);
+            border: 1px solid #efd5db;
+        }
+
+        .modal-timer-wrap .timer-icon {
+            color: var(--primary-red-dark);
+            font-size: 1rem;
+        }
+
+        .modal-timer-wrap .timer-text {
+            color: var(--primary-red-dark);
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+
+        .modal-timer-wrap .timer-count {
+            font-variant-numeric: tabular-nums;
+            min-width: 20px;
+            display: inline-block;
+            text-align: center;
         }
 
         button,
@@ -803,10 +836,10 @@
     </div>
 
     <div class="modal fade" id="systemModal" tabindex="-1" aria-labelledby="systemModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-sm modal-dialog-scrollable">
+        <div class="modal-dialog modal-dialog-centered modal-md modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header custom-modal-header">
-                    <button type="button" class="modal-close-btn ms-auto" data-bs-dismiss="modal" aria-label="Close">
+                    <button type="button" class="modal-close-btn ms-auto d-none" data-bs-dismiss="modal" aria-label="Close" id="modalCloseBtn">
                         <i class="bi bi-x-lg"></i>
                     </button>
                 </div>
@@ -819,6 +852,14 @@
                     <p class="custom-modal-text" id="systemModalText">
                         Message goes here.
                     </p>
+
+                    <!-- Timer display for success modals -->
+                    <div id="modalTimerWrap" class="modal-timer-wrap" style="display: none;">
+                        <i class="bi bi-hourglass-split timer-icon"></i>
+                        <span class="timer-text">
+                            You can close this in <span id="modalTimerCount" class="timer-count">5</span>s
+                        </span>
+                    </div>
                 </div>
 
                 <div class="modal-footer custom-modal-footer">
@@ -843,13 +884,77 @@
     const modalText = document.getElementById('systemModalText');
     const modalIconWrap = document.getElementById('modalIconWrap');
     const modalIcon = document.getElementById('modalIcon');
+    const modalOkBtn = document.getElementById('modalOkBtn');
+    const modalCloseBtn = document.getElementById('modalCloseBtn');
+    const modalTimerWrap = document.getElementById('modalTimerWrap');
+    const modalTimerCount = document.getElementById('modalTimerCount');
     const systemModal = new bootstrap.Modal(modalElement);
+
+    let timerInterval = null;
 
     function isValidEmail(email) {
         return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
     }
 
+    function startModalTimer(seconds, onComplete) {
+        // Clear any existing timer
+        if (timerInterval) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+
+        let remaining = seconds;
+        modalTimerCount.textContent = remaining;
+
+        // Disable close controls
+        modalOkBtn.disabled = true;
+        modalCloseBtn.disabled = true;
+        modalOkBtn.style.opacity = '0.5';
+        modalCloseBtn.style.opacity = '0.5';
+        modalOkBtn.style.cursor = 'not-allowed';
+        modalCloseBtn.style.cursor = 'not-allowed';
+
+        timerInterval = setInterval(function () {
+            remaining--;
+            modalTimerCount.textContent = remaining;
+
+            if (remaining <= 0) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+
+                // Re-enable close controls
+                modalOkBtn.disabled = false;
+                modalCloseBtn.disabled = false;
+                modalOkBtn.style.opacity = '1';
+                modalCloseBtn.style.opacity = '1';
+                modalOkBtn.style.cursor = 'pointer';
+                modalCloseBtn.style.cursor = 'pointer';
+
+                if (onComplete) onComplete();
+            }
+        }, 1000);
+    }
+
+    function stopModalTimer() {
+        if (timerInterval) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+        modalTimerWrap.style.display = 'none';
+
+        // Ensure controls are re-enabled
+        modalOkBtn.disabled = false;
+        modalCloseBtn.disabled = false;
+        modalOkBtn.style.opacity = '1';
+        modalCloseBtn.style.opacity = '1';
+        modalOkBtn.style.cursor = 'pointer';
+        modalCloseBtn.style.cursor = 'pointer';
+    }
+
     function showSystemModal(title, message, type = 'warning') {
+        // Stop any running timer when showing a new modal
+        stopModalTimer();
+
         modalTitle.textContent = title;
         modalText.textContent = message;
 
@@ -906,7 +1011,6 @@
                 return;
             }
 
-
             sendLinkBtn.disabled = true;
             sendLinkBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Sending Link...';
         });
@@ -919,15 +1023,35 @@
         }
     });
 
-
     window.addEventListener('load', function () {
         {% if login_modal %}
-            showSystemModal(
-                '{% if login_modal.type == "success" %}Check Your Email{% elif login_modal.type == "danger" %}Error{% else %}Notice{% endif %}',
-                '{{ login_modal.message|escapejs }}',
-                '{{ login_modal.type }}'
-            );
+            const modalType = '{{ login_modal.type }}';
+            const modalTitleText = '{% if login_modal.type == "success" %}Check Your Email{% elif login_modal.type == "danger" %}Error{% else %}Notice{% endif %}';
+            const modalMessage = '{{ login_modal.message|escapejs }}';
+
+            showSystemModal(modalTitleText, modalMessage, modalType);
+
+            // If it's the "Check Your Email" success modal, start the 5-second timer
+            if (modalType === 'success') {
+                modalTimerWrap.style.display = 'flex';
+                startModalTimer(5, function () {
+                    // Timer complete — user can now close
+                    modalTimerWrap.style.display = 'none';
+                });
+            }
         {% endif %}
+    });
+
+    // Clean up timer when modal is hidden (user closes it manually or via backdrop)
+    modalElement.addEventListener('hidden.bs.modal', function () {
+        stopModalTimer();
+    });
+
+    // Prevent closing via backdrop click or Escape key while timer is running
+    modalElement.addEventListener('hide.bs.modal', function (e) {
+        if (timerInterval !== null) {
+            e.preventDefault();
+        }
     });
 
 </script>
