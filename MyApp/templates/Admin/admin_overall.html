@@ -2097,7 +2097,7 @@ function buildBatchSignatories(item) {
         `;
     }
 
-function buildBatchIndividualPrintHtml(items) {
+function buildBatchIndividualPrintHtml(items, documentTitle = 'Batch Individual Evaluation Forms') {
     const pages = items.map((item, index) => {
         const singleHtml = buildSinglePersonPrintHtml(item);
 
@@ -2114,7 +2114,7 @@ function buildBatchIndividualPrintHtml(items) {
     return `
         <html>
         <head>
-            <title>Batch Individual Evaluation Forms</title>
+            <title>${escapeHtml(documentTitle)}</title>
             ${buildDocumentStyles()}
         </head>
         <body>
@@ -2125,7 +2125,6 @@ function buildBatchIndividualPrintHtml(items) {
         </html>
     `;
 }
-
 
 
     function buildBatchPrintHtml(items) {
@@ -2250,7 +2249,15 @@ function buildBatchIndividualPrintHtml(items) {
         `;
     }
 
-    function openPrintWindow(html) {
+  function sanitizePrintTitle(value) {
+    return String(value || 'Evaluation_Report')
+        .trim()
+        .replace(/[<>:"/\\|?*\x00-\x1F]/g, '')
+        .replace(/\s+/g, '_')
+        .slice(0, 150);
+}
+
+    function openPrintWindow(html, title = 'Evaluation_Report') {
         const printWindow = window.open('', '_blank', 'width=1100,height=900');
         if (!printWindow) {
             alert('Please allow popups for printing.');
@@ -2261,7 +2268,15 @@ function buildBatchIndividualPrintHtml(items) {
         printWindow.document.write(html);
         printWindow.document.close();
 
+        try {
+            printWindow.document.title = sanitizePrintTitle(title);
+        } catch (e) {}
+
         printWindow.onload = function() {
+            try {
+                printWindow.document.title = sanitizePrintTitle(title);
+            } catch (e) {}
+
             printWindow.focus();
             setTimeout(() => {
                 printWindow.print();
@@ -2272,13 +2287,17 @@ function buildBatchIndividualPrintHtml(items) {
         function printSinglePerson(id) {
             const item = facultyResults.find(entry => Number(entry.id) === Number(id));
 
-        if (!item) {
-            alert('Result not found.');
-            return;
-        }
+            if (!item) {
+                alert('Result not found.');
+                return;
+            }
 
-        openPrintWindow(buildSinglePersonPrintHtml(item));
-    }
+            const printTitle = item.name
+                ? `Evaluation Summary Report - ${item.name}`
+                : 'Evaluation Summary Report';
+
+            openPrintWindow(buildSinglePersonPrintHtml(item), printTitle);
+        }
 
 
     function updateBatchSelectedCount() {
@@ -2351,16 +2370,25 @@ function openBatchPrintModal() {
     new bootstrap.Modal(document.getElementById('batchPrintModal')).show();
 }
 
-function printSelectedBatchFromModal() {
-    const selectedItems = getBatchSelectedItems();
+    function printSelectedBatchFromModal() {
+        const selectedItems = getBatchSelectedItems();
 
-    if (!selectedItems.length) {
-        alert('Please select at least one result to print.');
-        return;
+        if (!selectedItems.length) {
+            alert('Please select at least one result to print.');
+            return;
+        }
+
+        let printTitle = 'Batch Individual Evaluation Forms';
+
+        if (selectedItems.length === 1) {
+            printTitle = `Evaluation Summary Report - ${selectedItems[0].name || 'Selected Person'}`;
+        } else if (selectedItems.length > 1) {
+            const firstName = selectedItems[0].name || 'Selected Person';
+            printTitle = `Batch_${selectedItems.length}_Evaluation_Forms_${firstName}`;
+        }
+
+        openPrintWindow(buildBatchIndividualPrintHtml(selectedItems, printTitle), printTitle);
     }
-
-    openPrintWindow(buildBatchIndividualPrintHtml(selectedItems));
-}
 
 
     
@@ -2373,7 +2401,11 @@ function printSelectedBatchFromModal() {
             return;
         }
 
-        openPrintWindow(buildBatchIndividualPrintHtml(filtered));
+        const printTitle = filtered.length === 1
+            ? `Evaluation Summary Report - ${filtered[0].name || 'Selected Person'}`
+            : `Batch_${filtered.length}_Evaluation_Forms`;
+
+        openPrintWindow(buildBatchIndividualPrintHtml(filtered, printTitle), printTitle);
     }
 
     function exportResultsToCSV() {
