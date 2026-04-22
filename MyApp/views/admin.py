@@ -676,7 +676,6 @@ def delete_department(request, dept_id):
     messages.success(request, f"Department '{department_name}' was deleted successfully.")
     return redirect("admin_department")
 
-
 @admin_required
 def admin_results_summary(request):
     schedules = EvaluationSchedule.objects.all().order_by("-start_datetime", "-created_at")
@@ -781,12 +780,12 @@ def admin_results_summary(request):
         }
 
         for section_key, values in section_groups.items():
-            evaluator_sections[section_key] = round(sum(values) / len(values), 2) if values else 0
+            evaluator_sections[section_key] = (sum(values) / len(values)) if values else 0
             grouped[group_key]["section_values"][section_key].append(evaluator_sections[section_key])
 
-        evaluator_average_score = round(float(average_score or 0), 2)
-        evaluator_total_score = round(float(total_score or 0), 2)
-        evaluator_computed_rating = round((evaluator_total_score / 75) * 100, 2) if evaluator_total_score else 0
+        evaluator_average_score = float(average_score or 0)
+        evaluator_total_score = float(total_score or 0)
+        evaluator_computed_rating = ((evaluator_total_score / 75) * 100) if evaluator_total_score else 0
 
         grouped[group_key]["evaluators"].append({
             "evaluator_name": evaluator_name or "Unknown Evaluator",
@@ -935,9 +934,9 @@ def admin_results_summary(request):
     for index, group in enumerate(grouped_results.values(), start=1):
         evaluator_count = len(group["evaluators"])
 
-        average_score = round(sum(group["overall_values"]) / evaluator_count, 2) if evaluator_count else 0
-        average_total_score = round(sum(group["total_scores"]) / evaluator_count, 2) if evaluator_count else 0
-        computed_rating = round(sum(group["computed_ratings"]) / evaluator_count, 2) if evaluator_count else 0
+        average_score = (sum(group["overall_values"]) / evaluator_count) if evaluator_count else 0
+        average_total_score = (sum(group["total_scores"]) / evaluator_count) if evaluator_count else 0
+        computed_rating = (sum(group["computed_ratings"]) / evaluator_count) if evaluator_count else 0
 
         section_averages = {
             "management_teaching_learning": 0,
@@ -946,7 +945,7 @@ def admin_results_summary(request):
         }
 
         for section_key, values in group["section_values"].items():
-            section_averages[section_key] = round(sum(values) / len(values), 2) if values else 0
+            section_averages[section_key] = (sum(values) / len(values)) if values else 0
 
         overall_list.append(computed_rating)
 
@@ -984,9 +983,9 @@ def admin_results_summary(request):
             "faculty_results": results,
             "departments": departments,
             "total_faculty_count": len(results),
-            "highest_average_grade": round(max(overall_list), 2) if overall_list else 0,
-            "lowest_average_grade": round(min(overall_list), 2) if overall_list else 0,
-            "overall_faculty_average": round(sum(overall_list) / len(overall_list), 2) if overall_list else 0,
+            "highest_average_grade": max(overall_list) if overall_list else 0,
+            "lowest_average_grade": min(overall_list) if overall_list else 0,
+            "overall_faculty_average": (sum(overall_list) / len(overall_list)) if overall_list else 0,
             "selected_schedule": selected_schedule,
             "academic_years": [],
             "semesters": [],
@@ -997,6 +996,7 @@ def admin_results_summary(request):
     )
 
     return render(request, "admin/admin_overall.html", context)
+
 
 def admin_overall(request):
     return admin_results_summary(request)
