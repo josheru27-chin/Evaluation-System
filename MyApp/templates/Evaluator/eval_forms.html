@@ -1972,8 +1972,39 @@
       throw new Error(data.message || "Something went wrong while saving.");
     }
 
-    ensureCategoryEvaluateePath(currentCategory, evaluateeId);
-    evaluateeSubmissionStatus[currentCategory][evaluateeId] = "submitted";
+    if (isApplyToAllActive) {
+      const allIds = getCategoryEvaluatees(currentCategory).map(person => String(person.id));
+
+      allIds.forEach(id => {
+        ensureCategoryEvaluateePath(currentCategory, id);
+        evaluateeSubmissionStatus[currentCategory][id] = "submitted";
+      });
+
+      submissionStatus[currentCategory] = "submitted";
+
+      if (!dashboardSummary[currentCategory]) {
+        dashboardSummary[currentCategory] = {};
+      }
+
+      dashboardSummary[currentCategory].saved = allIds.length;
+      dashboardSummary[currentCategory].required = allIds.length;
+      dashboardSummary[currentCategory].status = "submitted";
+
+      disableLivePeerCopy();
+    } else {
+      ensureCategoryEvaluateePath(currentCategory, evaluateeId);
+      evaluateeSubmissionStatus[currentCategory][evaluateeId] = "submitted";
+
+      if (!dashboardSummary[currentCategory]) {
+        dashboardSummary[currentCategory] = {};
+      }
+
+      dashboardSummary[currentCategory].saved = getSubmittedCount(currentCategory);
+      dashboardSummary[currentCategory].required = getCategoryEvaluatees(currentCategory).length;
+      dashboardSummary[currentCategory].status = areAllEvaluateesSubmitted(currentCategory)
+        ? "submitted"
+        : (getSubmittedCount(currentCategory) > 0 ? "in_progress" : "not_started");
+    }
 
     refreshCategoryStatus(currentCategory);
     renderDashboard();
@@ -1988,9 +2019,11 @@
 
     showInfoModal(
       "Evaluation Submitted",
-      nextEvaluatee
-        ? `The evaluation for <strong>${getEvaluateeNameById(currentCategory, evaluateeId)}</strong> has been submitted successfully. You may continue with the next evaluatee.`
-        : `The evaluation for <strong>${getEvaluateeNameById(currentCategory, evaluateeId)}</strong> has been submitted successfully.`
+      isApplyToAllActive
+        ? "Apply to All has been submitted successfully for all evaluatees."
+        : nextEvaluatee
+          ? `The evaluation for <strong>${getEvaluateeNameById(currentCategory, evaluateeId)}</strong> has been submitted successfully. You may continue with the next evaluatee.`
+          : `The evaluation for <strong>${getEvaluateeNameById(currentCategory, evaluateeId)}</strong> has been submitted successfully.`
     );
 
   } catch (error) {
