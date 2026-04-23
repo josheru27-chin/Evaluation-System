@@ -2190,20 +2190,48 @@ async function saveEditedEvaluation() {
     if (!sourceId) {
       const selectLabel =
         CURRENT_USER.role === "officer"
-          ? (CURRENT_USER.officerRole === "OCD" ? "Please select an ADAA first." : "Please select a department head first.")
+          ? (CURRENT_USER.officerRole === "OCD"
+              ? "Please select an ADAA first."
+              : "Please select a department head first.")
           : "Please select a faculty member first.";
 
       showInfoModal("No Evaluatee Selected", selectLabel);
       return;
     }
 
+    const activeId = getActiveLiveSourceId(currentCategory);
+
+    if (activeId !== null) {
+      if (String(activeId) === String(sourceId)) {
+        showInfoModal(
+          "Apply to All Already Active",
+          `<strong>${getEvaluateeNameById(currentCategory, sourceId)}</strong> is already the current Apply to All source.`
+        );
+        syncPeerCopyAppliedUI();
+        return;
+      }
+
+      showInfoModal(
+        "Apply to All Already Active",
+        `Apply to All is already active for <strong>${getEvaluateeNameById(currentCategory, activeId)}</strong>. Turn it off first before choosing another source.`
+      );
+      syncPeerCopyAppliedUI();
+      return;
+    }
+
     if (isCurrentCategorySubmitted() && !isCategoryEditMode()) {
-      showInfoModal("Already Submitted", "This category has already been submitted, so Apply to All cannot be enabled.");
+      showInfoModal(
+        "Already Submitted",
+        "This category has already been submitted, so Apply to All cannot be enabled."
+      );
       return;
     }
 
     if (isEvaluateeSubmitted(currentCategory, sourceId) && !isCategoryEditMode()) {
-      showInfoModal("Already Submitted", "This evaluation form has already been submitted, so Apply to All cannot be enabled.");
+      showInfoModal(
+        "Already Submitted",
+        "This evaluation form has already been submitted, so Apply to All cannot be enabled."
+      );
       return;
     }
 
@@ -2225,6 +2253,7 @@ async function saveEditedEvaluation() {
       `This ${sourceLabel} is now the Apply to All source. Its answers will be copied to the ${targetLabel} while Apply to All is active.`
     );
 
+    syncPeerCopyAppliedUI();
     renderSectionStepper();
     renderSection();
     renderDashboard();
