@@ -535,8 +535,8 @@
               <div id="copyPeersCard" class="action-card hidden">
                 <div class="copy-peers-wrap">
                   <div class="copy-peers-info">
-                   <div class="fw-bold" id="copyPeersTitle">Apply Current Answers to Other Faculty</div>
-                    <div class="muted-note" id="copyPeersNote"><strong class="bg-danger">When Apply to All is on, the answers from the selected faculty are copied to the other faculty automatically.</strong></div>
+                    <div class="fw-bold" id="copyPeersTitle">Apply to All</div>
+                    <div class="muted-note" id="copyPeersNote"></div>
                   </div>
                   <div class="copy-peers-actions">
                     <button type="button" class="btn btn-outline-primary copy-peer-btn" id="copyPeersBtn" onclick="copyCurrentEvaluationToOtherPeers()">
@@ -595,8 +595,8 @@
               </div>
 
               <div class="faculty-info-card mt-3">
-                <div class="fw-bold fs-5 mb-2">Other Comments and Suggestions</div>
-                <textarea class="form-control" id="commentsBox" rows="5" placeholder="Enter additional comments and suggestions here."></textarea>
+                <div class="fw-bold fs-5 mb-2">Other Comments and Suggestions <span class="text-danger">*</span></div> 
+                <textarea class="form-control" id="commentsBox" rows="5" placeholder="Required before submission."></textarea>
               </div>
             </div>
           </div>
@@ -858,7 +858,33 @@
     submitConfirmModalInstance.show();
   }
 
+  function validateRequiredCommentsForSubmission() {
+    const commentsBox = document.getElementById("commentsBox");
+    if (!commentsBox) return true;
+
+    const value = commentsBox.value.trim();
+
+    if (!value) {
+      commentsBox.classList.add("is-invalid");
+      showInfoModal(
+        "Comments Required",
+        "Please enter your comments and suggestions before submitting this evaluation."
+      );
+      commentsBox.focus();
+      return false;
+    }
+
+    commentsBox.classList.remove("is-invalid");
+    return true;
+  }
+
   function submitCurrentEvaluateeAndProceed() {
+    saveComments();
+
+    if (!validateRequiredCommentsForSubmission()) {
+      return;
+    }
+
     configureSubmitModal(
       "Confirm Submission",
       "Are you sure you want to submit this evaluation?",
@@ -1506,21 +1532,32 @@
     const card = document.getElementById("copyPeersCard");
     const titleEl = document.getElementById("copyPeersTitle");
     const noteEl = document.getElementById("copyPeersNote");
+
     if (!card || !titleEl || !noteEl) return;
+
+    const activeId = getActiveLiveSourceId(currentCategory);
+    const sourceName = activeId ? getEvaluateeNameById(currentCategory, activeId) : "";
 
     card.classList.remove("hidden");
 
+    if (activeId) {
+      titleEl.textContent = `Apply to All Source: ${sourceName}`;
+      noteEl.innerHTML = `<strong class="text-danger">Main faculty for Apply to All: ${sourceName}.</strong> Only this faculty member will remain selectable while Apply to All is active.`;
+      setTimeout(syncPeerCopyAppliedUI, 0);
+      return;
+    }
+
     if (CURRENT_USER.role === "officer") {
       if (CURRENT_USER.officerRole === "OCD") {
-        titleEl.textContent = "Apply Current Answers to Other ADAA Evaluatees";
-        noteEl.textContent = "When Apply to All is on, the answers from the selected ADAA evaluatee are copied to the other evaluatees automatically.";
+        titleEl.textContent = "Apply Current Answers to ADAA Evaluatees";
+        noteEl.textContent = "When Apply to All is on, the answers from the selected ADAA evaluatee are copied automatically.";
       } else {
-        titleEl.textContent = "Apply Current Answers to Other Department Heads";
-        noteEl.textContent = "When Apply to All is on, the answers from the selected department head are copied to the other evaluatees automatically.";
+        titleEl.textContent = "Apply Current Answers to Department Heads";
+        noteEl.textContent = "When Apply to All is on, the answers from the selected department head are copied automatically.";
       }
     } else {
-      titleEl.textContent = "Apply Current Answers to Other Faculty";
-      noteEl.textContent = "When Apply to All is on, the answers from the selected faculty member are copied to the other faculty automatically.";
+      titleEl.textContent = "Apply Current Answers";
+      noteEl.textContent = "When Apply to All is on, the answers from the selected faculty member are copied automatically.";
     }
 
     setTimeout(syncPeerCopyAppliedUI, 0);
@@ -1545,44 +1582,52 @@
         : "Choose Faculty Member";
 
     label.textContent = labelText;
+
     const previousValue = lastSelectedEvaluateeId ? String(lastSelectedEvaluateeId) : "";
     const firstPendingId = getNextPendingEvaluateeId(currentCategory);
 
     select.innerHTML = `<option value="">${placeholder}</option>`;
 
     available.forEach(person => {
-      const option = document.createElement("option");
       const personId = String(person.id);
+
+      if (activeId && String(activeId) !== personId) {
+        return;
+      }
+
+      const option = document.createElement("option");
       const submitted = isEvaluateeSubmitted(currentCategory, personId);
       const complete = isEvaluateeComplete(currentCategory, personId);
 
-      option.value = person.id;
+      option.value = personId;
       option.dataset.name = person.name || "";
       option.dataset.department = person.department || "";
       option.dataset.email = person.email || "";
 
-      if (submitted) option.textContent = `${person.name} - (Done)`;
-      else if (complete) option.textContent = `${person.name} (Complete)`;
-      else if (activeId && String(activeId) === personId) option.textContent = `${person.name} (Apply to All Source)`;
-      else option.textContent = person.name;
+      if (activeId && String(activeId) === personId) {
+        option.textContent = `${person.name} (Apply to All Source)`;
+      } else if (submitted) {
+        option.textContent = `${person.name} - (Done)`;
+      } else if (complete) {
+        option.textContent = `${person.name} (Complete)`;
+      } else {
+        option.textContent = person.name;
+      }
 
-      option.disabled = false;
       select.appendChild(option);
     });
 
-    const enabledOptions = [...select.options].filter(opt => opt.value && !opt.disabled);
+    const enabledOptions = Array.from(select.options).filter(opt => opt.value && !opt.disabled);
 
-    if (previousValue) {
-      const previousOption = [...select.options].find(opt => String(opt.value) === previousValue);
-      if (previousOption && !previousOption.disabled) select.value = previousValue;
-      else if (enabledOptions.length) select.value = enabledOptions[0].value;
-    } else if (activeId) {
-      const activeOption = [...select.options].find(opt => String(opt.value) === String(activeId));
-      if (activeOption) select.value = String(activeId);
+    if (activeId) {
+      select.value = String(activeId);
+    } else if (previousValue) {
+      const previousOption = Array.from(select.options).find(opt => String(opt.value) === previousValue);
+      if (previousOption) select.value = previousValue;
       else if (enabledOptions.length) select.value = enabledOptions[0].value;
     } else if (firstPendingId) {
-      const firstPendingOption = [...select.options].find(opt => String(opt.value) === String(firstPendingId));
-      if (firstPendingOption && !firstPendingOption.disabled) select.value = String(firstPendingId);
+      const firstPendingOption = Array.from(select.options).find(opt => String(opt.value) === String(firstPendingId));
+      if (firstPendingOption) select.value = String(firstPendingId);
       else if (enabledOptions.length) select.value = enabledOptions[0].value;
     } else if (enabledOptions.length) {
       select.value = enabledOptions[0].value;
@@ -1934,6 +1979,10 @@
     return;
   }
 
+  if (!validateRequiredCommentsForSubmission()) {
+    return;
+  }
+
   saveComments();
 
   const activeLiveSourceId = getActiveLiveSourceId();
@@ -1941,7 +1990,7 @@
 
   const payload = {
     evaluatee_id: evaluateeId,
-    comments: commentsData[currentCategory]?.[evaluateeId] || "",
+    comments: (commentsData[currentCategory]?.[evaluateeId] || "").trim(),
     answers: ratings[currentCategory]?.[evaluateeId] || {},
     apply_to_all: isApplyToAllActive,
     all_evaluatee_ids: isApplyToAllActive
@@ -2210,7 +2259,13 @@ async function saveEditedEvaluation() {
     initModal();
     setViewMode("dashboard");
     hydrateSavedEvaluations();
-    document.getElementById("commentsBox")?.addEventListener("input", saveComments);
+
+    const commentsBox = document.getElementById("commentsBox");
+    commentsBox?.addEventListener("input", () => {
+      commentsBox.classList.remove("is-invalid");
+      saveComments();
+    });
+
     renderDashboard();
   });
 
