@@ -359,7 +359,7 @@
             <div class="col-md-6">
                 <label class="form-label">Closing Date and Time</label>
                 <input type="datetime-local" id="end_datetime" name="end_datetime" class="form-control" required>
-                <small class="text-muted mt-1 d-block" id="endDateHint">Must be at least 1 day after the opening date.</small>
+                <small class="text-muted mt-1 d-block" id="endDateHint">Must be at least 12 hours after the opening date.</small>
             </div>
 
             <div class="col-lg-8">
@@ -569,7 +569,7 @@
                         <div class="col-md-6">
                             <label class="form-label">Closing Date and Time</label>
                             <input type="datetime-local" id="edit_end_datetime" name="end_datetime" class="form-control" required>
-                            <small class="text-muted mt-1 d-block" id="editEndDateHint">Must be at least 1 day after the opening date.</small>
+                            <small class="text-muted mt-1 d-block" id="editEndDateHint">Must be at least 12 hours after the opening date.</small>
                         </div>
 
                         <div class="col-lg-8">
@@ -788,11 +788,11 @@
         }
     }
 
-    function addOneDay(dateStr) {
+    function addTwelveHours(dateStr) {
         if (!dateStr) return '';
         const d = new Date(dateStr);
         if (isNaN(d.getTime())) return '';
-        d.setDate(d.getDate() + 1);
+        d.setHours(d.getHours() + 12);
         return toLocalISOString(d);
     }
 
@@ -801,11 +801,15 @@
 
         const startVal = startEl.value;
         if (startVal) {
-            const minEnd = addOneDay(startVal);
+            const minEnd = addTwelveHours(startVal);
             endEl.min = minEnd;
 
+            // If closing date is empty, suggest 12 hours after as default
+            if (!endEl.value) {
+                endEl.value = minEnd;
+            }
             // If current end value is before the new minimum, clear it
-            if (endEl.value && new Date(endEl.value) < new Date(minEnd)) {
+            else if (new Date(endEl.value) < new Date(minEnd)) {
                 endEl.value = '';
             }
         } else {
@@ -835,14 +839,20 @@
             const now = new Date();
             editStartInput.min = toLocalISOString(now);
 
-            // Set end min to 1 day after start (or today if no start)
+            // Set end min to 12 hours after start (or today if no start)
             if (editStartInput.value) {
-                editEndInput.min = addOneDay(editStartInput.value);
+                const minEnd = addTwelveHours(editStartInput.value);
+                editEndInput.min = minEnd;
+                // Suggest 12 hours after if closing date is empty or invalid
+                if (!editEndInput.value) {
+                    editEndInput.value = minEnd;
+                } else if (new Date(editEndInput.value) < new Date(minEnd)) {
+                    editEndInput.value = '';
+                }
             } else {
                 editEndInput.min = toLocalISOString(now);
             }
         }
-
         updateEditDurationPreview();
 
         if (editModalEl && typeof bootstrap !== 'undefined') {
