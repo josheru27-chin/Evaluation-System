@@ -388,10 +388,6 @@
 {% endblock %}
 
 {% block content %}
-<div class="page-hero">
-    <h3>Pending Evaluations Monitoring</h3>
-</div>
-
 <div class="row g-4 mb-4">
     <div class="col-md-4">
         <div class="stats-card total">
@@ -437,6 +433,71 @@
 </div>
 {% endif %}
 
+
+<div class="content-card">
+    <div class="toolbar-row">
+        <div>
+            <h5 class="section-title mb-1">Department Head Monitoring Table</h5>
+            <p class="muted-note mb-0">
+                Summary of department heads evaluated by the ADAA.
+            </p>
+        </div>
+    </div>
+
+    <div class="table-shell">
+        <table class="department-table">
+            <thead>
+                <tr>
+                    <th>Evaluation Type</th>
+                    <th>No. of Pending Heads</th>
+                    <th>No. of Done Heads</th>
+                    <th>Progress</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                <tr>
+                    <td class="department-cell">
+                        <div class="department-name">ADAA</div>
+                        <div class="department-code">All department heads</div>
+                    </td>
+
+                    <td>
+                        <button
+                            type="button"
+                            class="count-btn pending"
+                            data-bs-toggle="modal"
+                            data-bs-target="#pendingHeadsModal"
+                        >
+                            <i class="bi bi-hourglass-split"></i>
+                            {{ total_pending_heads|default:0 }} Pending
+                        </button>
+                    </td>
+
+                    <td>
+                        <button
+                            type="button"
+                            class="count-btn done"
+                            data-bs-toggle="modal"
+                            data-bs-target="#doneHeadsModal"
+                        >
+                            <i class="bi bi-check2-circle"></i>
+                            {{ total_done_heads|default:0 }} Done
+                        </button>
+                    </td>
+
+                    <td>
+                        <span class="progress-pill">
+                            {{ total_done_heads|default:0 }}/{{ total_heads|default:0 }}
+                        </span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
 <div class="content-card">
     <div class="toolbar-row">
         <div>
@@ -462,6 +523,76 @@
             </thead>
             <tbody id="departmentSummaryBody">
                 {% for dept in department_tabs %}
+                <div class="modal fade" id="pendingHeadsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-hourglass-split me-2"></i>
+                    Pending Department Heads
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+                <div class="modal-summary">
+                    <div class="modal-summary-box">
+                        <h6>Evaluation Flow</h6>
+                        <h5>ADAA to Heads</h5>
+                    </div>
+
+                    <div class="modal-summary-box">
+                        <h6>Total Heads</h6>
+                        <h5>{{ total_heads|default:0 }}</h5>
+                    </div>
+
+                    <div class="modal-summary-box">
+                        <h6>Total Pending</h6>
+                        <h5>{{ total_pending_heads|default:0 }}</h5>
+                    </div>
+
+                    <div class="modal-summary-box">
+                        <h6>Progress</h6>
+                        <h5>{{ total_done_heads|default:0 }}/{{ total_heads|default:0 }}</h5>
+                    </div>
+                </div>
+
+                <div class="member-list-wrap">
+                    <div class="member-list-header">
+                        <h6>Pending Department Head List</h6>
+                    </div>
+
+                    <div class="member-list">
+                        {% for row in head_pending_rows %}
+                        <div class="member-row">
+                            <div class="member-info">
+                                <strong>{{ row.head_name }}</strong>
+                                <small>
+                                    {{ row.department }}
+                                    {% if row.department_code %} • {{ row.department_code }}{% endif %}
+                                </small>
+                            </div>
+
+                            <span class="status-chip pending">
+                                {{ row.status }}
+                            </span>
+                        </div>
+                        {% empty %}
+                        <div class="empty-state">
+                            <i class="bi bi-check2-all"></i>
+                            No pending department heads.
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-soft" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
                 <tr data-search="{{ dept.name|default:''|lower }} {{ dept.code|default:''|lower }}">
                     <td class="department-cell">
                         <div class="department-name">{{ dept.name }}</div>
@@ -639,6 +770,81 @@
         </div>
     </div>
 </div>
+
+
+<div class="modal fade" id="doneHeadsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-check2-circle me-2"></i>
+                    Completed Department Heads
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+                <div class="modal-summary">
+                    <div class="modal-summary-box">
+                        <h6>Evaluation Flow</h6>
+                        <h5>ADAA to Heads</h5>
+                    </div>
+
+                    <div class="modal-summary-box">
+                        <h6>Total Heads</h6>
+                        <h5>{{ total_heads|default:0 }}</h5>
+                    </div>
+
+                    <div class="modal-summary-box">
+                        <h6>Total Done</h6>
+                        <h5>{{ total_done_heads|default:0 }}</h5>
+                    </div>
+
+                    <div class="modal-summary-box">
+                        <h6>Progress</h6>
+                        <h5>{{ total_done_heads|default:0 }}/{{ total_heads|default:0 }}</h5>
+                    </div>
+                </div>
+
+                <div class="member-list-wrap">
+                    <div class="member-list-header">
+                        <h6>Completed Department Head List</h6>
+                    </div>
+
+                    <div class="member-list">
+                        {% for row in head_done_rows %}
+                        <div class="member-row">
+                            <div class="member-info">
+                                <strong>{{ row.head_name }}</strong>
+                                <small>
+                                    {{ row.department }}
+                                    {% if row.department_code %} • {{ row.department_code }}{% endif %}
+                                    {% if row.submitted_at %} • Submitted: {{ row.submitted_at }}{% endif %}
+                                </small>
+                            </div>
+
+                            <span class="status-chip done">
+                                Done
+                            </span>
+                        </div>
+                        {% empty %}
+                        <div class="empty-state">
+                            <i class="bi bi-inbox"></i>
+                            No completed department head evaluations yet.
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-soft" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 {% endfor %}
 {% endblock %}
 

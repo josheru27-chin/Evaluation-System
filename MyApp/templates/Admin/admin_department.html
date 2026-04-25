@@ -307,7 +307,7 @@
                 <label class="form-label">Evaluation Schedule</label>
                 <select name="schedule_id" class="form-select" required>
                     {% for sched in schedules %}
-                        <option value="{{ sched.id }}" {% if sched.computed_status != "Open" %}disabled{% endif %}>
+                        <option value="{{ sched.id }}" {% if current_schedule and sched.id == current_schedule.id %}selected{% endif %}>
                             {{ sched.academic_year }} - {{ sched.semester }} | {{ sched.title }} ({{ sched.computed_status }})
                         </option>
                     {% endfor %}
@@ -507,7 +507,7 @@
                             <select name="schedule_id" class="form-select" required>
                                 <option value="">Select schedule</option>
                                 {% for sched in schedules %}
-                                    <option value="{{ sched.id }}" {% if sched.computed_status != "Open" %}disabled{% endif %}>
+                                   <option value="{{ sched.id }}" {% if current_schedule and sched.id == current_schedule.id %}selected{% endif %}>
                                         {{ sched.academic_year }} - {{ sched.semester }} | {{ sched.title }} ({{ sched.computed_status }})
                                     </option>
                                 {% endfor %}
@@ -578,7 +578,7 @@
                             <label class="form-label">Evaluation Schedule</label>
                             <select name="schedule_id" class="form-select" required>
                             {% for sched in schedules %}
-                                <option value="{{ sched.id }}" {% if sched.computed_status != "Open" %}disabled{% endif %}>
+                                <option value="{{ sched.id }}" {% if current_schedule and sched.id == current_schedule.id %}selected{% endif %}>
                                     {{ sched.academic_year }} - {{ sched.semester }} | {{ sched.title }} ({{ sched.computed_status }})
                                 </option>
                             {% endfor %}

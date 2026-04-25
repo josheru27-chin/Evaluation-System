@@ -11,6 +11,8 @@
       --primary:#981b2e;
       --primary-dark:#7d1626;
       --primary-soft:#f7e9ec;
+      --primary-soft-2:#fff7f9;
+      --primary-line:#ead3d8;
       --bg:#f4f6f9;
       --card:#ffffff;
       --text:#1f2937;
@@ -30,141 +32,692 @@
       --warning-bg:#fff8e8;
       --warning-border:#f4d58d;
       --warning-text:#8a5a00;
-      --shadow:0 10px 28px rgba(31, 41, 55, 0.08);
+      --shadow:0 18px 45px rgba(31, 41, 55, 0.10);
+      --soft-shadow:0 10px 24px rgba(31, 41, 55, 0.07);
+      --radius-xl:28px;
+      --radius-lg:22px;
+      --radius-md:18px;
     }
+
     *{ box-sizing:border-box; }
     html{ scroll-behavior:smooth; }
-    body{ margin:0; font-family:"Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background:linear-gradient(180deg, #ffffff 0%, var(--bg) 100%); color:var(--text); }
-    .app-shell{ width:100%; max-width:none; margin:0; padding:0 10px 24px; }
-    .main-card{ background:var(--card); border:1px solid var(--border); border-radius:28px; overflow:hidden; box-shadow:var(--shadow); }
-    .hero{ background:linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color:#fff; padding:28px; }
-    .hero h1{ font-size:1.7rem; font-weight:700; margin:0 0 8px; }
-    .hero p{ margin:0; opacity:.94; line-height:1.55; }
-    .body-wrap{ padding:24px; }
-    .status-pill{ display:inline-flex; align-items:center; gap:8px; padding:8px 14px; border-radius:999px; font-size:.92rem; font-weight:700; border:1px solid transparent; }
+
+    body{
+      margin:0;
+      min-height:100vh;
+      font-family:"Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(152, 27, 46, .11), transparent 34%),
+        radial-gradient(circle at top right, rgba(125, 22, 38, .08), transparent 28%),
+        linear-gradient(180deg, #fff 0%, #f7f3f5 42%, var(--bg) 100%);
+    }
+
+    body::before{
+      content:"";
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      background-image:linear-gradient(rgba(152,27,46,.035) 1px, transparent 1px), linear-gradient(90deg, rgba(152,27,46,.035) 1px, transparent 1px);
+      background-size:32px 32px;
+      mask-image:linear-gradient(180deg, #000 0%, transparent 70%);
+    }
+
+    .app-shell{
+      width:100%;
+      max-width:1500px;
+      margin:0 auto;
+      padding:22px 18px 34px;
+      position:relative;
+      z-index:1;
+    }
+
+    .main-card{
+      background:rgba(255,255,255,.64);
+      border:1px solid rgba(234, 211, 216, .75);
+      border-radius:34px;
+      overflow:visible;
+      box-shadow:var(--shadow);
+      backdrop-filter:blur(10px);
+    }
+
+    .hero{
+      position:relative;
+      overflow:hidden;
+      background:linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color:#fff;
+      padding:30px;
+      border-radius:34px 34px 26px 26px;
+      box-shadow:0 18px 35px rgba(125, 22, 38, .22);
+    }
+
+    .hero::before{
+      content:"";
+      position:absolute;
+      width:340px;
+      height:340px;
+      right:-125px;
+      top:-145px;
+      border-radius:999px;
+      background:rgba(255,255,255,.12);
+    }
+
+    .hero::after{
+      content:"";
+      position:absolute;
+      width:210px;
+      height:210px;
+      right:160px;
+      bottom:-145px;
+      border-radius:999px;
+      background:rgba(255,255,255,.08);
+    }
+
+    .hero > *{ position:relative; z-index:1; }
+    .hero h1{ font-size:clamp(1.45rem, 2vw, 2rem); font-weight:850; letter-spacing:-.03em; margin:0 0 9px; }
+    .hero p{ max-width:760px; margin:0; opacity:.94; line-height:1.58; }
+    .hero .text-md-end{
+      min-width:230px;
+      padding:16px 18px;
+      border:1px solid rgba(255,255,255,.18);
+      border-radius:22px;
+      background:rgba(255,255,255,.11);
+      box-shadow:0 14px 30px rgba(0,0,0,.10);
+      backdrop-filter:blur(7px);
+    }
+
+    .body-wrap{ padding:26px; }
+
+    .top-card,.category-card,.toolbar-card,.instrument-card,.action-card,.question-card,.footer-card,.faculty-info-card,.left-rail-card{
+      background:rgba(255,255,255,.96);
+      border:1px solid rgba(229,231,235,.95);
+      border-radius:var(--radius-lg);
+      box-shadow:var(--soft-shadow);
+    }
+
+    .top-card{
+      position:relative;
+      height:100%;
+      padding:22px;
+      overflow:hidden;
+    }
+
+    .top-card::before{
+      content:"";
+      position:absolute;
+      inset:0 auto 0 0;
+      width:6px;
+      background:linear-gradient(180deg, var(--primary), var(--primary-dark));
+      border-radius:999px;
+    }
+
+    .summary-count{
+      display:inline-flex;
+      align-items:flex-end;
+      gap:2px;
+      font-size:2.55rem;
+      font-weight:900;
+      color:var(--primary);
+      line-height:1;
+      letter-spacing:-.05em;
+    }
+
+    .mini-progress{ display:flex; flex-wrap:wrap; gap:10px; }
+    .mini-badge{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:10px 13px;
+      border-radius:999px;
+      border:1px solid var(--primary-line);
+      background:linear-gradient(135deg, #fff 0%, var(--primary-soft-2) 100%);
+      font-size:.88rem;
+      font-weight:650;
+      color:var(--text);
+    }
+
+    .helper-box{
+      position:relative;
+      border:1px solid var(--primary-line);
+      background:linear-gradient(135deg, #fff 0%, var(--primary-soft-2) 100%);
+      color:#4b2530;
+      border-radius:22px;
+      padding:16px 18px 16px 54px;
+      margin-bottom:22px;
+      box-shadow:0 8px 20px rgba(152, 27, 46, .05);
+      line-height:1.58;
+    }
+
+    .helper-box::before{
+      content:"i";
+      position:absolute;
+      left:17px;
+      top:16px;
+      width:24px;
+      height:24px;
+      border-radius:999px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:#fff;
+      background:var(--primary);
+      font-style:italic;
+      font-weight:800;
+      font-family:Georgia, serif;
+    }
+
+    #categoryCardsContainer > [class*="col-"]{
+      flex:0 0 100%;
+      max-width:100%;
+    }
+
+    .category-card{
+      position:relative;
+      min-height:unset;
+      padding:24px 24px 24px 112px;
+      overflow:hidden;
+      transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    }
+
+    .category-card:hover{
+      transform:translateY(-3px);
+      border-color:#dfbdc5;
+      box-shadow:0 18px 40px rgba(31,41,55,.11);
+    }
+
+    .category-icon{
+      position:absolute;
+      left:24px;
+      top:24px;
+      width:66px;
+      height:66px;
+      border-radius:22px;
+      background:linear-gradient(135deg, var(--primary-soft) 0%, #fff 100%);
+      color:var(--primary);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:900;
+      font-size:1.35rem;
+      border:1px solid var(--primary-line);
+      box-shadow:0 10px 20px rgba(152, 27, 46, .10);
+    }
+
+    .category-title{ font-size:1.25rem; font-weight:850; margin-bottom:7px; letter-spacing:-.02em; }
+    .category-desc{ color:var(--muted); min-height:unset; line-height:1.55; font-size:.96rem; max-width:850px; }
+
+    .status-pill{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      padding:8px 14px;
+      border-radius:999px;
+      font-size:.88rem;
+      font-weight:800;
+      border:1px solid transparent;
+      white-space:nowrap;
+    }
+    .status-pill::before{ content:""; width:8px; height:8px; border-radius:999px; background:currentColor; opacity:.75; }
     .status-not-started{ background:var(--not-bg); color:var(--not-text); border-color:var(--border); }
     .status-progress{ background:var(--progress-bg); color:var(--progress-text); border-color:var(--danger-border); }
     .status-submitted{ background:var(--success-bg); color:var(--success-text); border-color:var(--success-border); }
-    .top-card,.category-card,.toolbar-card,.instrument-card,.action-card,.question-card,.footer-card,.faculty-info-card,.left-rail-card{ background:#fff; border:1px solid var(--border); border-radius:20px; }
-    .top-card,.faculty-info-card{ padding:18px; height:100%; }
-    .summary-count{ font-size:2rem; font-weight:800; color:var(--primary); line-height:1; }
-    .mini-progress{ display:flex; flex-wrap:wrap; gap:10px; }
-    .mini-badge{ padding:8px 12px; border-radius:999px; border:1px solid var(--border); background:#fff; font-size:.88rem; font-weight:600; color:var(--text); }
-    .category-card{ padding:22px; height:100%; transition:.2s ease; }
-    .category-card:hover{ transform:translateY(-3px); box-shadow:0 10px 26px rgba(31, 41, 55, 0.08); }
-    .category-icon{ width:54px; height:54px; border-radius:16px; background:var(--primary-soft); color:var(--primary); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:1.2rem; margin-bottom:14px; }
-    .category-title{ font-size:1.1rem; font-weight:700; margin-bottom:6px; }
-    .category-desc{ color:var(--muted); min-height:52px; line-height:1.45; font-size:.95rem; }
-    .helper-box{ border:1px dashed var(--danger-border); background:var(--danger-bg); color:var(--danger-text); border-radius:18px; padding:14px 16px; margin-bottom:20px; }
-    .toolbar-card,.instrument-card,.action-card{ padding:16px 18px; margin-bottom:18px; }
-    .instrument-card{ background:#fcfcfd; }
-    .instrument-grid{ display:grid; grid-template-columns:repeat(5, minmax(0,1fr)); gap:12px; margin-top:14px; }
-    .instrument-item{ background:#fff; border:1px solid var(--border); border-radius:16px; padding:14px 12px; line-height:1.35; min-height:104px; }
-    .instrument-item strong{ font-size:1.05rem; color:var(--primary); }
-    .faculty-info-grid{ display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:14px; margin-top:14px; }
-    .field-block label{ display:block; font-weight:700; font-size:.9rem; margin-bottom:6px; color:#374151; }
-    .form-shell{ display:grid; grid-template-columns:300px minmax(0,1fr); gap:18px; align-items:start; }
-    .form-left-rail{ position:sticky; top:18px; display:flex; flex-direction:column; gap:16px; align-self:start; }
-    .left-rail-card{ padding:20px; }
-    .left-rail-title{ font-size:.82rem; font-weight:800; color:var(--primary); letter-spacing:.04em; text-transform:uppercase; margin-bottom:10px; }
-    .left-rail-divider{ height:1px; background:var(--border); margin:14px 0; }
+
+    .form-shell{
+      display:grid;
+      grid-template-columns:340px minmax(0,1fr);
+      gap:22px;
+      align-items:start;
+    }
+
+    .form-left-rail{
+      position:sticky;
+      top:18px;
+      display:flex;
+      flex-direction:column;
+      gap:16px;
+      align-self:start;
+    }
+
+    .left-rail-card{
+      position:relative;
+      padding:22px;
+      overflow:hidden;
+    }
+
+    .left-rail-card::before{
+      content:"";
+      position:absolute;
+      inset:0 0 auto 0;
+      height:7px;
+      background:linear-gradient(90deg, var(--primary), var(--primary-dark));
+    }
+
+    .left-rail-title{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      font-size:.82rem;
+      font-weight:900;
+      color:var(--primary);
+      letter-spacing:.07em;
+      text-transform:uppercase;
+      margin-bottom:14px;
+    }
+    .left-rail-title::before{
+      content:"";
+      width:12px;
+      height:12px;
+      border-radius:4px;
+      background:var(--primary);
+      box-shadow:0 0 0 5px var(--primary-soft);
+    }
+
+    .left-rail-divider{ height:1px; background:var(--border); margin:18px 0; }
     .left-rail-sub{ color:var(--muted); font-size:.9rem; line-height:1.5; }
-    .progress-panel{ border:1px solid var(--border); background:var(--input-bg); border-radius:16px; padding:12px 14px; margin-top:8px; }
-    .progress-panel .progress-title{ font-size:.82rem; font-weight:700; color:#374151; margin-bottom:4px; }
-    .progress-panel .progress-value{ font-size:1.05rem; font-weight:800; color:var(--primary); }
-    .status-panel{ border:1px dashed #d7c1c6; background:#fcf7f8; border-radius:16px; padding:12px 14px; }
-    .status-panel .status-label{ font-size:.8rem; font-weight:800; color:var(--primary); text-transform:uppercase; letter-spacing:.04em; margin-bottom:4px; }
-    .status-panel .status-value{ font-weight:800; color:var(--text); }
-    .copy-peers-wrap{ display:grid; grid-template-columns:minmax(0,1.6fr) minmax(260px,360px); gap:16px; align-items:start; }
-    .copy-peers-actions{ display:flex; flex-direction:column; gap:10px; align-items:stretch; justify-content:flex-start; }
+
+    .field-block label{
+      display:block;
+      font-weight:850;
+      font-size:.78rem;
+      margin-bottom:8px;
+      color:#374151;
+      letter-spacing:.04em;
+      text-transform:uppercase;
+    }
+
+    .form-control,.form-select{
+      min-height:44px;
+      background:var(--input-bg);
+      border:1px solid var(--border);
+      color:var(--text);
+      border-radius:15px;
+      font-weight:600;
+      box-shadow:none;
+    }
+    .form-control:focus,.form-select:focus{
+      border-color:#c98d99;
+      box-shadow:0 0 0 .22rem rgba(152, 27, 46, .12);
+    }
+
+    .progress-panel,.status-panel{
+      border:1px solid var(--primary-line);
+      background:linear-gradient(135deg, #fff 0%, var(--primary-soft-2) 100%);
+      border-radius:18px;
+      padding:14px 15px;
+      margin-top:14px;
+    }
+    .progress-panel .progress-title,.status-panel .status-label{
+      font-size:.74rem;
+      font-weight:900;
+      color:#7d1626;
+      text-transform:uppercase;
+      letter-spacing:.06em;
+      margin-bottom:5px;
+    }
+    .progress-panel .progress-value,.status-panel .status-value{
+      font-size:1rem;
+      font-weight:850;
+      color:var(--text);
+      line-height:1.35;
+    }
+
+    .form-main-content{
+      background:rgba(255,255,255,.76);
+      border:1px solid rgba(234,211,216,.75);
+      border-radius:30px;
+      padding:20px;
+      box-shadow:0 18px 42px rgba(31,41,55,.08);
+    }
+
+    .faculty-info-card,.instrument-card,.toolbar-card,.action-card,.footer-card{
+      padding:20px;
+      margin-bottom:18px;
+    }
+
+    .faculty-info-card{
+      background:linear-gradient(180deg, #fff 0%, #fffafa 100%);
+    }
+
+    .faculty-info-card .faculty-info-grid{
+      display:grid;
+      grid-template-columns:1.35fr 1fr;
+      gap:16px;
+      align-items:start;
+      margin-top:16px;
+    }
+
+    .faculty-info-card .field-block{ display:flex; flex-direction:column; gap:8px; }
+    .faculty-info-card #infoFacultyName,.faculty-info-card #infoDepartment{
+      min-height:66px;
+      padding:15px 17px;
+      background:#fff;
+      border:1px solid var(--primary-line);
+      border-radius:18px;
+      box-shadow:inset 4px 0 0 var(--primary-soft), 0 8px 18px rgba(152, 27, 46, .05);
+      color:var(--text);
+      cursor:default !important;
+    }
+    .faculty-info-card #infoFacultyName{ font-size:1.18rem; font-weight:900; color:#7d1626; }
+    .faculty-info-card #infoDepartment{ font-size:1rem; font-weight:750; }
+
+    .instrument-card{
+      background:#fff;
+      position:relative;
+      overflow:hidden;
+    }
+    .instrument-card::before{
+      content:"";
+      position:absolute;
+      inset:0 auto 0 0;
+      width:5px;
+      background:linear-gradient(180deg, var(--primary), transparent);
+      opacity:.75;
+    }
+
+    .instrument-grid{
+      display:grid;
+      grid-template-columns:repeat(5, minmax(0,1fr));
+      gap:12px;
+      margin-top:15px;
+    }
+
+    .instrument-item{
+      min-height:118px;
+      background:linear-gradient(180deg, #fff 0%, #fff8f9 100%);
+      border:1px solid var(--primary-line);
+      border-radius:18px;
+      padding:15px 13px;
+      line-height:1.38;
+      box-shadow:0 8px 18px rgba(31,41,55,.04);
+    }
+    .instrument-item strong{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      width:32px;
+      height:32px;
+      border-radius:12px;
+      margin-right:6px;
+      background:var(--primary);
+      color:#fff;
+      font-size:1rem;
+      font-weight:900;
+    }
+
+    .copy-peers-wrap{
+      display:grid;
+      grid-template-columns:minmax(0,1.6fr) minmax(250px,340px);
+      gap:16px;
+      align-items:center;
+    }
+    .copy-peers-actions{ display:flex; flex-direction:column; gap:10px; align-items:stretch; }
     .copy-peers-actions .btn{ width:100%; min-width:0; }
     .copy-peer-btn{ width:100%; min-width:0; position:relative; overflow:hidden; transition:all .25s ease; }
     .copy-peer-btn .copy-btn-default,.copy-peer-btn .copy-btn-success{ display:inline-flex; align-items:center; justify-content:center; gap:8px; transition:all .25s ease; }
     .copy-peer-btn .copy-btn-success{ display:none; }
-    .copy-peer-btn.applied{ background:var(--success-text); border-color:var(--success-text); color:#fff; box-shadow:0 8px 20px rgba(34, 97, 58, 0.18); }
+    .copy-peer-btn.applied{ background:var(--success-text); border-color:var(--success-text); color:#fff; box-shadow:0 8px 20px rgba(34, 97, 58, .18); }
     .copy-peer-btn.applied:hover{ background:#1b4f2f; border-color:#1b4f2f; color:#fff; }
     .copy-peer-btn.applied .copy-btn-default{ display:none; }
     .copy-peer-btn.applied .copy-btn-success{ display:inline-flex; }
-    .score-chip{ min-width:46px; height:46px; border-radius:999px; border:2px solid #d8a7b0; background:#fff; color:var(--primary); font-weight:800; transition:.2s ease; }
-    .score-chip:hover,.score-chip.active{ background:var(--primary); border-color:var(--primary); color:#fff; }
-    .stepper{ display:flex; flex-wrap:wrap; gap:10px; }
-    .step-chip{ border:1px solid var(--border); background:#fff; color:var(--muted); border-radius:999px; padding:9px 14px; font-weight:700; font-size:.92rem; cursor:pointer; transition:.18s ease; }
-    .step-chip:hover{ border-color:#d4a1ab; color:var(--primary); }
-    .step-chip.active{ background:var(--primary); color:#fff; border-color:var(--primary); }
+
+    .toolbar-card{
+      position:relative;
+      background:linear-gradient(135deg, #fff 0%, #fbf7f8 100%);
+    }
+    .stepper{
+      display:grid;
+      grid-template-columns:repeat(3, minmax(0,1fr));
+      gap:10px;
+    }
+    .step-chip{
+      min-height:48px;
+      border:1px solid var(--border);
+      background:#fff;
+      color:#5f6673;
+      border-radius:16px;
+      padding:10px 13px;
+      font-weight:800;
+      font-size:.88rem;
+      cursor:pointer;
+      transition:.18s ease;
+      text-align:left;
+    }
+    .step-chip:hover{ border-color:#d4a1ab; color:var(--primary); transform:translateY(-1px); }
+    .step-chip.active{ background:linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color:#fff; border-color:var(--primary); box-shadow:0 10px 22px rgba(152, 27, 46, .18); }
     .step-chip.done{ background:var(--success-bg); color:var(--success-text); border-color:var(--success-border); }
-    .step-chip.locked{ background:#f9fafb; color:#9ca3af; border-color:#e5e7eb; cursor:not-allowed; }
+    .step-chip.locked{ background:#f9fafb; color:#9ca3af; border-color:#e5e7eb; cursor:not-allowed; transform:none; }
     .step-chip.locked:hover{ border-color:#e5e7eb; color:#9ca3af; }
-    .question-card{ padding:18px; margin-bottom:16px; }
-    .question-card.readonly{ opacity:.7; }
-    .question-title{ font-weight:700; font-size:1.03rem; margin-bottom:6px; line-height:1.45; color:var(--text); }
-    .question-sub{ color:var(--muted); font-size:.94rem; margin-bottom:14px; line-height:1.5; }
-    .verification-box{ margin-bottom:14px; padding:12px 14px; border:1px dashed #d7c1c6; border-radius:14px; background:#fcf7f8; }
-    .verification-title{ font-size:.85rem; font-weight:700; color:var(--primary); margin-bottom:6px; }
-    .verification-list{ margin:0; padding-left:18px; color:#4b5563; font-size:.9rem; line-height:1.5; }
-    .rating-scale{ display:grid; grid-template-columns:repeat(5, minmax(120px, 1fr)); gap:10px; }
+
+    .action-card{
+      background:linear-gradient(135deg, #fff 0%, #fff8f9 100%);
+      border-color:var(--primary-line);
+    }
+    .score-chip{
+      min-width:48px;
+      height:48px;
+      border-radius:16px;
+      border:2px solid #d8a7b0;
+      background:#fff;
+      color:var(--primary);
+      font-weight:900;
+      transition:.18s ease;
+    }
+    .score-chip:hover,.score-chip.active{ background:var(--primary); border-color:var(--primary); color:#fff; transform:translateY(-2px); box-shadow:0 10px 20px rgba(152,27,46,.18); }
+
+    .section-header{
+      position:relative;
+      padding:18px 20px;
+      border-radius:22px;
+      background:linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color:#fff;
+      overflow:hidden;
+      box-shadow:0 16px 30px rgba(125, 22, 38, .18);
+    }
+    .section-header .text-muted{ color:rgba(255,255,255,.80) !important; }
+
+    .question-card{
+      position:relative;
+      padding:22px;
+      margin-bottom:18px;
+      border-radius:24px;
+      border:1px solid rgba(229,231,235,.98);
+      background:#fff;
+      overflow:hidden;
+      transition:box-shadow .18s ease, transform .18s ease, border-color .18s ease;
+    }
+    .question-card::before{
+      content:"";
+      position:absolute;
+      left:0;
+      top:0;
+      bottom:0;
+      width:6px;
+      background:linear-gradient(180deg, var(--primary), var(--primary-soft));
+    }
+    .question-card:hover{
+      transform:translateY(-2px);
+      border-color:#dfbdc5;
+      box-shadow:0 16px 34px rgba(31,41,55,.09);
+    }
+    .question-card.readonly{ opacity:.74; }
+
+    .question-title{
+      font-weight:850;
+      font-size:1.07rem;
+      margin-bottom:8px;
+      line-height:1.48;
+      color:var(--text);
+      letter-spacing:-.01em;
+    }
+    .question-sub{
+      color:#5e6673;
+      font-size:.95rem;
+      margin-bottom:15px;
+      line-height:1.55;
+      padding-left:14px;
+      border-left:3px solid var(--primary-soft);
+    }
+
+    .verification-box{
+      margin-bottom:16px;
+      padding:14px;
+      border:1px dashed #d7c1c6;
+      border-radius:18px;
+      background:#fcf7f8;
+    }
+    .verification-title{
+      font-size:.78rem;
+      font-weight:900;
+      color:var(--primary);
+      margin-bottom:10px;
+      letter-spacing:.05em;
+      text-transform:uppercase;
+    }
+    .verification-list{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin:0;
+      padding:0;
+      list-style:none;
+      color:#4b5563;
+      font-size:.88rem;
+      line-height:1.4;
+    }
+    .verification-list li{
+      padding:7px 10px;
+      border:1px solid #ead3d8;
+      border-radius:999px;
+      background:#fff;
+      box-shadow:0 3px 10px rgba(31,41,55,.04);
+    }
+
+    .rating-scale{
+      display:grid;
+      grid-template-columns:repeat(5, minmax(0,1fr));
+      gap:10px;
+    }
     .rating-option{ position:relative; }
     .rating-option input{ display:none; }
-    .rating-label{ display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:4px; min-height:96px; border:1.5px solid var(--border); border-radius:18px; background:#fff; padding:12px 10px; cursor:pointer; transition:.18s ease; }
-    .rating-label:hover{ border-color:#c98d99; background:var(--primary-soft); }
-    .rating-number{ width:36px; height:36px; border-radius:999px; border:2px solid #d6a1ab; display:flex; align-items:center; justify-content:center; font-weight:800; color:var(--primary); background:#fff; }
-    .rating-text{ font-size:.82rem; line-height:1.2; font-weight:600; color:#4b5563; }
-    .rating-option input:checked + .rating-label{ border-color:var(--primary); background:var(--primary-soft); box-shadow:0 0 0 3px rgba(152, 27, 46, 0.08); }
-    .rating-option input:checked + .rating-label .rating-number{ background:var(--primary); color:#fff; border-color:var(--primary); }
-    .rating-option.readonly .rating-label,.rating-option input:disabled + .rating-label{ cursor:not-allowed; background:#f9fafb; border-color:#e5e7eb; }
+    .rating-label{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      gap:8px;
+      min-height:98px;
+      border:1.5px solid var(--border);
+      border-radius:20px;
+      background:linear-gradient(180deg, #fff 0%, #fbfbfc 100%);
+      padding:12px 10px;
+      cursor:pointer;
+      transition:transform .16s ease, border-color .16s ease, background .16s ease, box-shadow .16s ease;
+    }
+    .rating-label:hover{
+      transform:translateY(-2px);
+      border-color:#c98d99;
+      background:var(--primary-soft-2);
+      box-shadow:0 10px 18px rgba(152, 27, 46, .08);
+    }
+    .rating-number{
+      width:38px;
+      height:38px;
+      border-radius:14px;
+      border:2px solid #d6a1ab;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:900;
+      color:var(--primary);
+      background:#fff;
+    }
+    .rating-text{ font-size:.8rem; line-height:1.22; font-weight:750; color:#4b5563; }
+    .rating-option input:checked + .rating-label{
+      border-color:var(--primary);
+      background:linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color:#fff;
+      box-shadow:0 12px 26px rgba(152, 27, 46, .23);
+      transform:translateY(-2px);
+    }
+    .rating-option input:checked + .rating-label .rating-number{
+      background:#fff;
+      color:var(--primary);
+      border-color:#fff;
+    }
+    .rating-option input:checked + .rating-label .rating-text{ color:#fff; }
+    .rating-option.readonly .rating-label,.rating-option input:disabled + .rating-label{ cursor:not-allowed; background:#f9fafb; border-color:#e5e7eb; box-shadow:none; transform:none; }
     .rating-option input:disabled + .rating-label:hover{ background:#f9fafb; border-color:#e5e7eb; }
-    .footer-card{ padding:18px; margin-top:18px; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
+
+    .footer-card{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:14px;
+      flex-wrap:wrap;
+      margin-top:20px;
+      border-color:var(--primary-line);
+      background:linear-gradient(135deg, #fff 0%, #fff8f9 100%);
+    }
+    .btn-group-wrap{ display:flex; flex-wrap:wrap; gap:10px; }
+
     .muted-note{ color:var(--muted); font-size:.92rem; line-height:1.5; }
-    .warning-note{ margin-top:14px; border:1px dashed var(--warning-border); background:var(--warning-bg); color:var(--warning-text); border-radius:16px; padding:12px 14px; }
+    .warning-note{ margin-top:14px; border:1px dashed var(--warning-border); background:var(--warning-bg); color:var(--warning-text); border-radius:18px; padding:13px 15px; }
     .hidden{ display:none !important; }
     .small-text{ font-size:.92rem; }
-    .form-control,.form-select{ background:var(--input-bg); border:1px solid var(--border); color:var(--text); }
-    .form-control:focus,.form-select:focus{ border-color:#c98d99; box-shadow:0 0 0 0.2rem rgba(152, 27, 46, 0.12); }
-    .btn-primary{ background:var(--primary); border-color:var(--primary); }
-    .btn-primary:hover,.btn-primary:focus{ background:var(--primary-dark); border-color:var(--primary-dark); }
-    .btn-outline-primary{ color:var(--primary); border-color:var(--primary); }
+
+    #commentsBox{
+      min-height:132px;
+      resize:vertical;
+      padding:15px 16px;
+      background:#fff;
+      border:1px solid var(--primary-line);
+      border-radius:18px;
+      line-height:1.55;
+    }
+    #commentsBox.is-invalid{ border-color:#dc3545; box-shadow:0 0 0 .22rem rgba(220,53,69,.12); }
+
+    .btn{
+      border-radius:14px;
+      font-weight:800;
+      padding:.65rem 1rem;
+      transition:transform .16s ease, box-shadow .16s ease, background .16s ease, border-color .16s ease;
+    }
+    .btn:hover{ transform:translateY(-1px); }
+    .btn-primary{ background:linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); border-color:var(--primary); box-shadow:0 10px 20px rgba(152,27,46,.16); }
+    .btn-primary:hover,.btn-primary:focus{ background:var(--primary-dark); border-color:var(--primary-dark); box-shadow:0 13px 24px rgba(152,27,46,.22); }
+    .btn-outline-primary{ color:var(--primary); border-color:#c98d99; background:#fff; }
     .btn-outline-primary:hover,.btn-outline-primary:focus{ background:var(--primary); border-color:var(--primary); color:#fff; }
-    .btn-outline-secondary{ color:#4b5563; border-color:#d1d5db; }
+    .btn-outline-secondary{ color:#4b5563; border-color:#d1d5db; background:#fff; }
     .btn-outline-secondary:hover,.btn-outline-secondary:focus{ background:#f3f4f6; border-color:#d1d5db; color:#111827; }
-    .btn:disabled,.btn.disabled{ opacity:.72; }
+    .btn-warning{ font-weight:900; border-color:#e2a92e; }
+    .btn:disabled,.btn.disabled{ opacity:.68; transform:none; box-shadow:none; }
     .alert-light{ background:#f9fafb; border-color:var(--border); color:var(--muted); }
-    @media (max-width: 991px){ .form-shell{ grid-template-columns:1fr; } .form-left-rail{ position:static; top:auto; } .instrument-grid{ grid-template-columns:repeat(2, minmax(0,1fr)); } .faculty-info-grid{ grid-template-columns:repeat(2, minmax(0,1fr)); } .rating-scale{ grid-template-columns:repeat(2, minmax(0,1fr)); } }
-    @media (max-width: 900px){ .copy-peers-wrap{ grid-template-columns:1fr; } .copy-peers-actions{ width:100%; } }
-    @media (max-width: 767px){ .footer-card{ flex-direction:column; align-items:stretch; } .footer-card .btn-group-wrap{ width:100%; display:flex; flex-wrap:wrap; gap:8px; } .footer-card .btn-group-wrap .btn{ flex:1 1 auto; } }
-    @media (max-width: 576px){ .body-wrap{ padding:16px; } .instrument-grid,.rating-scale,.faculty-info-grid{ grid-template-columns:1fr; } .hero{ padding:22px 18px; } .hero h1{ font-size:1.35rem; } }
+
     .logout-trigger-btn{
       border:0;
       border-radius:999px;
-      font-weight:700;
+      font-weight:800;
       padding:.58rem 1.15rem;
       box-shadow:0 8px 20px rgba(0,0,0,.12);
-      transition:all .2s ease;
     }
-    .logout-trigger-btn:hover{
-      transform:translateY(-1px);
-      box-shadow:0 12px 24px rgba(0,0,0,.16);
-    }
+    .logout-trigger-btn:hover{ box-shadow:0 12px 24px rgba(0,0,0,.16); }
 
+    .modal-content{ border-radius:24px !important; }
     .logout-modal .modal-content{
       border:0;
-      border-radius:26px;
+      border-radius:28px;
       overflow:hidden;
-      box-shadow:0 24px 60px rgba(31, 41, 55, 0.18);
+      box-shadow:0 24px 60px rgba(31, 41, 55, .18);
     }
-
     .logout-modal .modal-header{
       border:0;
       padding:0;
       position:relative;
       background:linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
     }
-
-    .logout-modal-banner{
-      width:100%;
-      padding:26px 26px 22px;
-      color:#fff;
-      position:relative;
-    }
-
+    .logout-modal-banner{ width:100%; padding:26px 26px 22px; color:#fff; position:relative; }
     .logout-modal-badge{
       width:58px;
       height:58px;
@@ -179,175 +732,172 @@
       backdrop-filter:blur(4px);
       margin-bottom:14px;
     }
-
-    .logout-modal-title{
-      margin:0;
-      font-size:1.35rem;
-      font-weight:800;
-      line-height:1.2;
-    }
-
-    .logout-modal-subtitle{
-      margin:8px 0 0;
-      opacity:.92;
-      line-height:1.55;
-      font-size:.96rem;
-    }
-
-    .logout-modal .btn-close{
-      position:absolute;
-      top:16px;
-      right:16px;
-      z-index:2;
-      filter:invert(1);
-      opacity:.9;
-    }
-
-    .logout-modal .modal-body{
-      padding:24px 26px 10px;
-      background:#fff;
-    }
-
+    .logout-modal-title{ margin:0; font-size:1.35rem; font-weight:850; line-height:1.2; }
+    .logout-modal-subtitle{ margin:8px 0 0; opacity:.92; line-height:1.55; font-size:.96rem; }
+    .logout-modal .btn-close{ position:absolute; top:16px; right:16px; z-index:2; filter:invert(1); opacity:.9; }
+    .logout-modal .modal-body{ padding:24px 26px 10px; background:#fff; }
     .logout-info-card{
       border:1px solid var(--border);
-      background:linear-gradient(180deg, #ffffff 0%, #faf7f8 100%);
+      background:linear-gradient(180deg, #fff 0%, #faf7f8 100%);
       border-radius:20px;
-      padding:16px 16px;
+      padding:16px;
+    }
+    .logout-info-label{ font-size:.78rem; font-weight:900; letter-spacing:.05em; text-transform:uppercase; color:var(--primary); margin-bottom:6px; }
+    .logout-info-value{ font-size:1rem; font-weight:800; color:var(--text); }
+    .logout-warning{ margin-top:14px; border:1px dashed #e7c3ca; background:#fff7f8; color:#7d1626; border-radius:16px; padding:12px 14px; font-size:.92rem; line-height:1.55; }
+    .logout-modal .modal-footer{ border:0; padding:18px 26px 26px; background:#fff; display:flex; gap:10px; justify-content:flex-end; }
+    .logout-cancel-btn{ border-radius:14px; font-weight:800; padding:.7rem 1.15rem; }
+    .logout-confirm-btn{ border-radius:14px; font-weight:900; padding:.7rem 1.2rem; background:linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); border:none; box-shadow:0 10px 22px rgba(152, 27, 46, .24); }
+    .logout-confirm-btn:hover{ box-shadow:0 14px 28px rgba(152, 27, 46, .28); }
+
+    @media (max-width: 1200px){
+      .instrument-grid{ grid-template-columns:repeat(3, minmax(0,1fr)); }
+      .rating-scale{ grid-template-columns:repeat(3, minmax(0,1fr)); }
     }
 
-    .logout-info-label{
-      font-size:.78rem;
-      font-weight:800;
-      letter-spacing:.04em;
-      text-transform:uppercase;
+    @media (max-width: 991px){
+      .app-shell{ padding:14px 10px 24px; }
+      .main-card{ border-radius:26px; }
+      .hero{ border-radius:26px 26px 22px 22px; padding:24px; }
+      .form-shell{ grid-template-columns:1fr; }
+      .form-left-rail{ position:static; top:auto; }
+      .instrument-grid{ grid-template-columns:repeat(2, minmax(0,1fr)); }
+      .faculty-info-card .faculty-info-grid{ grid-template-columns:1fr; }
+      .rating-scale{ grid-template-columns:repeat(2, minmax(0,1fr)); }
+      .stepper{ grid-template-columns:1fr; }
+    }
+
+    @media (max-width: 900px){
+      .copy-peers-wrap{ grid-template-columns:1fr; }
+      .copy-peers-actions{ width:100%; }
+    }
+
+    @media (max-width: 767px){
+      .body-wrap{ padding:18px; }
+      .hero .text-md-end{ width:100%; }
+      .category-card{ padding:22px; }
+      .category-icon{ position:static; margin-bottom:14px; }
+      .footer-card{ flex-direction:column; align-items:stretch; }
+      .footer-card .btn-group-wrap{ width:100%; display:flex; flex-wrap:wrap; gap:8px; }
+      .footer-card .btn-group-wrap .btn{ flex:1 1 auto; }
+    }
+
+    @media (max-width: 576px){
+      .body-wrap{ padding:14px; }
+      .form-main-content{ padding:14px; border-radius:24px; }
+      .instrument-grid,.rating-scale{ grid-template-columns:1fr; }
+      .hero{ padding:22px 18px; }
+      .hero h1{ font-size:1.35rem; }
+    }
+
+    /* Keep selected rating visible even when submitted/disabled */
+    .rating-option input:disabled:checked + .rating-label,
+    .rating-option.readonly input:checked + .rating-label {
+      background: linear-gradient(135deg, #981b2e 0%, #7d1626 100%) !important;
+      border-color: #981b2e !important;
+      color: #ffffff !important;
+      opacity: 1 !important;
+      box-shadow: 0 10px 22px rgba(152, 27, 46, .18) !important;
+      transform: none !important;
+    }
+
+    .rating-option input:disabled:checked + .rating-label .rating-number,
+    .rating-option.readonly input:checked + .rating-label .rating-number {
+      background: #ffffff !important;
+      color: #981b2e !important;
+      border-color: #ffffff !important;
+    }
+
+    .rating-option input:disabled:checked + .rating-label .rating-text,
+    .rating-option.readonly input:checked + .rating-label .rating-text {
+      color: #ffffff !important;
+      opacity: 1 !important;
+      font-weight: 800;
+    }
+
+    /* Disabled but NOT selected */
+    .rating-option input:disabled:not(:checked) + .rating-label {
+      background: #f9fafb !important;
+      border-color: #e5e7eb !important;
+      color: #9ca3af !important;
+      opacity: .75;
+    }
+
+
+    .left-rail-copy-card{
+      margin-top:18px;
+      padding:16px;
+      border:1px solid var(--primary-line);
+      border-radius:18px;
+      background:linear-gradient(135deg, #fff 0%, var(--primary-soft-2) 100%);
+      box-shadow:0 8px 18px rgba(152, 27, 46, .06);
+    }
+
+    .left-rail-copy-card .copy-peers-info{
+      margin-bottom:14px;
+    }
+
+    .left-copy-title{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      font-size:.86rem;
+      font-weight:900;
       color:var(--primary);
-      margin-bottom:6px;
+      text-transform:uppercase;
+      letter-spacing:.05em;
+      margin-bottom:8px;
     }
 
-    .logout-info-value{
-      font-size:1rem;
-      font-weight:700;
-      color:var(--text);
+    .left-copy-title::before{
+      content:"";
+      width:9px;
+      height:9px;
+      border-radius:999px;
+      background:var(--primary);
+      box-shadow:0 0 0 4px var(--primary-soft);
+      flex-shrink:0;
     }
 
-    .logout-warning{
-      margin-top:14px;
-      border:1px dashed #e7c3ca;
-      background:#fff7f8;
-      color:#7d1626;
-      border-radius:16px;
-      padding:12px 14px;
-      font-size:.92rem;
+    .left-copy-note{
+      color:#5f6673;
+      font-size:.86rem;
       line-height:1.55;
     }
 
-    .logout-modal .modal-footer{
-      border:0;
-      padding:18px 26px 26px;
-      background:#fff;
-      display:flex;
-      gap:10px;
-      justify-content:flex-end;
+    .left-copy-note strong{
+      color:#7d1626;
+      font-weight:900;
     }
 
-    .logout-cancel-btn{
-      border-radius:14px;
-      font-weight:700;
-      padding:.7rem 1.15rem;
-    }
-
-    .logout-confirm-btn{
-      border-radius:14px;
-      font-weight:800;
-      padding:.7rem 1.2rem;
-      background:linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-      border:none;
-      box-shadow:0 10px 22px rgba(152, 27, 46, 0.24);
-    }
-
-    .logout-confirm-btn:hover{
-      transform:translateY(-1px);
-      box-shadow:0 14px 28px rgba(152, 27, 46, 0.28);
-    }
-
-    .faculty-info-card .faculty-info-grid{
-      display:grid;
-      grid-template-columns:1.4fr 1fr;
-      gap:16px;
-      align-items:start;
-    }
-
-    .faculty-info-card .field-block{
+    .left-rail-copy-card .copy-peers-actions{
       display:flex;
       flex-direction:column;
       gap:10px;
+      width:100%;
     }
 
-    .faculty-info-card .field-block label{
-      font-size:.8rem;
-      font-weight:800;
-      letter-spacing:.05em;
-      text-transform:uppercase;
-      color:var(--primary);
-      margin:0;
+    .left-rail-copy-card .copy-peers-actions .btn{
+      width:100%;
+      min-height:42px;
+      font-size:.86rem;
+      border-radius:13px;
+      white-space:normal;
+      line-height:1.3;
     }
 
-    .faculty-info-card #infoFacultyName,
-    .faculty-info-card #infoDepartment{
-      background:linear-gradient(135deg, #fff8f9 0%, #ffffff 100%);
-      border:1px solid #ead3d8;
-      border-radius:18px;
-      box-shadow:0 8px 24px rgba(152, 27, 46, 0.06);
-      color:var(--text);
-      cursor:default !important;
+    .left-rail-copy-card .copy-peer-btn.applied{
+      background:var(--success-text);
+      border-color:var(--success-text);
+      color:#fff;
+      box-shadow:0 8px 18px rgba(34, 97, 58, .18);
     }
 
-    .faculty-info-card #infoFacultyName{
-      min-height:64px;
-      padding:14px 18px;
-      font-size:1.2rem;
-      font-weight:800;
-      color:#7d1626;
+    .left-rail-copy-card .copy-peer-btn.applied:hover{
+      background:#1b4f2f;
+      border-color:#1b4f2f;
+      color:#fff;
     }
-
-    .faculty-info-card #infoDepartment{
-      min-height:64px;
-      padding:14px 18px;
-      font-size:1rem;
-      font-weight:700;
-    }
-
-    .faculty-info-card #infoFacultyName:focus,
-    .faculty-info-card #infoDepartment:focus{
-      border-color:#ead3d8;
-      box-shadow:0 8px 24px rgba(152, 27, 46, 0.06);
-      outline:none;
-    }
-
-    @media (max-width: 768px){
-      .faculty-info-card .faculty-info-grid{
-        grid-template-columns:1fr;
-      }
-    }
-
-    .question-card.readonly {
-      opacity: .7;
-    }
-
-    .form-main-content {
-      background: #fff;
-      border-radius: 24px;
-      padding: 18px;
-      box-shadow: 0 12px 30px rgba(0,0,0,0.05);
-    }
-
-    .instrument-card,
-      .action-card,
-      .toolbar-card {
-        background: #fafafa;
-        border: 1px solid #eee;
-      }
-      
   </style>
 </head>
 <body>
@@ -408,8 +958,8 @@
           </div>
 
 
-        <div class="body-wrap">
-          <div class="row g-3 mb-4">
+        <div class="body-wrap ">
+          <div class="row g-3 mb-4 d-none">
             <div class="col-lg-4">
               <div class="top-card">
                 <div class="small text-muted mb-1">Progress</div>
@@ -469,9 +1019,9 @@
                   </select>
                 </div>
 
-                <div class="field-block mt-3">
+                <div class="field-block mt-3 d-none">
                   <label class="form-label fw-semibold">Category</label>
-                  <input type="text" class="form-control"  style="cursor:default;" id="categoryDisplay" readonly>
+                  <input type="text" class="form-control" style="cursor:default;" id="categoryDisplay" readonly>
                 </div>
 
                 <div class="field-block mt-3">
@@ -481,7 +1031,7 @@
 
                 <div class="progress-panel">
                   <div class="progress-title">Live section overview</div>
-                  <div class="progress-value"  style="cursor: default;" id="sideSectionName">Section</div>
+                  <div class="progress-value" style="cursor: default;" id="sideSectionName">Section</div>
                 </div>
 
                 <div class="left-rail-divider"></div>
@@ -490,13 +1040,38 @@
                   <div class="status-label">Current status</div>
                   <div class="status-value" style="cursor: default;" id="sideCategoryStatusText">In Progress</div>
                 </div>
+
+                <div id="copyPeersCard" class="left-rail-copy-card hidden">
+                  <div class="copy-peers-info">
+                    <div class="left-copy-title" id="copyPeersTitle">Apply to All</div>
+                    <div class="left-copy-note" id="copyPeersNote"></div>
+                  </div>
+
+                  <div class="copy-peers-actions">
+                    <button
+                      type="button"
+                      class="btn btn-outline-primary copy-peer-btn"
+                      id="copyPeersBtn"
+                      onclick="copyCurrentEvaluationToOtherPeers()">
+                      <span class="copy-btn-default">Apply to All</span>
+                      <span class="copy-btn-success">Apply to All Active</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      class="btn btn-outline-secondary d-none"
+                      id="disableCopyBtn"
+                      onclick="disableLivePeerCopy()">
+                      Turn Off Live Copy
+                    </button>
+                  </div>
+                </div>
               </div>
             </aside>
 
             <div class="form-main-content">
               <div class="faculty-info-card mb-3">
-                <div class="fw-bold fs-5 mb-2" id="personInfoTitle">A. Faculty Information</div>
-                <div class="small-text text-muted">To be accomplished by the designated office or pre-filled by the system.</div>
+                <div class="fw-bold fs-5 mb-2" id="personInfoTitle"></div>
 
                 <div class="faculty-info-grid">
                   <div class="field-block">
@@ -512,10 +1087,9 @@
               </div>
 
               <div class="instrument-card">
-                <div class="fw-bold fs-5 mb-2">B. Rating Scale</div>
+                <div class="fw-bold fs-5 mb-2">Rating Scale</div>
                   <div class="small-text text-muted mb-3" id="ratingScaleIntro">
-                    Carefully read each benchmark statement and rate the selected evaluatee using the scale below.
-                  </div>
+                 </div>
                 <div class="instrument-grid">
                   <div class="instrument-item"><strong>5</strong> Always manifested<br><span class="text-muted">Evident in nearly all relevant situations (91–100%).</span></div>
                   <div class="instrument-item"><strong>4</strong> Often manifested<br><span class="text-muted">Evident most of the time, with occasional lapses (61–90%).</span></div>
@@ -525,28 +1099,13 @@
                 </div>
               </div>
 
-              <div class="instrument-card">
+              <div class="instrument-card d-none">
                 <div class="fw-bold fs-5 mb-2">C. Instruction</div>
                 <div class="small-text text-muted" id="instructionIntro">
                   Carefully read each benchmark statement and rate the selected evaluatee by selecting the appropriate rating based on the scale above.
                 </div>
               </div>
 
-              <div id="copyPeersCard" class="action-card hidden">
-                <div class="copy-peers-wrap">
-                  <div class="copy-peers-info">
-                    <div class="fw-bold" id="copyPeersTitle">Apply to All</div>
-                    <div class="muted-note" id="copyPeersNote"></div>
-                  </div>
-                  <div class="copy-peers-actions">
-                    <button type="button" class="btn btn-outline-primary copy-peer-btn" id="copyPeersBtn" onclick="copyCurrentEvaluationToOtherPeers()">
-                      <span class="copy-btn-default">Apply to All</span>
-                      <span class="copy-btn-success">Apply to All Active</span>
-                    </button>
-                    <button type="button" class="btn btn-outline-secondary d-none" id="disableCopyBtn" onclick="disableLivePeerCopy()">Turn Off Live Copy</button>
-                  </div>
-                </div>
-              </div>
 
               <div class="toolbar-card">
                 <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
@@ -579,6 +1138,11 @@
               </div>
 
               <div id="questionsContainer"></div>
+              
+              <div class="faculty-info-card mt-3">
+                <div class="fw-bold fs-5 mb-2">Other Comments and Suggestions <span class="text-danger">*</span></div> 
+                <textarea class="form-control" id="commentsBox" rows="5" placeholder="Required before submission."></textarea>
+              </div>
 
               <div class="footer-card">
                 <div>
@@ -592,11 +1156,6 @@
                   <button class="btn btn-outline-primary" id="editCategoryBtn" onclick="enableEditMode()" style="display:none;">Edit</button>
                   <button class="btn btn-primary" id="submitCategoryBtn" onclick="submitCurrentEvaluateeAndProceed()" style="display:none;">Next Evaluatee</button>
                 </div>
-              </div>
-
-              <div class="faculty-info-card mt-3">
-                <div class="fw-bold fs-5 mb-2">Other Comments and Suggestions <span class="text-danger">*</span></div> 
-                <textarea class="form-control" id="commentsBox" rows="5" placeholder="Required before submission."></textarea>
               </div>
             </div>
           </div>
@@ -754,43 +1313,211 @@
   };
 
   const sections = [
-    {
-      key: "management_teaching_learning",
-      title: "A. Management of Teaching and Learning",
-      subtitle: "Evaluation Form",
-      questions: [
-        { en: "Comes to class on time.", tl: "Pumapasok sa klase sa tamang oras.", verification: ["Daily time record", "Faculty schedule and timetable", "Informal interview with students"] },
-        { en: "Submits updated syllabus, grade sheets, and other required reports on time.", tl: "Nagsusumite ng updated syllabus, grade sheets, at iba pang kinakailangang ulat sa tamang oras.", verification: ["Documents submission log", "Submission receipts or acknowledgment emails"] },
-        { en: "Maximizes the allocated time or learning hours effectively.", tl: "Mahusay na nagagamit ang inilaan na oras o learning hours.", verification: ["Class schedules and timetables", "LMS logs", "Informal interview with students"] },
-        { en: "Provides appropriate learning activities that facilitate students' critical thinking and creativity.", tl: "Nagbibigay ng angkop na learning activities na nagpapalago ng critical thinking at creativity ng mga mag-aaral.", verification: ["Course syllabus", "Learning plan", "Classroom observation"] },
-        { en: "Guides students to learn on their own, reflect on new ideas and experiences, and make decisions in accomplishing given tasks.", tl: "Ginagabayan ang mga mag-aaral upang matutong magsarili, magnilay sa mga bagong ideya at karanasan, at makapagpasya sa pagtupad ng mga gawain.", verification: ["Informal interview with students", "LMS logs", "Student work samples"] },
-        { en: "Communicates constructive feedback to students for their academic growth.", tl: "Nagbibigay ng makabuluhan at nakabubuting feedback sa mga mag-aaral para sa kanilang pag-unlad akademiko.", verification: ["Graded student work with feedback", "Faculty consultation log", "Official correspondence or LMS logs"] }
-      ]
-    },
-    {
-      key: "content_knowledge_pedagogy_technology",
-      title: "B. Content Knowledge, Pedagogy, and Technology",
-      subtitle: "Evaluation Form",
-      questions: [
-        { en: "Demonstrates extensive and broad knowledge of the subject or course.", tl: "Nagpapakita ng malawak at malalim na kaalaman sa asignatura o kurso.", verification: ["Course syllabus", "Learning plan", "Instructional materials developed by faculty", "Informal interview with students"] },
-        { en: "Simplifies complex ideas in the lesson for ease of understanding.", tl: "Naipapaliwanag nang simple ang mahihirap na konsepto upang madaling maunawaan ng mga mag-aaral.", verification: ["Learning plan", "Course syllabus", "Classroom observation", "Lecture notes and presentations"] },
-        { en: "Integrates contemporary issues and developments in the discipline and/or daily life activities in the syllabus.", tl: "Naipapasok sa syllabus ang mga makabagong isyu at pag-unlad sa disiplina at/o sa pang-araw-araw na gawain.", verification: ["Course syllabus", "Learning plan", "Participation in conferences, webinars, and training", "LMS logs"] },
-        { en: "Promotes active learning and student engagement by using appropriate teaching and learning resources including ICT tools and platforms.", tl: "Itinataguyod ang active learning at pakikilahok ng mga mag-aaral sa pamamagitan ng angkop na resources, kabilang ang ICT tools at platforms.", verification: ["Multimedia lecture materials", "LMS logs", "Classroom observation", "Student work samples"] },
-        { en: "Uses appropriate assessments such as projects, exams, quizzes, and assignments aligned with the learning outcomes.", tl: "Gumagamit ng angkop na pagtataya tulad ng projects, exams, quizzes, at assignments na nakaayon sa learning outcomes.", verification: ["Assessment tools and rubrics", "Exam and quiz samples", "Graded student work samples", "Learning plan"] }
-      ]
-    },
-    {
-      key: "commitment_transparency",
-      title: "C. Commitment and Transparency",
-      subtitle: "Evaluation Form",
-      questions: [
-        { en: "Recognizes and values the unique diversity and individual differences among students.", tl: "Kinikilala at pinahahalagahan ang pagkakaiba-iba at natatanging katangian ng bawat mag-aaral.", verification: ["Course syllabus", "Learning plan", "Instructional materials", "Classroom observation", "Informal interview with students"] },
-        { en: "Assists students with their learning challenges during consultation hours.", tl: "Tinutulungan ang mga mag-aaral sa kanilang learning challenges tuwing consultation hours.", verification: ["Faculty consultation log", "Advisory records", "LMS logs", "Official correspondence"] },
-        { en: "Provides immediate feedback on student outputs and performance.", tl: "Nagbibigay ng agarang feedback sa outputs at performance ng mga mag-aaral.", verification: ["Graded student work samples", "Assessment tools and rubrics", "LMS logs", "Emails or official correspondence"] },
-        { en: "Provides transparent and clear criteria in rating student performance.", tl: "Nagbibigay ng malinaw at transparent na pamantayan sa pagmamarka ng performance ng mga mag-aaral.", verification: ["Course syllabus", "Assessment tools and rubrics", "Informal interview with students", "Learning plan"] }
-      ]
-    }
-  ];
+      {
+        key: "management_teaching_learning",
+        title: "A. Management of Teaching and Learning",
+        subtitle: "",
+        questions: [
+          {
+            no: 1,
+            en: "Comes to class on time.",
+            tl: "Pumapasok sa klase sa tamang oras.",
+            verification: [
+              "Daily time record",
+              "Faculty schedule and timetable",
+              "Informal interview with students"
+            ]
+          },
+          {
+            no: 2,
+            en: "Submits updated syllabus, grade sheets, and other required reports on time.",
+            tl: "Nagsusumite ng updated syllabus, grade sheets, at iba pang kinakailangang ulat sa tamang oras.",
+            verification: [
+              "Documents submission log",
+              "Submission receipts or acknowledgment emails"
+            ]
+          },
+          {
+            no: 3,
+            en: "Maximizes the allocated time or learning hours effectively.",
+            tl: "Mahusay na nagagamit ang inilaan na oras o learning hours.",
+            verification: [
+              "Class schedules and timetables",
+              "LMS logs",
+              "Informal interview with students"
+            ]
+          },
+          {
+            no: 4,
+            en: "Provides appropriate learning activities that facilitate critical thinking and creativity of students.",
+            tl: "Nagbibigay ng angkop na learning activities na nagpapalago ng critical thinking at creativity ng mga mag-aaral.",
+            verification: [
+              "Course syllabus",
+              "Learning plan",
+              "Classroom observation",
+              "Informal interview with students",
+              "LMS Logs"
+            ]
+          },
+          {
+            no: 5,
+            en: "Guides students to learn on their own, reflect on new ideas and experiences, and make decisions in accomplishing given tasks.",
+            tl: "Ginagabayan ang mga mag-aaral upang matutong magsarili, magnilay sa mga bagong ideya at karanasan, at makapagpasya sa pagtupad ng mga gawain.",
+            verification: [
+              "Informal interview with students",
+              "LMS logs",
+              "Course syllabus",
+              "Learning plan",
+              "Student work samples",
+              "Classroom observation"
+            ]
+          },
+          {
+            no: 6,
+            en: "Communicates constructive feedback to students for their academic growth.",
+            tl: "Nagbibigay ng makabuluhan at nakabubuting feedback sa mga mag-aaral para sa kanilang pag-unlad akademiko.",
+            verification: [
+              "LMS logs",
+              "Informal interview with students",
+              "Faculty consultation log",
+              "Graded student work with feedback",
+              "Emails or official correspondence"
+            ]
+          }
+        ]
+      },
+      {
+        key: "content_knowledge_pedagogy_technology",
+        title: "B. Content Knowledge, Pedagogy, and Technology",
+        subtitle: "",
+        questions: [
+          {
+            no: 7,
+            en: "Demonstrates extensive and broad knowledge of the subject or course.",
+            tl: "Nagpapakita ng malawak at malalim na kaalaman sa asignatura o kurso.",
+            verification: [
+              "Course syllabus",
+              "Learning plan",
+              "Instructional materials developed by the faculty",
+              "Informal interview with students",
+              "Mentorship or thesis/dissertation advisory records"
+            ]
+          },
+          {
+            no: 8,
+            en: "Simplifies complex ideas in the lesson for ease of understanding.",
+            tl: "Naipapaliwanag nang simple ang mahihirap na konsepto upang madaling maunawaan ng mga mag-aaral.",
+            verification: [
+              "Learning plan",
+              "Course syllabus",
+              "Classroom observation",
+              "Informal interview with students",
+              "Lecture notes and presentations",
+              "LMS logs"
+            ]
+          },
+          {
+            no: 9,
+            en: "Integrates contemporary issues and developments in the discipline and/or daily life activities in the syllabus.",
+            tl: "Naipapasok sa syllabus ang mga makabagong isyu at pag-unlad sa disiplina at/o sa pang-araw-araw na gawain.",
+            verification: [
+              "Course syllabus",
+              "Learning plan",
+              "Classroom observation",
+              "Informal interview with students",
+              "LMS logs",
+              "Instructional materials developed by the faculty",
+              "Participation in conferences, webinars, and training"
+            ]
+          },
+          {
+            no: 10,
+            en: "Promotes active learning and student engagement by using appropriate teaching and learning resources including ICT tools and platforms.",
+            tl: "Itinataguyod ang active learning at pakikilahok ng mga mag-aaral sa pamamagitan ng angkop na resources, kabilang ang ICT tools at platforms.",
+            verification: [
+              "Course syllabus",
+              "Learning plan",
+              "Classroom observation",
+              "Informal interview with students",
+              "LMS logs",
+              "Multimedia lecture materials",
+              "Student work samples"
+            ]
+          },
+          {
+            no: 11,
+            en: "Uses appropriate assessments such as projects, exams, quizzes, and assignments aligned with the learning outcomes.",
+            tl: "Gumagamit ng angkop na pagtataya tulad ng projects, exams, quizzes, at assignments na nakaayon sa learning outcomes.",
+            verification: [
+              "Course syllabus",
+              "Learning plan",
+              "Informal interview with students",
+              "Assessment tools and rubrics",
+              "Exam and quiz samples",
+              "Graded student work samples",
+              "LMS records"
+            ]
+          }
+        ]
+      },
+      {
+        key: "commitment_transparency",
+        title: "C. Commitment and Transparency",
+        subtitle: "",
+        questions: [
+          {
+            no: 12,
+            en: "Recognizes and values the unique diversity and individual differences among students.",
+            tl: "Kinikilala at pinahahalagahan ang pagkakaiba-iba at natatanging katangian ng bawat mag-aaral.",
+            verification: [
+              "Course syllabus",
+              "Learning plan",
+              "Instructional materials developed by the faculty",
+              "Classroom observation",
+              "Informal interview with students"
+            ]
+          },
+          {
+            no: 13,
+            en: "Assists students with their learning challenges during consultation hours.",
+            tl: "Tinutulungan ang mga mag-aaral sa kanilang learning challenges tuwing consultation hours.",
+            verification: [
+              "Course syllabus",
+              "Faculty consultation log",
+              "Advisory records",
+              "LMS logs",
+              "Emails or official correspondence"
+            ]
+          },
+          {
+            no: 14,
+            en: "Provides immediate feedback on student outputs and performance.",
+            tl: "Nagbibigay ng agarang feedback sa outputs at performance ng mga mag-aaral.",
+            verification: [
+              "Graded student work samples",
+              "Assessment tools and rubrics",
+              "Informal interview with students",
+              "LMS logs",
+              "Emails or official correspondence",
+              "Faculty consultation log",
+              "Advising reports"
+            ]
+          },
+          {
+            no: 15,
+            en: "Provides transparent and clear criteria in rating student's performance.",
+            tl: "Nagbibigay ng malinaw at transparent na pamantayan sa pagmamarka ng performance ng mga mag-aaral.",
+            verification: [
+              "Course syllabus",
+              "Assessment tools and rubrics",
+              "Informal interview with students",
+              "LMS records",
+              "Grade sheets and records"
+            ]
+          }
+        ]
+      }
+    ];
 
   const categories = [
     {
@@ -1021,15 +1748,15 @@
 
     if (CURRENT_USER.role === "officer") {
       if (CURRENT_USER.officerRole === "OCD") {
-        if (personInfoTitle) personInfoTitle.textContent = "A. ADAA Information";
+        if (personInfoTitle) personInfoTitle.textContent = "";
         if (personNameLabel) personNameLabel.textContent = "Name of ADAA Being Evaluated";
       } else {
-        if (personInfoTitle) personInfoTitle.textContent = "A. Department Head Information";
+        if (personInfoTitle) personInfoTitle.textContent = "";
         if (personNameLabel) personNameLabel.textContent = "Name of Department Head Being Evaluated";
       }
       if (personDepartmentLabel) personDepartmentLabel.textContent = "Office / Department";
     } else {
-      if (personInfoTitle) personInfoTitle.textContent = "A. Faculty Information";
+      if (personInfoTitle) personInfoTitle.textContent = "";
       if (personNameLabel) personNameLabel.textContent = "Name of Faculty Being Evaluated";
       if (personDepartmentLabel) personDepartmentLabel.textContent = "Department";
     }
@@ -1058,11 +1785,8 @@
   }
 
   function saveComments() {
-    const commentsBox = document.getElementById("commentsBox");
-    if (!commentsBox || !currentCategory || !getCurrentEvaluateeId()) return;
     const evaluateeId = getCurrentEvaluateeId();
-    ensureCategoryEvaluateePath(currentCategory, evaluateeId);
-    commentsData[currentCategory][evaluateeId] = commentsBox.value;
+    saveCommentsForEvaluatee(evaluateeId);
   }
 
   function getActiveLiveSourceId(categoryKey = currentCategory) {
@@ -1200,42 +1924,102 @@
     }
     return true;
   }
+function syncPeerCopyAppliedUI() {
+  const card = document.getElementById("copyPeersCard");
+  const title = document.getElementById("copyPeersTitle");
+  const note = document.getElementById("copyPeersNote");
+  const btn = document.getElementById("copyPeersBtn");
+  const disableBtn = document.getElementById("disableCopyBtn");
 
-  function syncPeerCopyAppliedUI() {
-    const btn = document.getElementById("copyPeersBtn");
-    const disableBtn = document.getElementById("disableCopyBtn");
-    if (!btn || !disableBtn) return;
+  if (!card || !title || !note || !btn || !disableBtn) return;
 
-    const activeId = getActiveLiveSourceId();
-    const evaluateeId = getCurrentEvaluateeId();
-    const currentSubmitted = evaluateeId ? isEvaluateeSubmitted(currentCategory, evaluateeId) : false;
-    const categorySubmitted = isCurrentCategorySubmitted();
-    const editMode = isCategoryEditMode();
+  const evaluateeId = getCurrentEvaluateeId();
+  const activeId = getActiveLiveSourceId();
+  const editMode = isCategoryEditMode();
 
-    if (activeId === null) {
-      btn.classList.remove("applied");
-      btn.innerHTML = `<span class="copy-btn-default">Apply to All</span><span class="copy-btn-success">Apply to All Active</span>`;
-      disableBtn.classList.add("d-none");
-      btn.disabled = (categorySubmitted && !editMode) || (currentSubmitted && !editMode);
-      disableBtn.disabled = (categorySubmitted && !editMode) || (currentSubmitted && !editMode);
-      return;
-    }
+  const categorySubmitted = isCurrentCategorySubmitted();
+  const currentSubmitted = evaluateeId
+    ? isEvaluateeSubmitted(currentCategory, evaluateeId)
+    : false;
 
-    disableBtn.classList.remove("d-none");
+  const personLabel =
+    CURRENT_USER.role === "officer"
+      ? (CURRENT_USER.officerRole === "OCD" ? "ADAA" : "department head")
+      : "faculty member";
 
-    if (isCurrentEvaluateeLiveSource()) {
-      btn.classList.add("applied");
-      btn.innerHTML = `<span class="copy-btn-success" style="display:inline-flex;">Apply to All Active</span>`;
-      btn.disabled = true;
-      disableBtn.disabled = false;
-      return;
-    }
+  const sourceName = activeId
+    ? getEvaluateeNameById(currentCategory, activeId)
+    : "";
+
+  const currentName = evaluateeId
+    ? getEvaluateeNameById(currentCategory, evaluateeId)
+    : "";
+
+  card.classList.remove("hidden");
+
+  // No active Apply to All yet
+  if (activeId === null) {
+    title.textContent = "Apply to All";
+
+    note.innerHTML = evaluateeId
+      ? `Use this if you want the answers and comments from <strong>${currentName}</strong> to be copied to all other ${personLabel}s.`
+      : `Select a ${personLabel} first before using Apply to All.`;
 
     btn.classList.remove("applied");
-    btn.innerHTML = `<span class="copy-btn-default">Following ${getEvaluateeNameById(currentCategory, activeId)}</span>`;
-    btn.disabled = true;
-    disableBtn.disabled = false;
+    btn.innerHTML = `
+      <span class="copy-btn-default">Apply to All</span>
+      <span class="copy-btn-success">Apply to All Active</span>
+    `;
+
+    disableBtn.classList.add("d-none");
+
+    btn.disabled = !evaluateeId || ((categorySubmitted || currentSubmitted) && !editMode);
+    disableBtn.disabled = true;
+
+    return;
   }
+
+  // Apply to All is active
+  title.textContent = "Apply to All Active";
+  disableBtn.classList.remove("d-none");
+  disableBtn.disabled = false;
+
+  // Current selected form is the source form
+  if (isCurrentEvaluateeLiveSource()) {
+    btn.classList.add("applied");
+
+    btn.innerHTML = `
+      <span class="copy-btn-success" style="display:inline-flex;">
+        Copying from ${sourceName}
+      </span>
+    `;
+
+    note.innerHTML = `
+      The form of <strong>${sourceName}</strong> is currently being used as the source.
+      Any changes you make here will be copied to all other ${personLabel}s when you save.
+    `;
+
+    btn.disabled = true;
+    return;
+  }
+
+  // Current selected form is following the source form
+  btn.classList.remove("applied");
+
+  btn.innerHTML = `
+    <span class="copy-btn-default">
+      Following ${sourceName}
+    </span>
+  `;
+
+  note.innerHTML = `
+    This form is currently following the answers and comments from
+    <strong>${sourceName}</strong>. To edit this form separately, turn off Apply to All first.
+  `;
+
+  btn.disabled = true;
+}
+
 
   function activateLiveCopy(categoryKey, sourceEvaluateeId) {
     activeLiveSourceByCategory[categoryKey] = String(sourceEvaluateeId);
@@ -1642,10 +2426,20 @@
     updateReadOnlyState();
 
     select.onchange = () => {
-      saveComments();
+      const previousEvaluateeId = lastSelectedEvaluateeId;
+
+      if (previousEvaluateeId) {
+        saveCommentsForEvaluatee(previousEvaluateeId);
+      }
+
       lastSelectedEvaluateeId = String(select.value || "");
-      if (lastSelectedEvaluateeId) ensureCategoryEvaluateePath(currentCategory, lastSelectedEvaluateeId);
+
+      if (lastSelectedEvaluateeId) {
+        ensureCategoryEvaluateePath(currentCategory, lastSelectedEvaluateeId);
+      }
+
       currentSectionIndex = 0;
+
       populateFacultyInfo();
       loadComments();
       togglePeerCopyCard();
@@ -1755,7 +2549,7 @@
 
       container.innerHTML += `
         <div class="question-card ${readOnlyClass}">
-          <div class="question-title">${index + 1}. ${question.en}</div>
+          <div class="question-title">${question.no}. ${question.en}</div>
           <div class="question-sub">${question.tl}</div>
           <div class="verification-box">
             <div class="verification-title">Suggested Means of Verification</div>
@@ -2056,15 +2850,27 @@
     }
 
     refreshCategoryStatus(currentCategory);
+
+    const nextEvaluatee = getNextEvaluateeAfter(currentCategory, evaluateeId);
+
+    if (!isApplyToAllActive && nextEvaluatee) {
+      lastSelectedEvaluateeId = String(nextEvaluatee.id);
+      ensureCategoryEvaluateePath(currentCategory, lastSelectedEvaluateeId);
+
+      const commentsBox = document.getElementById("commentsBox");
+      if (commentsBox) commentsBox.value = "";
+    } else if (!isApplyToAllActive) {
+      lastSelectedEvaluateeId = String(evaluateeId);
+    }
+
     renderDashboard();
     populateEvaluatees();
+    loadComments();
     renderSectionStepper();
     renderSection();
     updateSubmitButtonState();
     updateReadOnlyState();
     scrollFormToTop();
-
-    const nextEvaluatee = getNextEvaluateeAfter(currentCategory, evaluateeId);
 
     showInfoModal(
       "Evaluation Submitted",
@@ -2090,7 +2896,6 @@
     updateReadOnlyState();
   }
 }
-
 async function saveEditedEvaluation() {
   const evaluateeId = getCurrentEvaluateeId();
   const saveBtn = document.getElementById("saveEditBtn");
@@ -2123,10 +2928,23 @@ async function saveEditedEvaluation() {
 
   saveComments();
 
+  const activeLiveSourceId = getActiveLiveSourceId();
+  const isApplyToAllActive =
+    !!activeLiveSourceId && String(activeLiveSourceId) === String(evaluateeId);
+
+  if (isApplyToAllActive) {
+    applyLiveCopy(currentCategory);
+    syncPeerCopyAppliedUI();
+  }
+
   const payload = {
     evaluatee_id: evaluateeId,
-    comments: commentsData[currentCategory]?.[evaluateeId] || "",
-    answers: ratings[currentCategory]?.[evaluateeId] || {}
+    comments: (commentsData[currentCategory]?.[evaluateeId] || "").trim(),
+    answers: ratings[currentCategory]?.[evaluateeId] || {},
+    apply_to_all: isApplyToAllActive,
+    all_evaluatee_ids: isApplyToAllActive
+      ? getCategoryEvaluatees(currentCategory).map(person => String(person.id))
+      : []
   };
 
   const oldText = saveBtn ? saveBtn.textContent : "Save Changes";
@@ -2152,8 +2970,40 @@ async function saveEditedEvaluation() {
       throw new Error(data.message || "Something went wrong while saving the edited evaluation.");
     }
 
-    ensureCategoryEvaluateePath(currentCategory, evaluateeId);
-    evaluateeSubmissionStatus[currentCategory][evaluateeId] = "submitted";
+    if (isApplyToAllActive) {
+      const allIds = getCategoryEvaluatees(currentCategory).map(person => String(person.id));
+
+      allIds.forEach(id => {
+        ensureCategoryEvaluateePath(currentCategory, id);
+        evaluateeSubmissionStatus[currentCategory][id] = "submitted";
+      });
+
+      submissionStatus[currentCategory] = "submitted";
+
+      if (!dashboardSummary[currentCategory]) {
+        dashboardSummary[currentCategory] = {};
+      }
+
+      dashboardSummary[currentCategory].saved = allIds.length;
+      dashboardSummary[currentCategory].required = allIds.length;
+      dashboardSummary[currentCategory].status = "submitted";
+
+      activeLiveSourceByCategory[currentCategory] = null;
+    } else {
+      ensureCategoryEvaluateePath(currentCategory, evaluateeId);
+      evaluateeSubmissionStatus[currentCategory][evaluateeId] = "submitted";
+
+      if (!dashboardSummary[currentCategory]) {
+        dashboardSummary[currentCategory] = {};
+      }
+
+      dashboardSummary[currentCategory].saved = getSubmittedCount(currentCategory);
+      dashboardSummary[currentCategory].required = getCategoryEvaluatees(currentCategory).length;
+      dashboardSummary[currentCategory].status = areAllEvaluateesSubmitted(currentCategory)
+        ? "submitted"
+        : (getSubmittedCount(currentCategory) > 0 ? "in_progress" : "not_started");
+    }
+
     editModeByCategory[currentCategory] = false;
 
     refreshCategoryStatus(currentCategory);
@@ -2163,10 +3013,15 @@ async function saveEditedEvaluation() {
     renderSection();
     updateSubmitButtonState();
     updateReadOnlyState();
+    syncPeerCopyAppliedUI();
+
+    const copiedFromName = getEvaluateeNameById(currentCategory, evaluateeId);
 
     showInfoModal(
       "Changes Saved",
-      "Your edited submitted evaluation has been saved successfully."
+      isApplyToAllActive
+        ? `The edited evaluation from <strong>${copiedFromName}</strong> has been saved and copied to all evaluatees.`
+        : "Your edited submitted evaluation has been saved successfully."
     );
 
   } catch (error) {
@@ -2177,12 +3032,13 @@ async function saveEditedEvaluation() {
   } finally {
     if (saveBtn) {
       saveBtn.textContent = oldText;
+      saveBtn.disabled = false;
     }
+
     updateSubmitButtonState();
     updateReadOnlyState();
   }
 }
-
 
   function copyCurrentEvaluationToOtherPeers() {
     const sourceId = getCurrentEvaluateeId();
@@ -2348,6 +3204,18 @@ function enableEditMode() {
   renderSection();
   updateSubmitButtonState();
   updateReadOnlyState();
+}
+
+
+
+function saveCommentsForEvaluatee(evaluateeId) {
+  const commentsBox = document.getElementById("commentsBox");
+
+  if (!commentsBox || !currentCategory || !evaluateeId) return;
+
+  const evalId = String(evaluateeId);
+  ensureCategoryEvaluateePath(currentCategory, evalId);
+  commentsData[currentCategory][evalId] = commentsBox.value;
 }
   </script>
 </body>

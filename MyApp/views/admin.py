@@ -84,16 +84,59 @@ def _ordered_response_queryset(model):
 
 def _replace_faculty_from_department_sheet(ws, department, schedule):
     """
-    Expected sheet format:
-    NAME | GSFE EMAIL
+    Supports department sheets with flexible headers:
+    - NAME | GSFE EMAIL
+    - ID NUMBER | NAME | GSFE EMAIL
+    - NAME | EMAIL
+    - FIRST NAME | LAST NAME | EMAIL
     """
+
     FacultyMember.objects.filter(schedule=schedule, department=department).delete()
+
+    headers = [
+        str(cell.value).strip().upper() if cell.value else ""
+        for cell in ws[1]
+    ]
+
+    def get_index(*possible_names):
+        for name in possible_names:
+            if name in headers:
+                return headers.index(name)
+        return None
+
+    name_index = get_index("NAME", "FULL NAME", "FACULTY NAME")
+    first_name_index = get_index("FIRST NAME", "FIRSTNAME")
+    last_name_index = get_index("LAST NAME", "LASTNAME")
+    id_index = get_index("ID NUMBER", "ID NO", "ID", "EMPLOYEE ID")
+    email_index = get_index("GSFE EMAIL", "EMAIL", "EMAIL ADDRESS")
 
     faculty_to_create = []
 
     for row in ws.iter_rows(min_row=2, values_only=True):
-        name = str(row[0]).strip() if row and len(row) > 0 and row[0] else ""
-        email = str(row[1]).strip() if row and len(row) > 1 and row[1] else ""
+        id_number = ""
+        name = ""
+        email = ""
+
+        if id_index is not None and id_index < len(row) and row[id_index]:
+            id_number = str(row[id_index]).strip()
+
+        if name_index is not None and name_index < len(row) and row[name_index]:
+            name = str(row[name_index]).strip()
+
+        if not name:
+            first_name = ""
+            last_name = ""
+
+            if first_name_index is not None and first_name_index < len(row) and row[first_name_index]:
+                first_name = str(row[first_name_index]).strip()
+
+            if last_name_index is not None and last_name_index < len(row) and row[last_name_index]:
+                last_name = str(row[last_name_index]).strip()
+
+            name = f"{first_name} {last_name}".strip()
+
+        if email_index is not None and email_index < len(row) and row[email_index]:
+            email = str(row[email_index]).strip()
 
         if not name:
             continue
@@ -102,7 +145,7 @@ def _replace_faculty_from_department_sheet(ws, department, schedule):
             FacultyMember(
                 schedule=schedule,
                 department=department,
-                id_number="",
+                id_number=id_number,
                 name=name,
                 email=email,
             )
@@ -287,21 +330,22 @@ def admin_department(request):
             for sheet_name in wb.sheetnames:
                 code = str(sheet_name).strip().upper()
 
-                # skip non-department sheets here
+                # skip non-department sheets
                 if code in ["HEAD", "OFFICES"]:
-                    continue
-
-                if code not in DEPARTMENT_MAP:
                     continue
 
                 ws = wb[sheet_name]
 
+                # If the sheet is one of the original departments, use the fixed full name.
+                # If it is a newly added department sheet, use the sheet name as the department name.
+                department_name = DEPARTMENT_MAP.get(code, str(sheet_name).strip())
+
                 department, _ = Department.objects.get_or_create(
                     code=code,
-                    defaults={"name": DEPARTMENT_MAP[code]},
+                    defaults={"name": department_name},
                 )
 
-                department.name = DEPARTMENT_MAP[code]
+                department.name = department_name
                 department.save()
 
                 imported_faculty += _replace_faculty_from_department_sheet(
@@ -548,6 +592,7 @@ def admin_manage(request):
     return render(request, "admin/admin_manage.html", context)
 
 
+@admin_required
 def add_department(request):
     if request.method != "POST":
         return redirect("admin_department")
@@ -567,17 +612,14 @@ def add_department(request):
 
     if not code or not name:
         messages.error(request, "Department code and name are required.")
-        return redirect("admin_department")
+        return redirect(f"{reverse('admin_department')}?schedule={selected_schedule.id}")
 
     department, created = Department.objects.get_or_create(
         code=code,
         defaults={"name": name},
     )
 
-    if not created:
-        messages.error(request, f"Department code '{code}' already exists.")
-        return redirect("admin_department")
-
+    # If the department already exists, update its name instead of blocking it.
     department.name = name
     department.save()
 
@@ -594,18 +636,28 @@ def add_department(request):
     if faculty_file:
         try:
             count = _replace_faculty_from_uploaded_file(
-                faculty_file, department, selected_schedule
+                faculty_file,
+                department,
+                selected_schedule
             )
-            messages.success(request, f"Department added successfully with {count} faculty members.")
+
+            if created:
+                messages.success(request, f"Department added successfully with {count} faculty members.")
+            else:
+                messages.success(request, f"Department already existed. Faculty list for this schedule was updated with {count} records.")
+
         except Exception as e:
-            messages.warning(request, f"Department added, but faculty file could not be processed: {str(e)}")
-            return redirect("admin_department")
+            messages.warning(request, f"Department saved, but faculty file could not be processed: {str(e)}")
+            return redirect(f"{reverse('admin_department')}?schedule={selected_schedule.id}")
     else:
-        messages.success(request, "Department added successfully.")
+        if created:
+            messages.success(request, "Department added successfully.")
+        else:
+            messages.success(request, "Department already existed. Department details were updated for the selected schedule.")
 
-    return redirect("admin_department")
+    return redirect(f"{reverse('admin_department')}?schedule={selected_schedule.id}")
 
-
+@admin_required
 def update_department(request, dept_id):
     if request.method != "POST":
         return redirect("admin_department")
@@ -624,15 +676,16 @@ def update_department(request, dept_id):
         return redirect("admin_department")
 
     selected_schedule = get_object_or_404(EvaluationSchedule, id=schedule_id)
+    redirect_url = f"{reverse('admin_department')}?schedule={selected_schedule.id}"
 
     if not code or not name:
         messages.error(request, "Department code and name are required.")
-        return redirect("admin_department")
+        return redirect(redirect_url)
 
     existing_department = Department.objects.filter(code=code).exclude(id=department.id).first()
     if existing_department:
         messages.error(request, f"Department code '{code}' is already used by another department.")
-        return redirect("admin_department")
+        return redirect(redirect_url)
 
     department.code = code
     department.name = name
@@ -648,21 +701,32 @@ def update_department(request, dept_id):
             },
         )
     else:
-        DepartmentHead.objects.filter(schedule=selected_schedule, department=department).delete()
+        DepartmentHead.objects.filter(
+            schedule=selected_schedule,
+            department=department
+        ).delete()
 
     if faculty_file:
         try:
             count = _replace_faculty_from_uploaded_file(
-                faculty_file, department, selected_schedule
+                faculty_file,
+                department,
+                selected_schedule
             )
-            messages.success(request, f"Department updated successfully. Faculty list replaced with {count} records.")
+            messages.success(
+                request,
+                f"Department updated successfully. Faculty list replaced with {count} records."
+            )
         except Exception as e:
-            messages.warning(request, f"Department updated, but faculty file could not be processed: {str(e)}")
-            return redirect("admin_department")
+            messages.warning(
+                request,
+                f"Department updated, but faculty file could not be processed: {str(e)}"
+            )
+            return redirect(redirect_url)
     else:
         messages.success(request, "Department updated successfully.")
 
-    return redirect("admin_department")
+    return redirect(redirect_url)
 
 
 def delete_department(request, dept_id):
@@ -1287,8 +1351,6 @@ def admin_reset_password(request, uidb64, token):
     })
 
 
-
-
 @admin_required
 def admin_past_evaluations(request):
     selected_schedule_id = request.GET.get("schedule")
@@ -1608,9 +1670,6 @@ def admin_logout(request):
     logout(request)
     return redirect("admin_login")
 
-
-
-
 @login_required
 def admin_pending(request):
     schedules = EvaluationSchedule.objects.order_by('-start_datetime')
@@ -1620,10 +1679,67 @@ def admin_pending(request):
     total_done_evaluatees = 0
     department_tabs = []
 
+    total_pending_heads = 0
+    total_done_heads = 0
+    total_heads = 0
+    head_pending_rows = []
+    head_done_rows = []
+
     if selected_schedule:
-        department_heads = DepartmentHead.objects.filter(
-            schedule=selected_schedule
-        ).select_related('department').order_by('department__name', 'name')
+        # ==============================
+        # HEAD MONITORING: ADAA -> HEADS
+        # ==============================
+        department_heads_for_adaa = (
+            DepartmentHead.objects
+            .filter(schedule=selected_schedule)
+            .select_related("department")
+            .order_by("department__name", "name")
+        )
+
+        for head in department_heads_for_adaa:
+            total_heads += 1
+
+            evaluation = (
+                HeadEvaluation.objects
+                .filter(
+                    schedule=selected_schedule,
+                    evaluatee_head=head
+                )
+                .order_by("-submitted_at", "-id")
+                .first()
+            )
+
+            department_name = head.department.name if head.department else "No Department"
+            department_code = head.department.code if head.department else "—"
+
+            if evaluation and evaluation.status == "submitted":
+                head_done_rows.append({
+                    "head_name": evaluation.evaluatee_name or head.name,
+                    "department": evaluation.evaluatee_department or department_name,
+                    "department_code": department_code,
+                    "status": "Done",
+                    "evaluator_name": evaluation.evaluator_name or "ADAA",
+                    "submitted_at": evaluation.submitted_at.strftime('%b %d, %Y %I:%M %p') if evaluation.submitted_at else "—",
+                })
+                total_done_heads += 1
+            else:
+                head_pending_rows.append({
+                    "head_name": head.name,
+                    "department": department_name,
+                    "department_code": department_code,
+                    "status": "Not Yet Finished",
+                })
+                total_pending_heads += 1
+
+        # ===================================
+        # FACULTY MONITORING: HEAD -> FACULTY
+        # ===================================
+        department_heads = (
+            DepartmentHead.objects
+            .filter(schedule=selected_schedule)
+            .select_related('department')
+            .order_by('department__name', 'name')
+        )
 
         departments_map = {}
 
@@ -1644,17 +1760,26 @@ def admin_pending(request):
                     'total_faculty': 0,
                 }
 
-            faculty_members = FacultyMember.objects.filter(
-                schedule=selected_schedule,
-                department=dept
-            ).select_related('department').order_by('name')
+            faculty_members = (
+                FacultyMember.objects
+                .filter(
+                    schedule=selected_schedule,
+                    department=dept
+                )
+                .select_related('department')
+                .order_by('name')
+            )
 
             for faculty in faculty_members:
-                evaluation = FacultyEvaluation.objects.filter(
-                    schedule=selected_schedule,
-                    evaluator_head=head,
-                    evaluatee_faculty=faculty
-                ).first()
+                evaluation = (
+                    FacultyEvaluation.objects
+                    .filter(
+                        schedule=selected_schedule,
+                        evaluator_head=head,
+                        evaluatee_faculty=faculty
+                    )
+                    .first()
+                )
 
                 if evaluation and evaluation.status == 'submitted':
                     departments_map[dept_name]['done_rows'].append({
@@ -1669,7 +1794,7 @@ def admin_pending(request):
                     departments_map[dept_name]['pending_rows'].append({
                         'evaluatee_name': faculty.name,
                         'evaluatee_department': dept_name,
-                        'status': 'In Progress' if evaluation and evaluation.status == 'in_progress' else 'Not Yet Finished',
+                        'status': 'Not Yet Finished',
                     })
                     departments_map[dept_name]['pending_count'] += 1
                     total_pending_evaluatees += 1
@@ -1683,9 +1808,18 @@ def admin_pending(request):
         'active_page': 'pending',
         'selected_schedule': selected_schedule,
         'schedules': schedules,
+
+        # Faculty pending data
         'department_tabs': department_tabs,
         'total_pending_evaluatees': total_pending_evaluatees,
         'total_done_evaluatees': total_done_evaluatees,
+
+        # Head pending data
+        'total_heads': total_heads,
+        'total_pending_heads': total_pending_heads,
+        'total_done_heads': total_done_heads,
+        'head_pending_rows': head_pending_rows,
+        'head_done_rows': head_done_rows,
     }
 
     return render(request, 'admin/admin_pending.html', context)
