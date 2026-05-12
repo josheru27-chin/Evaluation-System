@@ -26,8 +26,11 @@ SECRET_KEY = 'django-insecure-^)l&sjs_3!@anu4a24d#y!$@ml6_t2vdc_w5o&7&325$c&7vav
 DEBUG = True
 
 # To this:
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '172.16.27.133']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '172.16.27.133','evaluation.tupcavite.edu.ph','0.0.0.0']
 
+CSRF_TRUSTED_ORIGINS = [
+    'https://evaluation.tupcavite.edu.ph',
+]
 
 # Application definition
 
