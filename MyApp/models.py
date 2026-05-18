@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.conf import settings
 
 
 class Department(models.Model):
@@ -56,6 +57,9 @@ class FacultyMember(models.Model):
     id_number = models.CharField(max_length=100, blank=True, default="")
     name = models.CharField(max_length=255)
     email = models.EmailField(blank=True, default="")
+    academic_rank = models.CharField(max_length=255, blank=True, default="")
+    course = models.CharField(max_length=255, blank=True, default="")
+    program_year = models.CharField(max_length=255, blank=True, default="")
 
     class Meta:
         ordering = ["name"]
@@ -82,6 +86,9 @@ class DepartmentHead(models.Model):
     otp_code = models.CharField(max_length=6, blank=True, default="")
     otp_created_at = models.DateTimeField(null=True, blank=True)
     is_verified = models.BooleanField(default=False)
+    academic_rank = models.CharField(max_length=255, blank=True, default="")
+    course = models.CharField(max_length=255, blank=True, default="")
+    program_year = models.CharField(max_length=255, blank=True, default="")
 
     class Meta:
         ordering = ["department__name", "name"]
@@ -270,6 +277,9 @@ class EvaluationOfficer(models.Model):
     role = models.CharField(max_length=20, choices=ROLE_CHOICES)
     name = models.CharField(max_length=255)
     email = models.EmailField(blank=True, default="")
+    academic_rank = models.CharField(max_length=255, blank=True, default="")
+    course = models.CharField(max_length=255, blank=True, default="")
+    program_year = models.CharField(max_length=255, blank=True, default="")
 
     class Meta:
         ordering = ["role", "name"]
@@ -410,4 +420,87 @@ class HeadEvaluationResponse(models.Model):
     class Meta:
         ordering = ["section_name", "question_number"]
 
+    
+# =========================
+# SEF + SET UPLOAD STORAGE
+# for future printable use
+# =========================
+
+class SEFSETUploadBatch(models.Model):
+    sef_file = models.FileField(upload_to="sef_set_uploads/sef/")
+    set_file = models.FileField(upload_to="sef_set_uploads/set/")
+
+    sef_filename = models.CharField(max_length=255, blank=True, default="")
+    set_filename = models.CharField(max_length=255, blank=True, default="")
+
+    total_sef = models.PositiveIntegerField(default=0)
+    total_set = models.PositiveIntegerField(default=0)
+    total_matched = models.PositiveIntegerField(default=0)
+    total_unmatched_sef = models.PositiveIntegerField(default=0)
+    total_unmatched_set = models.PositiveIntegerField(default=0)
+
+    unmatched_sef_json = models.JSONField(default=list, blank=True)
+    unmatched_set_json = models.JSONField(default=list, blank=True)
+
+    uploaded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+
+    is_active = models.BooleanField(default=True)
+    generated_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ["-generated_at", "-id"]
+
+    def __str__(self):
+        return f"SEF + SET Upload - {self.generated_at.strftime('%Y-%m-%d %I:%M %p')}"
+
+
+class SEFSETMatchedResult(models.Model):
+    batch = models.ForeignKey(
+        SEFSETUploadBatch,
+        on_delete=models.CASCADE,
+        related_name="matched_results"
+    )
+
+    name = models.CharField(max_length=255)
+    normalized_name = models.CharField(max_length=255, blank=True, default="")
+    department = models.CharField(max_length=255, blank=True, default="")
+    rank = models.CharField(max_length=255, blank=True, default="")
+
+    supervisor = models.CharField(max_length=255, blank=True, default="")
+    semester = models.CharField(max_length=100, blank=True, default="")
+    school_year = models.CharField(max_length=100, blank=True, default="")
+    period = models.CharField(max_length=255, blank=True, default="")
+
+    sef_name = models.CharField(max_length=255, blank=True, default="")
+    set_name = models.CharField(max_length=255, blank=True, default="")
+
+    sef_rating = models.CharField(max_length=50, blank=True, default="")
+    sef_computed_rating = models.CharField(max_length=50, blank=True, default="")
+    sef_total_score = models.CharField(max_length=50, blank=True, default="")
+
+    set_rating = models.CharField(max_length=50, blank=True, default="")
+    set_remarks = models.TextField(blank=True, default="")
+
+    sef_sheet = models.CharField(max_length=255, blank=True, default="")
+    set_sheet = models.CharField(max_length=255, blank=True, default="")
+
+    match_type = models.CharField(max_length=50, blank=True, default="")
+    match_score = models.CharField(max_length=50, blank=True, default="")
+
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
+    
+    
+    
+    
     

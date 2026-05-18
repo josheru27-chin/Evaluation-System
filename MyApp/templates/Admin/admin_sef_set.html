@@ -1,0 +1,2637 @@
+{% extends "admin/admin_base.html" %}
+
+{% block content %}
+
+<style>
+    .content-header,
+    .dashboard-header,
+    .page-header,
+    .admin-page-header,
+    .welcome-card,
+    .admin-welcome-card {
+        display: none !important;
+    }
+
+    .sefset-hero {
+        background: linear-gradient(135deg, #981b2e, #7d1626);
+        color: #fff;
+        border-radius: 24px;
+        padding: 28px;
+        box-shadow: 0 14px 34px rgba(152, 27, 46, 0.22);
+    }
+
+    .sefset-card {
+        border: 0;
+        border-radius: 22px;
+        box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+        overflow: hidden;
+        background: #fff;
+    }
+
+    .sefset-card-header {
+        padding: 20px 24px;
+        border-bottom: 1px solid #f0d8dd;
+        background: #fff;
+    }
+
+    .sefset-card-header h5 {
+        color: #981b2e;
+        font-weight: 800;
+        margin-bottom: 4px;
+    }
+
+    .btn-maroon {
+        background: #981b2e;
+        border-color: #981b2e;
+        color: #fff;
+        border-radius: 999px;
+        font-weight: 700;
+        padding: 10px 22px;
+    }
+
+    .btn-maroon:hover {
+        background: #7d1626;
+        border-color: #7d1626;
+        color: #fff;
+    }
+
+    .btn-outline-maroon {
+        border: 1px solid #981b2e;
+        color: #981b2e;
+        background: #fff;
+        border-radius: 999px;
+        font-weight: 700;
+        padding: 10px 22px;
+    }
+
+    .btn-outline-maroon:hover {
+        background: #981b2e;
+        color: #fff;
+    }
+
+    .badge-soft {
+        background: #f7e9ec;
+        color: #981b2e;
+        border-radius: 999px;
+        padding: 8px 14px;
+        font-weight: 800;
+    }
+
+    .mode-card {
+        border: 1px solid #f0d8dd;
+        border-radius: 26px;
+        background: #fff;
+        padding: 26px;
+        height: 100%;
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.07);
+        transition: .2s ease;
+    }
+
+    .mode-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 18px 40px rgba(152, 27, 46, 0.14);
+        border-color: #d8a1ad;
+    }
+
+    .mode-icon {
+        width: 64px;
+        height: 64px;
+        border-radius: 20px;
+        background: #f7e9ec;
+        color: #981b2e;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        margin-bottom: 16px;
+    }
+
+    .stat-card {
+        border-radius: 18px;
+        padding: 18px;
+        border: 1px solid #f0d8dd;
+        background: #fff;
+        height: 100%;
+    }
+
+    .stat-card .value {
+        font-size: 2rem;
+        font-weight: 900;
+        color: #981b2e;
+        line-height: 1;
+    }
+
+    .stat-card .label {
+        color: #6b7280;
+        font-weight: 700;
+        font-size: .9rem;
+        margin-top: 6px;
+    }
+
+    .search-box {
+        position: relative;
+    }
+
+    .search-box i {
+        position: absolute;
+        top: 50%;
+        left: 15px;
+        transform: translateY(-50%);
+        color: #9ca3af;
+    }
+
+    .search-box input {
+        padding-left: 42px;
+        border-radius: 999px;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #981b2e;
+        box-shadow: 0 0 0 .2rem rgba(152, 27, 46, .15);
+    }
+
+    .filter-label {
+        font-size: .78rem;
+        font-weight: 800;
+        color: #6b7280;
+        margin-bottom: 6px;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+    }
+
+    .result-count-info {
+        color: #6b7280;
+        font-weight: 800;
+        font-size: .9rem;
+    }
+
+    .matched-table-scroll {
+        max-height: 520px;
+        overflow: auto;
+        border-top: 1px solid #f0d8dd;
+        border-bottom: 1px solid #f0d8dd;
+        background: #fff;
+    }
+
+    .matched-table-scroll::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+
+    .matched-table-scroll::-webkit-scrollbar-thumb {
+        background: #d8a1ad;
+        border-radius: 999px;
+    }
+
+    .matched-table-scroll::-webkit-scrollbar-track {
+        background: #fff8fa;
+    }
+
+    .matched-table-scroll table {
+        min-width: 820px;
+    }
+
+    .table thead th {
+        background: #981b2e;
+        color: #fff;
+        vertical-align: middle;
+        white-space: nowrap;
+        font-size: .9rem;
+        padding: 14px 12px;
+    }
+
+    .matched-table-scroll thead th {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+    }
+
+    .table tbody td {
+        vertical-align: middle;
+        padding: 16px 12px;
+    }
+
+    .table tbody tr:hover {
+        background: #fff8fa;
+    }
+
+    .faculty-name {
+        font-weight: 800;
+        color: #111827;
+    }
+
+    .empty-state {
+        padding: 55px 20px;
+        text-align: center;
+    }
+
+    .empty-state i {
+        color: #981b2e;
+        font-size: 3.5rem;
+        display: block;
+        margin-bottom: 14px;
+    }
+
+    .batch-check {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+        accent-color: #981b2e;
+    }
+
+    .upload-modal-icon {
+        width: 58px;
+        height: 58px;
+        border-radius: 18px;
+        background: #f7e9ec;
+        color: #981b2e;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        margin-bottom: 12px;
+    }
+
+    .upload-box {
+        border: 2px dashed #d8a1ad;
+        background: #fff8fa;
+        border-radius: 20px;
+        padding: 20px;
+        height: 100%;
+        transition: 0.2s ease;
+    }
+
+    .upload-box:hover {
+        background: #fff1f4;
+        border-color: #981b2e;
+    }
+
+    .modal-content {
+        border-radius: 24px;
+        overflow: hidden;
+    }
+
+    .modal-header-maroon {
+        background: linear-gradient(135deg, #981b2e, #7d1626);
+        color: #fff;
+        border-bottom: 0;
+        padding: 22px 24px;
+    }
+
+    .modal-header-maroon .btn-close {
+        filter: brightness(0) invert(1);
+        opacity: .9;
+    }
+
+    .unmatched-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 18px;
+        margin-top: 22px;
+    }
+
+    .unmatched-card {
+        border: 1px solid #f0d8dd;
+        border-radius: 22px;
+        background: #fff;
+        box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
+        overflow: hidden;
+    }
+
+    .unmatched-card-header {
+        padding: 18px 20px;
+        border-bottom: 1px solid #f0d8dd;
+        background: #fff8fa;
+    }
+
+    .unmatched-card-header h5 {
+        margin: 0;
+        font-weight: 900;
+        color: #981b2e;
+        font-size: 1rem;
+    }
+
+    .unmatched-card-header p {
+        margin: 4px 0 0;
+        color: #6b7280;
+        font-size: .88rem;
+    }
+
+    .unmatched-empty {
+        padding: 28px 18px;
+        text-align: center;
+        color: #6b7280;
+    }
+
+    .unmatched-empty i {
+        display: block;
+        font-size: 2rem;
+        color: #981b2e;
+        margin-bottom: 8px;
+    }
+
+    .print-area {
+        display: none;
+    }
+
+    .print-page {
+        position: relative;
+        width: 8.5in;
+        min-height: 11in;
+        margin: 0 auto 18px auto;
+        background: #fff;
+        color: #111;
+        padding: .48in .58in;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 10px;
+        line-height: 1.18;
+        box-shadow: 0 6px 24px rgba(0, 0, 0, .18);
+        overflow: visible;
+    }
+
+/* ── ANNEX B - CMO FORMAT COMPACT 3 PAGES ── */
+
+
+.annex-b-page {
+    width: 8.5in;
+    min-height: auto !important;
+    padding: 0 !important;
+    background: #fff;
+    box-sizing: border-box;
+}
+
+.annex-b-sheet {
+    width: 8.5in !important;
+    min-height: 11in !important;
+    height: 11in !important;
+    padding: 0.35in 0.58in 0.30in 0.58in !important;
+    page-break-after: always !important;
+    break-after: page !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+}
+
+.annex-b-sheet:last-child {
+    page-break-after: auto !important;
+    break-after: auto !important;
+}
+
+.annex-b-continuation-title {
+    text-align: right;
+    font-size: 8px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.annex-b-sheet .annex-benchmark-table {
+    margin-top: 4px;
+}
+.annex-b-page,
+.annex-b-page * {
+    font-family: Arial, Helvetica, sans-serif !important;
+    color: #000 !important;
+}
+
+.annex-b-page {
+    width: 8.5in;
+    min-height: 11in;
+    padding: 0.25in 0.48in 0.25in 0.48in;
+    background: #fff;
+    font-size: 8.2px;
+    line-height: 1.02;
+    box-sizing: border-box;
+}
+
+.annex-header-right {
+    text-align: right;
+    font-size: 7.8px;
+    font-weight: 700;
+    margin-bottom: 7px;
+}
+
+.annex-main-title {
+    text-align: center;
+    font-size: 8.5px;
+    line-height: 1.05;
+    font-weight: 900;
+    text-transform: uppercase;
+    margin-bottom: 7px;
+}
+
+.annex-section-title {
+    font-size: 8.2px;
+    font-weight: 900;
+    margin-top: 5px;
+    margin-bottom: 3px;
+}
+
+.annex-light-text {
+    font-size: 8.2px;
+    font-weight: 700;
+}
+
+.annex-info-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 5px;
+}
+
+.annex-info-table td {
+    border: none !important;
+    padding: 1px 2px;
+    font-size: 8.1px;
+    line-height: 1.02;
+    vertical-align: top;
+}
+
+.annex-info-table td:first-child {
+    width: 170px;
+    font-weight: 700;
+}
+
+.annex-info-table td:nth-child(2) {
+    width: 10px;
+    text-align: center;
+    font-weight: 700;
+}
+
+.annex-info-table td:nth-child(3) {
+    font-weight: 800;
+}
+
+.annex-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.annex-table th,
+.annex-table td {
+    border: 1px solid #000;
+    padding: 1px 3px;
+    vertical-align: top;
+    font-size: 7.6px;
+    line-height: 1.0;
+}
+
+.annex-table th {
+    text-align: center;
+    font-weight: 900;
+}
+
+.rating-scale-table {
+    margin-bottom: 4px;
+}
+
+.rating-scale-table .scale-cell {
+    width: 38px;
+    text-align: center;
+    font-weight: 900;
+}
+
+.rating-scale-table .description-cell {
+    width: 128px;
+    text-align: center;
+}
+
+.annex-instruction {
+    font-size: 7.9px;
+    text-align: justify;
+    line-height: 1.05;
+    margin: 4px 0 3px;
+}
+
+.annex-benchmark-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    margin-top: 2px;
+}
+
+.annex-benchmark-table th,
+.annex-benchmark-table td {
+    border: 1px solid #000;
+    padding: 1px 3px;
+    vertical-align: top;
+    font-size: 7.15px;
+    line-height: 0.98;
+}
+
+.annex-benchmark-table th {
+    text-align: center;
+    font-weight: 900;
+    background: #e8e8ef !important;
+}
+
+.annex-benchmark-table .benchmark-col {
+    width: 37%;
+}
+
+.annex-benchmark-table .verification-col {
+    width: 38%;
+}
+
+.annex-benchmark-table .rating-number-col {
+    width: 5%;
+    text-align: center;
+}
+
+.annex-section-row td {
+    background: #3f3f46 !important;
+    color: #fff !important;
+    font-weight: 900;
+    padding: 2px 4px;
+    font-size: 7.4px;
+    line-height: 0.98;
+}
+
+.annex-section-row em,
+.annex-section-row strong {
+    color: #fff !important;
+}
+
+.benchmark-text {
+    font-size: 7.15px;
+    line-height: 0.98;
+}
+
+.means-cell {
+    font-size: 7.0px;
+    line-height: 0.96;
+}
+
+.means-cell br {
+    display: none;
+}
+
+.means-cell ul,
+.means-cell ol {
+    margin: 0 0 0 9px !important;
+    padding: 0 !important;
+}
+
+.means-cell li {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.rating-choice-cell {
+    text-align: center;
+    vertical-align: top !important;
+    padding: 1px 0 !important;
+    font-size: 7.2px !important;
+    line-height: 1 !important;
+    position: relative;
+}
+
+.rating-choice-cell.selected-rating {
+    font-weight: 900;
+}
+
+.rating-choice-cell.selected-rating::after {
+    content: "";
+    width: 9px;
+    height: 9px;
+    border: 1px solid #000;
+    border-radius: 50%;
+    position: absolute;
+    top: 1.5px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.total-score-row td {
+    height: 14px;
+    font-size: 7.8px;
+    font-weight: 900;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.annex-comments-title {
+    font-size: 8px;
+    font-weight: 900;
+    margin-top: 5px;
+    margin-bottom: 2px;
+}
+
+.annex-lines {
+    margin-bottom: 5px;
+}
+
+.annex-line {
+    border-bottom: 1px solid #000;
+    min-height: 10px;
+    margin-bottom: 1px;
+    font-size: 7.8px;
+    line-height: 1;
+    padding: 0 2px;
+    white-space: pre-wrap;
+}
+
+.annex-signature-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 5px;
+}
+
+.annex-signature-table td {
+    border: none !important;
+    padding: 1px 2px;
+    font-size: 8px;
+    font-weight: 700;
+    line-height: 1;
+    vertical-align: bottom;
+}
+
+.annex-signature-table td:first-child {
+    width: 128px;
+}
+
+.annex-signature-table td:nth-child(2) {
+    width: 10px;
+    text-align: center;
+}
+
+.annex-sign-line {
+    border-bottom: 1px solid #000 !important;
+    min-height: 11px;
+    font-weight: 800 !important;
+}
+
+.annex-computation {
+    margin-top: 14px;
+    font-size: 8px;
+    line-height: 1.1;
+}
+
+.annex-computation-title {
+    font-size: 8px;
+    font-weight: 900;
+    text-decoration: underline;
+    margin-bottom: 6px;
+}
+
+.annex-computation-row {
+    margin-bottom: 3px;
+    font-size: 8px;
+}
+
+.annex-computation-line {
+    display: inline-block;
+    min-width: 120px;
+    border-bottom: 1px solid #000;
+    padding: 0 5px 1px;
+    font-weight: 900;
+}
+
+.annex-b-prepared-by {
+    margin-top: 8px;
+    font-size: 8px;
+    font-weight: 700;
+}
+
+.annex-b-prepared-block {
+    display: inline-block;
+    min-width: 220px;
+    text-align: center;
+    vertical-align: top;
+}
+
+.annex-b-prepared-line {
+    display: block;
+    width: 100%;
+    border-bottom: 1px solid #000;
+    min-height: 11px;
+    padding: 0 6px 1px;
+    font-weight: 900;
+    text-align: center;
+}
+
+.annex-b-role-label {
+    display: block;
+    margin-top: 1px;
+    font-size: 7.8px !important;
+    font-weight: 700;
+    text-align: center;
+}
+
+
+.annex-b-page-break-before {
+    page-break-before: always !important;
+    break-before: page !important;
+}
+
+
+
+
+
+    /* ── ANNEX D ── */
+    .annex-d-page,
+    .annex-d-page * {
+        font-family: Arial, Helvetica, sans-serif !important;
+        font-size: 11px !important;
+    }
+
+    .annex-d-exact {
+        padding: .45in .72in !important;
+        font-family: Arial, Helvetica, sans-serif !important;
+        font-size: 11px !important;
+        line-height: 1.16;
+
+        min-height: 11in !important;
+        height: 11in !important;
+        background: #fff !important;
+        box-sizing: border-box !important;
+    }
+
+    .annex-d-top-label {
+        text-align: right;
+        font-size: 11px !important;
+        margin-bottom: 10px;
+    }
+
+    .annex-d-top-label u {
+        font-weight: 900;
+    }
+
+    .annex-d-title {
+        text-align: center;
+        font-size: 11px !important;
+        font-weight: 900;
+        text-transform: uppercase;
+        margin-bottom: 18px;
+        margin-top: 6px;
+    }
+
+    .annex-d-section {
+        margin-top: 12px;
+        margin-bottom: 6px;
+        font-size: 11px !important;
+        font-weight: 900;
+        text-transform: uppercase;
+    }
+
+    .annex-d-info-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 14px;
+    }
+
+    .annex-d-info-table td {
+        border: 0;
+        padding: 3px 4px;
+        font-size: 11px !important;
+        vertical-align: top;
+    }
+
+    .annex-d-info-table td:first-child {
+        width: 215px;
+    }
+
+    .annex-d-info-table td:nth-child(2) {
+        font-weight: 900;
+    }
+
+    .annex-d-summary-exact {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 4px;
+        margin-bottom: 14px;
+        table-layout: fixed;
+    }
+
+    .annex-d-summary-exact th,
+    .annex-d-summary-exact td {
+        border: 1px solid #000;
+        padding: 3px 6px;
+        font-size: 11px !important;
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    .annex-d-summary-exact th {
+        font-weight: 700;
+    }
+
+    .annex-d-summary-exact td {
+        font-weight: 900;
+        height: 22px;
+    }
+
+    .annex-d-development-exact {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+        margin-top: 4px;
+    }
+
+    .annex-d-development-exact tr {
+        height: .90in;
+    }
+
+    .annex-d-development-exact td {
+        border: 1px solid #000;
+        height: .90in;
+        padding: 10px 12px;
+        font-size: 11px !important;
+        vertical-align: top;
+        box-sizing: border-box;
+    }
+
+    .annex-d-ack {
+        margin: 14px 0 10px;
+        font-size: 11px !important;
+        line-height: 1.45;
+        text-align: justify;
+        font-weight: 700;
+    }
+
+    .annex-d-sign-exact {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+        margin-top: 10px;
+    }
+
+    .annex-d-sign-exact th {
+        border: 1px solid #000;
+        background: #a0a0a8;
+        color: #111;
+        font-family: Arial, Helvetica, sans-serif !important;
+        font-size: 11px !important;
+        font-weight: 900;
+        text-align: center;
+        padding: 3px 4px;
+        height: 20px;
+    }
+
+    .annex-d-sign-exact td {
+        border: 1px solid #000;
+        height: 22px;
+        font-family: Arial, Helvetica, sans-serif !important;
+        font-size: 11px !important;
+        padding: 2px 6px;
+        vertical-align: middle;
+    }
+
+    .annex-d-sign-exact {
+        table-layout: fixed;
+    }
+
+    .annex-d-sign-exact col.col-label { width: 110px; }
+    .annex-d-sign-exact col.col-colon { width: 14px; }
+    .annex-d-sign-exact col.col-value { width: auto; }
+
+    .annex-d-sign-label {
+        width: 110px;
+        white-space: nowrap;
+        font-weight: 500;
+    }
+
+    .annex-d-sign-colon {
+        width: 14px;
+        text-align: center;
+        padding: 2px 0 !important;
+    }
+
+    .annex-d-sign-value {
+        font-weight: 900;
+    }
+
+    .annex-d-prepared-by {
+        margin-top: 48px;
+        font-family: Arial, Helvetica, sans-serif !important;
+        font-size: 12px !important;
+        font-weight: 700;
+    }
+
+
+    .annex-d-prepared-by {
+    margin-top: 48px;
+    font-family: Arial, Helvetica, sans-serif !important;
+    font-size: 12px !important;
+    font-weight: 700;
+}
+
+.prepared-sign-block {
+    display: inline-block;
+    min-width: 300px;
+    text-align: center;
+    vertical-align: top;
+}
+
+.prepared-sign-block .prepared-by-print {
+    display: block;
+    width: 100%;
+    min-height: 16px;
+    border-bottom: 1px solid #000;
+    padding: 0 8px 2px;
+    font-weight: 900;
+    text-align: center;
+}
+
+.prepared-role-label {
+    display: block;
+    margin-top: 3px;
+    font-size: 11px !important;
+    font-weight: 700;
+    text-align: center;
+    line-height: 1.1;
+}
+
+
+@media print {
+
+    html,
+    body {
+        background: #fff !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        min-height: 100% !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    body * {
+        visibility: hidden !important;
+    }
+
+    .no-print {
+        display: none !important;
+        visibility: hidden !important;
+    }
+
+    .print-area {
+        display: block !important;
+        visibility: visible !important;
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        background: #fff !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .print-area * {
+        visibility: hidden !important;
+    }
+
+    .print-page {
+        display: none !important;
+        visibility: hidden !important;
+        box-shadow: none !important;
+        margin: 0 auto !important;
+        background: #fff !important;
+    }
+
+    .print-page.selected-print-page {
+        display: block !important;
+        visibility: visible !important;
+        page-break-after: always !important;
+        break-after: page !important;
+    }
+
+    .print-page.selected-print-page * {
+        visibility: visible !important;
+    }
+
+    /* ANNEX B - CMO print sizing */
+.annex-b-page.selected-print-page {
+    width: 8.5in !important;
+    min-height: auto !important;
+    height: auto !important;
+    background: #fff !important;
+    overflow: visible !important;
+    box-sizing: border-box !important;
+    padding: 0 !important;
+    font-family: Arial, Helvetica, sans-serif !important;
+}
+
+.annex-b-page-break-before {
+    page-break-before: always !important;
+    break-before: page !important;
+}
+    /* ANNEX D - keep exact one-page layout */
+    .annex-d-page.selected-print-page {
+        width: 8.5in !important;
+        min-height: 11in !important;
+        height: 11in !important;
+        background: #fff !important;
+        overflow: hidden !important;
+        box-sizing: border-box !important;
+        font-family: Arial, Helvetica, sans-serif !important;
+    }
+
+    .annex-d-exact.selected-print-page {
+        padding: 0.45in 0.72in !important;
+    }
+
+    /* Allow Annex B benchmark table to flow like the CMO pages */
+    .annex-benchmark-table {
+        width: 100% !important;
+        page-break-inside: auto !important;
+        break-inside: auto !important;
+        border-collapse: collapse !important;
+    }
+
+    .annex-benchmark-table thead {
+        display: table-header-group !important;
+    }
+
+    .annex-benchmark-table tbody {
+        display: table-row-group !important;
+    }
+
+    .annex-benchmark-table tr {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+    .annex-benchmark-table td,
+    .annex-benchmark-table th {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+    .annex-section-row {
+        page-break-after: avoid !important;
+        break-after: avoid !important;
+    }
+
+    .annex-section-row td {
+        background: #3f3f46 !important;
+        color: #fff !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    .annex-section-row td *,
+    .annex-section-row strong,
+    .annex-section-row em {
+        color: #fff !important;
+    }
+
+    /* Keep small Annex B parts together */
+    .annex-info-table,
+    .rating-scale-table,
+    .annex-signature-table,
+    .annex-computation,
+    .annex-b-prepared-by {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+    /* Keep Annex D sections from breaking */
+    .annex-d-info-table,
+    .annex-d-summary-exact,
+    .annex-d-development-exact,
+    .annex-d-sign-exact,
+    .annex-d-prepared-by {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+    table {
+        border-collapse: collapse !important;
+    }
+
+    th,
+    td {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    @page {
+        size: Letter;
+        margin: 0;
+    }
+}
+
+@media (max-width: 768px) {
+    .sefset-hero {
+        padding: 22px;
+    }
+
+    .stat-card .value {
+        font-size: 1.6rem;
+    }
+}
+
+
+
+
+</style>
+
+<div class="container-fluid py-4 no-print">
+    <div class="sefset-hero mb-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h2 class="fw-bold mb-1">SEF and SET Printing</h2>
+                <p class="mb-0 opacity-75">
+                    Print official Annex B and Annex D formats using recorded SEF results and uploaded SET Excel data.
+                </p>
+            </div>
+
+            {% if page_mode != "home" %}
+                <a href="{% url 'admin_sef_set' %}" class="btn btn-light rounded-pill fw-bold px-4">
+                    <i class="bi bi-grid me-2"></i>
+                    Back to Options
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if page_mode == "home" %}
+        <div class="row g-4">
+            <div class="col-lg-6">
+                <div class="mode-card">
+                    <div class="mode-icon">
+                        <i class="bi bi-journal-text"></i>
+                    </div>
+                    <h3 class="fw-bold mb-2" style="color:#981b2e;">Recorded SEF</h3>
+                    <p class="text-muted mb-4">
+                        Supervisor's Evaluation of Faculty (SEF)
+                    </p>
+                    <a href="{% url 'admin_sef_set' %}?mode=recorded" class="btn btn-maroon">
+                        <i class="bi bi-list-check me-2"></i>
+                        View Recorded SEF Names
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="mode-card">
+                    <div class="mode-icon">
+                        <i class="bi bi-files"></i>
+                    </div>
+                    <h3 class="fw-bold mb-2" style="color:#981b2e;">Recorded SEF + SET </h3>
+                    <p class="text-muted mb-4">
+                        Use recorded SEF and upload an Excel file for generating Annex D.
+                    </p>
+                    <a href="{% url 'admin_sef_set' %}?mode=excel" class="btn btn-maroon">
+                        <i class="bi bi-cloud-arrow-up me-2"></i>
+                        Upload SET File
+                    </a>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    {% if page_mode == "recorded" %}
+        <div class="row g-3 mb-4">
+
+            <div class="col-md">
+                <div class="stat-card d-flex align-items-center justify-content-between flex-wrap gap-3">
+                    <div>
+                                            <div class="value">{{ recorded_sef_results|length }}</div>
+                    <div class="label">Recorded SEF Names</div>
+                        <div class="fw-bold" style="color:#981b2e;">Batch Print Annex B</div>                    
+                    </div>
+
+                    <button type="button" class="btn btn-maroon" id="recordedBatchPrintBtn" disabled>
+                        <i class="bi bi-printer-fill me-2"></i>
+                        Batch Print <span id="recordedBatchCount">(0)</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card sefset-card mb-4">
+            <div class="sefset-card-header">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                    <div>
+                        <h5><i class="bi bi-journal-check me-2"></i>Recorded SEF List</h5>
+                    </div>
+
+                    <span class="badge-soft">{{ recorded_sef_results|length }} record(s)</span>
+                </div>
+            </div>
+
+            <div class="card-body p-4">
+                <div class="row g-3 align-items-end">
+                    <div class="col-lg-4">
+                        <div class="filter-label">Evaluation Schedule</div>
+                        <select id="recordedScheduleSelect" class="form-select rounded-pill fw-bold">
+                            <option value="all" {% if selected_recorded_schedule == "all" %}selected{% endif %}>
+                                All Past Schedules
+                            </option>
+
+                            {% for schedule in recorded_sef_schedules %}
+                                <option value="{{ schedule.id }}" {% if selected_recorded_schedule == schedule.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ schedule.academic_year }} | {{ schedule.semester }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-lg-3">
+                        <div class="filter-label">Search</div>
+                        <div class="search-box">
+                            <i class="bi bi-search"></i>
+                            <input type="text" id="recordedSearchInput" class="form-control" placeholder="Search faculty or supervisor...">
+                        </div>
+                    </div>
+
+                    <div class="col-lg-3">
+                        <div class="filter-label">Department</div>
+                        <select id="recordedDepartmentFilterSelect" class="form-select rounded-pill fw-bold">
+                            <option value="all">All Departments</option>
+                            {% for dept in recorded_departments %}
+                                <option value="{{ dept|lower }}">{{ dept }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-lg-2">
+                        <div class="result-count-info text-lg-end" id="recordedResultCountInfo">
+                            Showing records
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body p-0">
+                <div class="matched-table-scroll">
+                    <table class="table table-hover align-middle mb-0" id="recordedResultsTable">
+                        <thead>
+                            <tr>
+                                <th class="text-center" style="width:55px;">
+                                    <input type="checkbox" class="batch-check" id="recordedSelectAllVisible" title="Select visible rows">
+                                </th>
+                                <th style="width:70px;">#</th>
+                                <th>Name</th>
+                                <th>Type</th>
+                                <th>Department</th>
+                                <th>Supervisor/s</th>
+                                <th class="text-center" style="width:170px;">Action</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for item in recorded_sef_results %}
+                                <tr
+                                    class="recorded-row filterable-recorded-row"
+                                    data-print-id="{{ item.print_id }}"
+                                    data-name="{{ item.name|lower }}"
+                                    data-department="{{ item.department|default:''|lower }}"
+                                    data-department-label="{{ item.department|default:'' }}"
+                                >
+                                    <td class="text-center">
+                                        <input type="checkbox" class="batch-check recorded-row-check" value="{{ item.print_id }}">
+                                    </td>
+                                    <td class="fw-bold row-number"></td>
+                                    <td class="faculty-name">{{ item.name }}</td>
+                                    <td>
+                                        <span class="badge-soft">
+                                            {{ item.target_type|default:"Faculty" }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if item.department %}
+                                            {{ item.department }}
+                                        {% else %}
+                                            <span class="text-muted">—</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if item.supervisor_display %}
+                                            <div class="fw-bold">{{ item.supervisor_display }}</div>
+                                        {% else %}
+                                            <span class="text-muted">—</span>
+                                        {% endif %}
+                                    </td>
+
+                                    <td class="text-center">
+                                        <button type="button" class="btn btn-maroon btn-sm rounded-pill px-3" onclick="printFaculty('{{ item.print_id }}', 'recorded')">
+                                            <i class="bi bi-printer me-1"></i>
+                                            Print Annex B
+                                        </button>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="8" class="text-center text-muted py-4">
+                                        No recorded SEF records found.
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="recordedNoSearchResults" class="empty-state d-none">
+                    <i class="bi bi-search"></i>
+                    <h5 class="fw-bold mb-2">No matching record</h5>
+                    <p class="text-muted mb-0">Try searching another name or department.</p>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    {% if page_mode == "excel" %}
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#uploadExcelModal">
+                <i class="bi bi-cloud-arrow-up me-2"></i>
+                Upload SET Excel
+            </button>
+        </div>
+
+        {% if results %}
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="value">{{ results.total_sef }}</div>
+                        <div class="label">Recorded SEF Names</div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="value">{{ results.total_set }}</div>
+                        <div class="label">SET Names</div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="value">{{ results.total_matched }}</div>
+                        <div class="label">Matched Names</div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="value">{{ results.total_unmatched_sef|add:results.total_unmatched_set }}</div>
+                        <div class="label">Unmatched SEF / SET Names</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card sefset-card mb-4">
+                <div class="card-body d-flex align-items-center justify-content-between flex-wrap gap-3">
+                    <div>
+                        <div class="fw-bold" style="color:#981b2e;">Batch Print Annex D</div>
+                        <div class="text-muted small">
+                            Select matched faculty names, then print all Annex D forms at once.
+                        </div>
+                    </div>
+
+                    <button type="button" class="btn btn-maroon" id="annexDBatchPrintBtn" disabled>
+                        <i class="bi bi-printer-fill me-2"></i>
+                        Batch Print Annex D <span id="annexDBatchCount">(0)</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="card sefset-card mb-4">
+                <div class="sefset-card-header">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                        <div>
+                            <h5><i class="bi bi-check-circle me-2"></i>Matched Results</h5>
+                            <p class="text-muted mb-0">Generated from recorded SEF and uploaded SET on {{ results.generated_at }}</p>
+                        </div>
+
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <span class="badge-soft">{{ results.total_matched }} matched</span>
+                            <a href="{% url 'admin_sef_set' %}?mode=excel&clear=1" class="btn btn-outline-maroon btn-sm px-3">
+                                <i class="bi bi-trash3 me-1"></i> Clear
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body p-4">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-lg-7">
+                            <div class="filter-label">Search</div>
+                            <div class="search-box">
+                                <i class="bi bi-search"></i>
+                                <input type="text" id="excelSearchInput" class="form-control" placeholder="Search faculty name or department...">
+                            </div>
+                        </div>
+
+                        <div class="col-lg-3">
+                            <div class="filter-label">Filter Department</div>
+                            <select id="excelDepartmentFilterSelect" class="form-select rounded-pill fw-bold">
+                                <option value="all">All Departments</option>
+                            </select>
+                        </div>
+
+                        <div class="col-lg-2">
+                            <div class="result-count-info text-lg-end" id="excelResultCountInfo">
+                                Showing results
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body p-0">
+                    <div class="matched-table-scroll">
+                        <table class="table table-hover align-middle mb-0" id="excelResultsTable">
+                            <thead>
+                                <tr>
+                                    <th class="text-center" style="width:55px;">
+                                        <input type="checkbox" class="batch-check" id="annexDSelectAllVisible" title="Select visible rows">
+                                    </th>
+                                    <th style="width:70px;">#</th>
+                                    <th>Faculty Name</th>
+                                    <th>Department</th>
+                                    <th class="text-center" style="width:190px;">Print</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                {% for item in results.matched_results %}
+                                    <tr
+                                        class="excel-row"
+                                        data-name="{{ item.name|lower }}"
+                                        data-department="{{ item.department|default:''|lower }}"
+                                        data-department-label="{{ item.department|default:'' }}"
+                                    >
+                                        <td class="text-center">
+                                            <input type="checkbox" class="batch-check annex-d-row-check" value="{{ forloop.counter }}">
+                                        </td>
+                                        <td class="fw-bold row-number"></td>
+                                        <td class="faculty-name">{{ item.name }}</td>
+                                        <td>
+                                            {% if item.department %}
+                                                {{ item.department }}
+                                            {% else %}
+                                                <span class="text-muted">—</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-center">
+                                            <button type="button" class="btn btn-maroon btn-sm rounded-pill px-3" onclick="printFaculty('{{ forloop.counter }}', 'combined')">
+                                                <i class="bi bi-printer me-1"></i>
+                                                Print Annex D
+                                            </button>
+                                        </td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted py-4">
+                                            No matched names found.
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div id="excelNoSearchResults" class="empty-state d-none">
+                        <i class="bi bi-search"></i>
+                        <h5 class="fw-bold mb-2">No matching result</h5>
+                        <p class="text-muted mb-0">Try searching another name or department.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="unmatched-grid">
+                <div class="unmatched-card">
+                    <div class="unmatched-card-header">
+                        <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap">
+                            <div>
+                                <h5>
+                                    <i class="bi bi-journal-x me-2"></i>
+                                    Recorded SEF without SET Match
+                                </h5>
+                            </div>
+
+                            <span class="badge-soft">{{ results.total_unmatched_sef }}</span>
+                        </div>
+                    </div>
+
+                    <div class="p-4">
+                        {% if results.unmatched_sef %}
+                            <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                                <div>
+                                    <div class="fw-bold" style="color:#981b2e;">
+                                        {{ results.total_unmatched_sef }} recorded SEF name(s) do not have SET match.
+                                    </div>
+                                </div>
+
+                                <button type="button"
+                                        class="btn btn-maroon"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#unmatchedSefModal">
+                                    <i class="bi bi-eye me-2"></i>
+                                    View SEF Unmatched
+                                </button>
+                            </div>
+                        {% else %}
+                            <div class="unmatched-empty">
+                                <i class="bi bi-check-circle"></i>
+                                <div class="fw-bold">No unmatched recorded SEF names</div>
+                                <div>Every recorded SEF name has a SET match.</div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="card sefset-card">
+                <div class="empty-state">
+                    <i class="bi bi-files"></i>
+                    <h4 class="fw-bold mb-2">No uploaded results yet</h4>
+                    <p class="text-muted mb-4">Choose recorded SEF records and upload one SET file to start matching names.</p>
+
+                    <button type="button" class="btn btn-maroon" data-bs-toggle="modal" data-bs-target="#uploadExcelModal">
+                        <i class="bi bi-cloud-arrow-up me-2"></i>
+                        Upload SET Excel
+                    </button>
+                </div>
+            </div>
+        {% endif %}
+    {% endif %}
+</div>
+
+<!-- Upload SET Excel Modal -->
+<div class="modal fade no-print" id="uploadExcelModal" tabindex="-1" aria-labelledby="uploadExcelModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header modal-header-maroon">
+                <div>
+                    <h5 class="modal-title fw-bold" id="uploadExcelModalLabel">
+                        <i class="bi bi-file-earmark-excel me-2"></i>
+                        Upload SET Excel File
+                    </h5>
+                    <p class="mb-0 small opacity-75">Choose the recorded SEF schedule, then upload one SET Excel file.</p>
+                </div>
+
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <form method="POST" enctype="multipart/form-data" action="{% url 'excel_matcher' %}">
+                {% csrf_token %}
+
+                <div class="modal-body p-4">
+                    <div class="alert alert-light border rounded-4 mb-4">
+                        <i class="bi bi-info-circle me-2" style="color:#981b2e;"></i>
+                        The system will compare recorded SEF names from the database against names from the uploaded SET Excel file.
+                    </div>
+
+                    <div class="row g-4">
+                        <div class="col-lg-5">
+                            <div class="upload-box">
+                                <div class="upload-modal-icon"><i class="bi bi-database-check"></i></div>
+                                <h5 class="fw-bold mb-2" style="color:#981b2e;">Recorded SEF Source</h5>
+                                <p class="text-muted small mb-3">Select which recorded SEF schedule will be used for matching.</p>
+
+                                <select name="schedule_id" class="form-select rounded-3">
+                                    <option value="all">All Past Recorded SEF</option>
+                                    {% for schedule in recorded_sef_schedules %}
+                                        <option value="{{ schedule.id }}">
+                                            {{ schedule.academic_year }} | {{ schedule.semester }} | {{ schedule.title }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+
+                                <div class="small text-muted mt-2">
+                                    No SEF Excel upload is needed. SEF ratings will come from the submitted system records.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-7">
+                            <div class="upload-box">
+                                <div class="upload-modal-icon"><i class="bi bi-file-earmark-spreadsheet-fill"></i></div>
+                                <h5 class="fw-bold mb-2" style="color:#981b2e;">SET Excel File</h5>
+                                <p class="text-muted small mb-3">Upload the Student Evaluation of Teachers file only.</p>
+                                <input type="file" name="set_file" class="form-control rounded-3" accept=".xlsx" required>
+                                <div class="small text-muted mt-2">Accepted format: .xlsx</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer bg-light border-0 p-4">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill fw-bold px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="reset" class="btn btn-outline-maroon">Clear File</button>
+                    <button type="submit" class="btn btn-maroon"><i class="bi bi-search me-2"></i>Match Names</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Recorded SEF Without SET Match Modal -->
+<div class="modal fade no-print" id="unmatchedSefModal" tabindex="-1" aria-labelledby="unmatchedSefModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header modal-header-maroon">
+                <div>
+                    <h5 class="modal-title fw-bold" id="unmatchedSefModalLabel">
+                        <i class="bi bi-journal-x me-2"></i>
+                        Recorded SEF Without SET Match
+                    </h5>
+                    <p class="mb-0 small opacity-75">
+                        These names are from recorded SEF records but were not found in the uploaded SET file.
+                    </p>
+                </div>
+
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body p-4">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
+                    <div>
+                        <div class="fw-bold" style="color:#981b2e;">
+                            Total unmatched recorded SEF names: {{ results.total_unmatched_sef }}
+                        </div>
+                        <div class="text-muted small">
+                            Review spelling, middle initials, spacing, and the selected recorded SEF schedule.
+                        </div>
+                    </div>
+
+                    <div class="search-box" style="min-width:280px;">
+                        <i class="bi bi-search"></i>
+                        <input type="text"
+                               id="unmatchedSefSearchInput"
+                               class="form-control"
+                               placeholder="Search SEF unmatched name...">
+                    </div>
+                </div>
+
+                {% if results.unmatched_sef %}
+                    <div class="matched-table-scroll" style="max-height:520px;">
+                        <table class="table table-hover align-middle mb-0" id="unmatchedSefTable">
+                            <thead>
+                                <tr>
+                                    <th style="width:70px;">#</th>
+                                    <th>Name</th>
+                                    <th>Department</th>
+                                    <th>SEF Rating</th>
+                                    <th>Period</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                {% for item in results.unmatched_sef %}
+                                    <tr class="unmatched-sef-row"
+                                        data-name="{{ item.name|default:''|lower }}"
+                                        data-department="{{ item.department|default:''|lower }}"
+                                        data-period="{{ item.period|default:''|lower }}">
+                                        <td class="fw-bold unmatched-sef-number">{{ forloop.counter }}</td>
+                                        <td><div class="faculty-name">{{ item.name }}</div></td>
+                                        <td>
+                                            {% if item.department %}
+                                                {{ item.department }}
+                                            {% else %}
+                                                <span class="text-muted">—</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if item.computed_rating %}
+                                                {{ item.computed_rating }}%
+                                            {% elif item.rating %}
+                                                {{ item.rating }}%
+                                            {% elif item.total_score %}
+                                                {{ item.total_score }}
+                                            {% else %}
+                                                <span class="text-muted">—</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if item.period %}
+                                                {{ item.period }}
+                                            {% else %}
+                                                <span class="text-muted">—</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div id="unmatchedSefNoResults" class="empty-state d-none">
+                        <i class="bi bi-search"></i>
+                        <h5 class="fw-bold mb-2">No matching SEF name</h5>
+                        <p class="text-muted mb-0">Try searching another name, department, or period.</p>
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <i class="bi bi-check-circle"></i>
+                        <h5 class="fw-bold mb-2">No unmatched recorded SEF names</h5>
+                        <p class="text-muted mb-0">Every recorded SEF name has a SET match.</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="modal-footer bg-light border-0 p-4">
+                <button type="button" class="btn btn-outline-secondary rounded-pill fw-bold px-4" data-bs-dismiss="modal">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Prepared By Before Print Modal -->
+<div class="modal fade no-print" id="preparedByModal" tabindex="-1" aria-labelledby="preparedByModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header modal-header-maroon">
+                <div>
+                    <h5 class="modal-title fw-bold" id="preparedByModalLabel">
+                        <i class="bi bi-person-badge me-2"></i>
+                        Prepared By
+                    </h5>
+                    
+                    <p class="mb-0 small opacity-75">
+                        Enter the name of the person who will print this form.
+                    </p>
+                </div>
+
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body p-4">
+                <label class="filter-label">Prepared by</label>
+                <input type="text"
+                       id="preparedByInput"
+                       class="form-control rounded-3"
+                       placeholder="Enter name..."
+                       autocomplete="off">
+                <div class="text-muted small mt-2">
+                    This name will appear on the printed Annex form.
+                </div>
+            </div>
+
+            <div class="modal-footer bg-light border-0 p-4">
+                <button type="button" class="btn btn-outline-secondary rounded-pill fw-bold px-4" data-bs-dismiss="modal">
+                    Cancel
+                </button>
+                <button type="button" class="btn btn-maroon" id="continuePreparedPrintBtn">
+                    <i class="bi bi-printer me-2"></i>
+                    Continue Printing
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     PRINT AREA
+     ═══════════════════════════════════════════════════════════ -->
+<div class="print-area">
+
+    <!-- ── ANNEX D PAGES (Matched SEF + SET results) ── -->
+    {% if results %}
+        {% for item in results.matched_results %}
+            <section class="print-page annex-d-page annex-d-exact"
+                     data-print-id="{{ forloop.counter }}"
+                     data-print-type="combined">
+
+                <!-- Top label -->
+                <div class="annex-d-top-label">
+                    <u><strong>ANNEX D-</strong></u>&nbsp; Faculty Evaluation and Development Acknowledgement Form
+                </div>
+                <br>
+
+                <!-- Main title -->
+                <div class="annex-d-title">
+                    Faculty Evaluation and Development Acknowledgement Form
+                </div>
+
+                <!-- A. Faculty Member Information -->
+                <div class="annex-d-section">A. &nbsp; Faculty Member Information</div>
+
+                <table class="annex-d-info-table">
+                    <tbody>
+                        <tr>
+                            <td>Name of Faculty</td>
+                            <td>{{ item.name }}</td>
+                        </tr>
+                        <tr>
+                            <td>Department/College</td>
+                            <td>{{ item.department|default:"" }}</td>
+                        </tr>
+                        <tr>
+                            <td>Current Faculty Rank</td>
+                            <td>{{ item.rank|default:"" }}</td>
+                        </tr>
+                        <tr>
+                            <td>Semester/Term &amp; Academic Year</td>
+                            <td>
+                                {% if item.semester %}{{ item.semester }}{% endif %}
+                                {% if item.semester and item.school_year %} / {% endif %}
+                                {% if item.school_year %}{{ item.school_year }}{% endif %}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- B. Faculty Evaluation Summary -->
+                <div class="annex-d-section">B. &nbsp; Faculty Evaluation Summary</div>
+
+                <table class="annex-d-summary-exact">
+                    <thead>
+                        <tr>
+                            <th colspan="2">Overall Rating</th>
+                        </tr>
+                        <tr>
+                            <th>Student Evaluation of Teachers (SET)</th>
+                            <th>Supervisor's Evaluation of Faculty (SEF)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                {% if item.set_rating %}
+                                    {{ item.set_rating }}
+                                {% else %}
+                                    &nbsp;
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if item.sef_computed_rating %}
+                                    {{ item.sef_computed_rating }}
+                                {% elif item.sef_rating %}
+                                    {{ item.sef_rating }}
+                                {% else %}
+                                    &nbsp;
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- C. Development Plan -->
+                <div class="annex-d-section" style="text-transform:none;">
+                    C. &nbsp; Development Plan
+                    <span style="font-weight:700;">(to be jointly accomplished by the Supervisor and Faculty)</span>
+                </div>
+
+                <table class="annex-d-development-exact">
+                    <tbody>
+                        <tr>
+                            <td>Areas for Improvement</td>
+                        </tr>
+                        <tr>
+                            <td>Proposed Learning and Development Activities</td>
+                        </tr>
+                        <tr>
+                            <td>Action Plan</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- Acknowledgement paragraph -->
+                <p class="annex-d-ack">
+                    I acknowledge that I have received and reviewed the faculty evaluation conducted for
+                    the period mentioned above. I understand that my signature below does not
+                    necessarily indicate agreement with the evaluation but confirms that I have been
+                    given the opportunity to discuss it with my supervisor.
+                </p>
+
+                <!-- Signature table — single tbody, header rows use th -->
+                <table class="annex-d-sign-exact">
+                    <colgroup>
+                        <col class="col-label">
+                        <col class="col-colon">
+                        <col class="col-value">
+                    </colgroup>
+                    <tbody>
+                        <tr>
+                            <th colspan="3">SUPERVISOR</th>
+                        </tr>
+                        <tr>
+                            <td class="annex-d-sign-label">Signature</td>
+                            <td class="annex-d-sign-colon">:</td>
+                            <td class="annex-d-sign-value"></td>
+                        </tr>
+                        <tr>
+                            <td class="annex-d-sign-label">Name</td>
+                            <td class="annex-d-sign-colon">:</td>
+                            <td class="annex-d-sign-value">
+                                {% if item.supervisor %}{{ item.supervisor }}{% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="annex-d-sign-label">Date Signed</td>
+                            <td class="annex-d-sign-colon">:</td>
+                            <td class="annex-d-sign-value"></td>
+                        </tr>
+                        <tr>
+                            <th colspan="3">FACULTY</th>
+                        </tr>
+                        <tr>
+                            <td class="annex-d-sign-label">Signature</td>
+                            <td class="annex-d-sign-colon">:</td>
+                            <td class="annex-d-sign-value"></td>
+                        </tr>
+                        <tr>
+                            <td class="annex-d-sign-label">Name</td>
+                            <td class="annex-d-sign-colon">:</td>
+                            <td class="annex-d-sign-value">{{ item.name }}</td>
+                        </tr>
+                        <tr>
+                            <td class="annex-d-sign-label">Date Signed</td>
+                            <td class="annex-d-sign-colon">:</td>
+                            <td class="annex-d-sign-value"></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- Prepared by -->
+                <div class="annex-d-prepared-by">
+                    Prepared by:
+                    <span class="prepared-sign-block">
+                        <span class="prepared-by-print"></span>
+                        <span class="prepared-role-label">OAA Secretary</span>
+                    </span>
+                </div>
+
+            </section>
+
+        {% endfor %}
+    {% endif %}
+
+    <!-- ── ANNEX B PAGES (Recorded SEF results) ── -->
+    {% if recorded_sef_results %}
+        {% for detail in recorded_sef_results %}
+            {% for evaluator in detail.evaluators %}
+                <section class="print-page annex-b-page" data-print-id="{{ detail.print_id }}" data-print-type="recorded">
+
+    <!-- PAGE 1: Info + Rating Scale + Section A -->
+    <div class="annex-b-sheet">
+        <div class="annex-header-right">ANNEX B - Supervisor's Evaluation of Faculty</div>
+
+        <div class="annex-main-title">
+            EVALUATION INSTRUMENT<br>
+            SUPERVISOR'S EVALUATION OF FACULTY
+        </div>
+
+        <div class="annex-section-title">
+            A. Faculty Information
+            <span class="annex-light-text">(to be accomplished by the Designated Office)</span>
+        </div>
+
+        <table class="annex-info-table">
+            <tbody>
+                <tr>
+                    <td>Name of Faculty being Evaluated</td>
+                    <td>:</td>
+                    <td>{{ detail.name|default:"" }}</td>
+                </tr>
+                <tr>
+                    <td>Academic Rank</td>
+                    <td>:</td>
+                    <td>{{ detail.academic_rank|default:"" }}</td>
+                </tr>
+                <tr>
+                    <td>College/Department</td>
+                    <td>:</td>
+                    <td>{{ detail.department|default:"" }}</td>
+                </tr>
+                <tr>
+                    <td>Course Code/Title</td>
+                    <td>:</td>
+                    <td>{% if detail.course %}{{ detail.course }}{% endif %}</td>
+                </tr>
+                <tr>
+                    <td>Program Year</td>
+                    <td>:</td>
+                    <td>{% if detail.program_year %}{{ detail.program_year }}{% endif %}</td>
+                </tr>
+                <tr>
+                    <td>Semester or Term/Academic Year</td>
+                    <td>:</td>
+                    <td>{{ detail.semester|default:"" }}{% if detail.semester and detail.academic_year %} / {% endif %}{{ detail.academic_year|default:"" }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="annex-section-title">B. Rating Scale</div>
+
+        <table class="annex-table rating-scale-table">
+            <thead>
+                <tr>
+                    <th class="scale-cell">Scale</th>
+                    <th class="description-cell">Qualitative Description</th>
+                    <th>Operational Definition and Scale</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="scale-cell">5</td>
+                    <td class="description-cell">Always manifested</td>
+                    <td>Evident in nearly all relevant situations (91-100% of instances).</td>
+                </tr>
+                <tr>
+                    <td class="scale-cell">4</td>
+                    <td class="description-cell">Often manifested</td>
+                    <td>Evident most of the time, with occasional lapses (61-90%).</td>
+                </tr>
+                <tr>
+                    <td class="scale-cell">3</td>
+                    <td class="description-cell">Sometimes manifested</td>
+                    <td>Evident about half the time (31-60%).</td>
+                </tr>
+                <tr>
+                    <td class="scale-cell">2</td>
+                    <td class="description-cell">Seldom manifested</td>
+                    <td>Infrequently Demonstrated: Rarely evident in relevant situations (11-30%).</td>
+                </tr>
+                <tr>
+                    <td class="scale-cell">1</td>
+                    <td class="description-cell">Never/Rarely manifested</td>
+                    <td>Seldom Demonstrated: Almost never evident, with only isolated cases (0-10%).</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="annex-instruction">
+            <strong>C. Instruction:</strong>
+            Carefully read each benchmark statement and rate the faculty member by encircling the appropriate rating based on the scale above.
+            The <em>"Suggested Means of Verification"</em> column may guide the supervisor in conducting an objective assessment.
+        </div>
+
+        <table class="annex-benchmark-table">
+            <colgroup>
+                <col class="benchmark-col">
+                <col class="verification-col">
+                <col class="rating-number-col">
+                <col class="rating-number-col">
+                <col class="rating-number-col">
+                <col class="rating-number-col">
+                <col class="rating-number-col">
+            </colgroup>
+
+            <thead>
+                <tr>
+                    <th>Benchmark Statements</th>
+                    <th>Suggested Means for<br>Verification</th>
+                    <th colspan="5">Rating</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for section in evaluator.sections %}
+                    {% if forloop.counter == 1 %}
+                        <tr class="annex-section-row">
+                            <td colspan="7">{{ section.title }}</td>
+                        </tr>
+
+                        {% for answer in section.answers %}
+                            {% with ar=answer.rating|stringformat:"s" %}
+                            <tr>
+                                <td class="benchmark-text">
+                                    <strong>{{ answer.number }}.</strong>
+                                    {{ answer.question_text }}
+                                </td>
+                                <td class="means-cell">{{ answer.suggested_means|linebreaksbr }}</td>
+                                <td class="rating-choice-cell {% if ar == '5' or ar == '5.0' %}selected-rating{% endif %}">5</td>
+                                <td class="rating-choice-cell {% if ar == '4' or ar == '4.0' %}selected-rating{% endif %}">4</td>
+                                <td class="rating-choice-cell {% if ar == '3' or ar == '3.0' %}selected-rating{% endif %}">3</td>
+                                <td class="rating-choice-cell {% if ar == '2' or ar == '2.0' %}selected-rating{% endif %}">2</td>
+                                <td class="rating-choice-cell {% if ar == '1' or ar == '1.0' %}selected-rating{% endif %}">1</td>
+                            </tr>
+                            {% endwith %}
+                        {% endfor %}
+                    {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- PAGE 2: Section B -->
+    <div class="annex-b-sheet">
+        <div class="annex-b-continuation-title">ANNEX B - Supervisor's Evaluation of Faculty</div>
+
+        <table class="annex-benchmark-table">
+            <colgroup>
+                <col class="benchmark-col">
+                <col class="verification-col">
+                <col class="rating-number-col">
+                <col class="rating-number-col">
+                <col class="rating-number-col">
+                <col class="rating-number-col">
+                <col class="rating-number-col">
+            </colgroup>
+
+            <thead>
+                <tr>
+                    <th>Benchmark Statements</th>
+                    <th>Suggested Means for<br>Verification</th>
+                    <th colspan="5">Rating</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for section in evaluator.sections %}
+                    {% if forloop.counter == 2 %}
+                        <tr class="annex-section-row">
+                            <td colspan="7">{{ section.title }}</td>
+                        </tr>
+
+                        {% for answer in section.answers %}
+                            {% with ar=answer.rating|stringformat:"s" %}
+                            <tr>
+                                <td class="benchmark-text">
+                                    <strong>{{ answer.number }}.</strong>
+                                    {{ answer.question_text }}
+                                </td>
+                                <td class="means-cell">{{ answer.suggested_means|linebreaksbr }}</td>
+                                <td class="rating-choice-cell {% if ar == '5' or ar == '5.0' %}selected-rating{% endif %}">5</td>
+                                <td class="rating-choice-cell {% if ar == '4' or ar == '4.0' %}selected-rating{% endif %}">4</td>
+                                <td class="rating-choice-cell {% if ar == '3' or ar == '3.0' %}selected-rating{% endif %}">3</td>
+                                <td class="rating-choice-cell {% if ar == '2' or ar == '2.0' %}selected-rating{% endif %}">2</td>
+                                <td class="rating-choice-cell {% if ar == '1' or ar == '1.0' %}selected-rating{% endif %}">1</td>
+                            </tr>
+                            {% endwith %}
+                        {% endfor %}
+                    {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- PAGE 3: Section C + bottom -->
+    <div class="annex-b-sheet">
+        <div class="annex-b-continuation-title">ANNEX B - Supervisor's Evaluation of Faculty</div>
+
+        <table class="annex-benchmark-table">
+            <colgroup>
+                <col class="benchmark-col">
+                <col class="verification-col">
+                <col class="rating-number-col">
+                <col class="rating-number-col">
+                <col class="rating-number-col">
+                <col class="rating-number-col">
+                <col class="rating-number-col">
+            </colgroup>
+
+            <thead>
+                <tr>
+                    <th>Benchmark Statements</th>
+                    <th>Suggested Means for<br>Verification</th>
+                    <th colspan="5">Rating</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for section in evaluator.sections %}
+                    {% if forloop.counter == 3 %}
+                        <tr class="annex-section-row">
+                            <td colspan="7">{{ section.title }}</td>
+                        </tr>
+
+                        {% for answer in section.answers %}
+                            {% with ar=answer.rating|stringformat:"s" %}
+                            <tr>
+                                <td class="benchmark-text">
+                                    <strong>{{ answer.number }}.</strong>
+                                    {{ answer.question_text }}
+                                </td>
+                                <td class="means-cell">{{ answer.suggested_means|linebreaksbr }}</td>
+                                <td class="rating-choice-cell {% if ar == '5' or ar == '5.0' %}selected-rating{% endif %}">5</td>
+                                <td class="rating-choice-cell {% if ar == '4' or ar == '4.0' %}selected-rating{% endif %}">4</td>
+                                <td class="rating-choice-cell {% if ar == '3' or ar == '3.0' %}selected-rating{% endif %}">3</td>
+                                <td class="rating-choice-cell {% if ar == '2' or ar == '2.0' %}selected-rating{% endif %}">2</td>
+                                <td class="rating-choice-cell {% if ar == '1' or ar == '1.0' %}selected-rating{% endif %}">1</td>
+                            </tr>
+                            {% endwith %}
+                        {% endfor %}
+                    {% endif %}
+                {% endfor %}
+
+                <tr class="total-score-row">
+                    <td colspan="2">TOTAL SCORE</td>
+                    <td colspan="5">{{ evaluator.total_score }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="annex-comments-title">Other comments and suggestions:</div>
+        <div class="annex-lines">
+            {% if evaluator.comments %}
+                <div class="annex-line">{{ evaluator.comments }}</div>
+                <div class="annex-line"></div>
+            {% else %}
+                <div class="annex-line"></div>
+                <div class="annex-line"></div>
+            {% endif %}
+        </div>
+
+        <table class="annex-signature-table">
+            <tbody>
+                <tr>
+                    <td>Signature of Supervisor</td>
+                    <td>:</td>
+                    <td class="annex-sign-line"></td>
+                </tr>
+                <tr>
+                    <td>Name of Supervisor</td>
+                    <td>:</td>
+                    <td class="annex-sign-line">{{ evaluator.evaluator_name|default:"" }}</td>
+                </tr>
+                <tr>
+                    <td>Designation</td>
+                    <td>:</td>
+                    <td class="annex-sign-line">{{ evaluator.evaluator_department|default:"" }}</td>
+                </tr>
+                <tr>
+                    <td>Date</td>
+                    <td>:</td>
+                    <td class="annex-sign-line">{{ evaluator.submitted_at|default:"" }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="annex-computation">
+            <div class="annex-computation-title">SEF RATING Computation</div>
+
+            <div class="annex-computation-row">
+                Total Score:
+                <span class="annex-computation-line">{{ evaluator.total_score }}</span>
+            </div>
+
+            <div class="annex-computation-row">
+                <strong>Formula:</strong><br>
+                Rating = (Total Score / 75) x 100
+            </div>
+
+            <div class="annex-computation-row">
+                <strong>COMPUTED RATING:</strong>
+                <span class="annex-computation-line">{{ evaluator.computed_rating }}</span>
+            </div>
+        </div>
+
+        <div class="annex-b-prepared-by">
+            Prepared by:
+            <span class="annex-b-prepared-block">
+                <span class="annex-b-prepared-line prepared-by-print"></span>
+                <span class="annex-b-role-label">OAA Secretary</span>
+            </span>
+        </div>
+    </div>
+
+</section>
+            {% endfor %}
+        {% endfor %}
+    {% endif %}
+
+</div><!-- end .print-area -->
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        let pendingPrintId = null;
+        let pendingPrintType = null;
+        let pendingBatchPrintIds = [];
+
+        function setupFilter(options) {
+            const table = document.getElementById(options.tableId);
+            if (!table) return;
+
+            const searchInput = document.getElementById(options.searchId);
+            const departmentSelect = document.getElementById(options.departmentId);
+            const countInfo = document.getElementById(options.countId);
+            const emptyDiv = document.getElementById(options.emptyId);
+            const rows = Array.from(table.querySelectorAll(options.rowSelector));
+
+            // Populate department select dynamically
+            if (departmentSelect) {
+                const depts = [...new Set(rows.map(function (r) {
+                    return r.dataset.departmentLabel || "";
+                }).filter(Boolean))].sort();
+
+                depts.forEach(function (dept) {
+                    const opt = document.createElement("option");
+                    opt.value = dept.toLowerCase();
+                    opt.textContent = dept;
+                    departmentSelect.appendChild(opt);
+                });
+            }
+
+            function applyFilter() {
+                const query = searchInput ? searchInput.value.trim().toLowerCase() : "";
+                const dept = departmentSelect ? departmentSelect.value : "all";
+                let count = 0;
+
+                rows.forEach(function (row) {
+                    const name = row.dataset.name || "";
+                    const rowDept = row.dataset.department || "";
+                    const matchName = !query || name.includes(query);
+                    const matchDept = dept === "all" || rowDept === dept;
+                    const visible = matchName && matchDept;
+                    row.style.display = visible ? "" : "none";
+                    if (visible) count++;
+                });
+
+                // Re-number visible rows
+                let num = 0;
+                rows.forEach(function (row) {
+                    if (row.style.display !== "none") {
+                        num++;
+                        const cell = row.querySelector(".row-number");
+                        if (cell) cell.textContent = num;
+                    }
+                });
+
+                if (countInfo) countInfo.textContent = "Showing " + count + " record(s)";
+                if (table && emptyDiv) {
+                    if (count === 0) {
+                        table.closest(".matched-table-scroll").classList.add("d-none");
+                        emptyDiv.classList.remove("d-none");
+                    } else {
+                        table.closest(".matched-table-scroll").classList.remove("d-none");
+                        emptyDiv.classList.add("d-none");
+                    }
+                }
+            }
+
+            if (searchInput) searchInput.addEventListener("input", applyFilter);
+            if (departmentSelect) departmentSelect.addEventListener("change", applyFilter);
+            applyFilter();
+        }
+
+        function clearSelectedPrintPages() {
+            document.querySelectorAll(".selected-print-page").forEach(function (page) {
+                page.classList.remove("selected-print-page");
+            });
+        }
+
+        function getVisibleRecordedRows() {
+            return Array.from(document.querySelectorAll(".recorded-row")).filter(function (row) {
+                return row.style.display !== "none";
+            });
+        }
+
+        function getCheckedRecordedRows() {
+            return Array.from(document.querySelectorAll(".recorded-row-check:checked")).map(function (cb) {
+                return cb.closest("tr");
+            }).filter(Boolean);
+        }
+
+        function updateRecordedBatchUI() {
+            const checkedRows = getCheckedRecordedRows();
+            const batchBtn = document.getElementById("recordedBatchPrintBtn");
+            const batchCount = document.getElementById("recordedBatchCount");
+
+            if (batchBtn) batchBtn.disabled = checkedRows.length === 0;
+            if (batchCount) batchCount.textContent = "(" + checkedRows.length + ")";
+
+            const selectAll = document.getElementById("recordedSelectAllVisible");
+            if (selectAll) {
+                const visibleCheckboxes = getVisibleRecordedRows().map(function (row) {
+                    return row.querySelector(".recorded-row-check");
+                }).filter(Boolean);
+
+                const checkedVisible = visibleCheckboxes.filter(function (cb) { return cb.checked; });
+                selectAll.checked = visibleCheckboxes.length > 0 && checkedVisible.length === visibleCheckboxes.length;
+                selectAll.indeterminate = checkedVisible.length > 0 && checkedVisible.length < visibleCheckboxes.length;
+            }
+        }
+
+        function getVisibleAnnexDRows() {
+            return Array.from(document.querySelectorAll(".excel-row")).filter(function (row) {
+                return row.style.display !== "none";
+            });
+        }
+
+        function getCheckedAnnexDRows() {
+            return Array.from(document.querySelectorAll(".annex-d-row-check:checked")).map(function (cb) {
+                return cb.closest("tr");
+            }).filter(Boolean);
+        }
+
+        function updateAnnexDBatchUI() {
+            const checkedRows = getCheckedAnnexDRows();
+            const batchBtn = document.getElementById("annexDBatchPrintBtn");
+            const batchCount = document.getElementById("annexDBatchCount");
+
+            if (batchBtn) batchBtn.disabled = checkedRows.length === 0;
+            if (batchCount) batchCount.textContent = "(" + checkedRows.length + ")";
+
+            const selectAll = document.getElementById("annexDSelectAllVisible");
+            if (selectAll) {
+                const visibleCheckboxes = getVisibleAnnexDRows().map(function (row) {
+                    return row.querySelector(".annex-d-row-check");
+                }).filter(Boolean);
+
+                const checkedVisible = visibleCheckboxes.filter(function (cb) { return cb.checked; });
+                selectAll.checked = visibleCheckboxes.length > 0 && checkedVisible.length === visibleCheckboxes.length;
+                selectAll.indeterminate = checkedVisible.length > 0 && checkedVisible.length < visibleCheckboxes.length;
+            }
+        }
+
+        function openPreparedByModal(printId, printType, batchPrintIds) {
+            pendingPrintId = printId || null;
+            pendingPrintType = printType || null;
+            pendingBatchPrintIds = batchPrintIds || [];
+
+            const input = document.getElementById("preparedByInput");
+            if (input) input.value = "";
+
+            const modalElement = document.getElementById("preparedByModal");
+            if (modalElement && window.bootstrap) {
+                const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+                modal.show();
+                setTimeout(function () {
+                    if (input) input.focus();
+                }, 300);
+            } else {
+                runPendingPrint();
+            }
+        }
+
+        function applyPreparedByName() {
+            const input = document.getElementById("preparedByInput");
+            const preparedByName = input ? input.value.trim() : "";
+            document.querySelectorAll(".prepared-by-print").forEach(function (el) {
+                el.textContent = preparedByName;
+            });
+        }
+
+        function runPendingPrint() {
+            applyPreparedByName();
+            clearSelectedPrintPages();
+
+            if (pendingBatchPrintIds.length > 0) {
+                pendingBatchPrintIds.forEach(function (printId) {
+                    document.querySelectorAll('.print-page[data-print-id="' + printId + '"][data-print-type="' + pendingPrintType + '"]').forEach(function (page) {
+                        page.classList.add("selected-print-page");
+                    });
+                });
+            } else {
+                document.querySelectorAll(".print-page").forEach(function (page) {
+                    const pageId = page.getAttribute("data-print-id");
+                    const pageType = page.getAttribute("data-print-type");
+                    if (pageId === String(pendingPrintId) && pageType === pendingPrintType) {
+                        page.classList.add("selected-print-page");
+                    }
+                });
+            }
+
+            const modalElement = document.getElementById("preparedByModal");
+            if (modalElement && window.bootstrap) {
+                const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+                modal.hide();
+            }
+
+            applyPrintSettings();
+            window.print();
+        }
+
+        setupFilter({
+            tableId: "recordedResultsTable",
+            searchId: "recordedSearchInput",
+            departmentId: "recordedDepartmentFilterSelect",
+            countId: "recordedResultCountInfo",
+            emptyId: "recordedNoSearchResults",
+            rowSelector: ".recorded-row"
+        });
+
+        setupFilter({
+            tableId: "excelResultsTable",
+            searchId: "excelSearchInput",
+            departmentId: "excelDepartmentFilterSelect",
+            countId: "excelResultCountInfo",
+            emptyId: "excelNoSearchResults",
+            rowSelector: ".excel-row"
+        });
+
+        document.querySelectorAll(".recorded-row-check").forEach(function (checkbox) {
+            checkbox.addEventListener("change", updateRecordedBatchUI);
+        });
+
+        const selectAll = document.getElementById("recordedSelectAllVisible");
+        if (selectAll) {
+            selectAll.addEventListener("change", function () {
+                getVisibleRecordedRows().forEach(function (row) {
+                    const checkbox = row.querySelector(".recorded-row-check");
+                    if (checkbox) checkbox.checked = selectAll.checked;
+                });
+                updateRecordedBatchUI();
+            });
+        }
+
+        const batchBtn = document.getElementById("recordedBatchPrintBtn");
+        if (batchBtn) {
+            batchBtn.addEventListener("click", function () {
+                const checkedRows = getCheckedRecordedRows();
+                if (checkedRows.length === 0) {
+                    alert("Please select at least one recorded SEF.");
+                    return;
+                }
+                const batchPrintIds = checkedRows.map(function (row) { return row.dataset.printId; });
+                openPreparedByModal(null, "recorded", batchPrintIds);
+            });
+        }
+
+        document.querySelectorAll(".annex-d-row-check").forEach(function (checkbox) {
+            checkbox.addEventListener("change", updateAnnexDBatchUI);
+        });
+
+        const annexDSelectAll = document.getElementById("annexDSelectAllVisible");
+        if (annexDSelectAll) {
+            annexDSelectAll.addEventListener("change", function () {
+                getVisibleAnnexDRows().forEach(function (row) {
+                    const checkbox = row.querySelector(".annex-d-row-check");
+                    if (checkbox) checkbox.checked = annexDSelectAll.checked;
+                });
+                updateAnnexDBatchUI();
+            });
+        }
+
+        const annexDBatchBtn = document.getElementById("annexDBatchPrintBtn");
+        if (annexDBatchBtn) {
+            annexDBatchBtn.addEventListener("click", function () {
+                const checkedRows = getCheckedAnnexDRows();
+                if (checkedRows.length === 0) {
+                    alert("Please select at least one Annex D record.");
+                    return;
+                }
+                const batchPrintIds = checkedRows.map(function (row) {
+                    const checkbox = row.querySelector(".annex-d-row-check");
+                    return checkbox ? checkbox.value : null;
+                }).filter(Boolean);
+                openPreparedByModal(null, "combined", batchPrintIds);
+            });
+        }
+
+        const continuePreparedPrintBtn = document.getElementById("continuePreparedPrintBtn");
+        if (continuePreparedPrintBtn) {
+            continuePreparedPrintBtn.addEventListener("click", function () {
+                runPendingPrint();
+            });
+        }
+
+        const preparedByInput = document.getElementById("preparedByInput");
+        if (preparedByInput) {
+            preparedByInput.addEventListener("keydown", function (event) {
+                if (event.key === "Enter") {
+                    event.preventDefault();
+                    runPendingPrint();
+                }
+            });
+        }
+
+        const unmatchedSefSearchInput = document.getElementById("unmatchedSefSearchInput");
+        const unmatchedSefRows = Array.from(document.querySelectorAll(".unmatched-sef-row"));
+        const unmatchedSefTable = document.getElementById("unmatchedSefTable");
+        const unmatchedSefNoResults = document.getElementById("unmatchedSefNoResults");
+
+        function filterUnmatchedSefRows() {
+            const query = unmatchedSefSearchInput ? unmatchedSefSearchInput.value.trim().toLowerCase() : "";
+            let visibleCount = 0;
+
+            unmatchedSefRows.forEach(function (row) {
+                const name = row.dataset.name || "";
+                const department = row.dataset.department || "";
+                const period = row.dataset.period || "";
+                const isVisible = !query || name.includes(query) || department.includes(query) || period.includes(query);
+                row.style.display = isVisible ? "" : "none";
+
+                if (isVisible) {
+                    visibleCount += 1;
+                    const numberCell = row.querySelector(".unmatched-sef-number");
+                    if (numberCell) numberCell.textContent = visibleCount;
+                }
+            });
+
+            if (unmatchedSefTable && unmatchedSefNoResults) {
+                if (visibleCount === 0) {
+                    unmatchedSefTable.classList.add("d-none");
+                    unmatchedSefNoResults.classList.remove("d-none");
+                } else {
+                    unmatchedSefTable.classList.remove("d-none");
+                    unmatchedSefNoResults.classList.add("d-none");
+                }
+            }
+        }
+
+        if (unmatchedSefSearchInput) {
+            unmatchedSefSearchInput.addEventListener("input", filterUnmatchedSefRows);
+        }
+
+        window.printFaculty = function (printId, printType) {
+            const selectedType = printType || "combined";
+            openPreparedByModal(printId, selectedType, []);
+        };
+
+        window.addEventListener("afterprint", clearSelectedPrintPages);
+    });
+
+    const recordedScheduleSelect = document.getElementById("recordedScheduleSelect");
+    if (recordedScheduleSelect) {
+        recordedScheduleSelect.addEventListener("change", function () {
+            const selectedSchedule = this.value || "all";
+            window.location.href = "{% url 'admin_sef_set' %}?mode=recorded&schedule=" + encodeURIComponent(selectedSchedule);
+        });
+    }
+
+    function applyPrintSettings() {
+        // Reserved for print preparation.
+    }
+
+    applyPrintSettings();
+</script>
+
+{% endblock %}

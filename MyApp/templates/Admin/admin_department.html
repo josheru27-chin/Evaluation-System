@@ -347,14 +347,10 @@
         <div class="toolbar-right">
             <div class="search-pill">
                 <i class="bi bi-search"></i>
-                <input type="text" id="departmentSearch" class="form-control" placeholder="Search department...">
-            </div>
-
-            <div class="search-pill">
-                <i class="bi bi-search"></i>
-                <input type="text" id="facultySearch" class="form-control" placeholder="Search faculty member...">
+                <input type="text" id="departmentSearch" class="form-control" placeholder="Search department, head, or faculty...">
             </div>
         </div>
+
     </div>
 
     <div class="table-responsive">
@@ -700,19 +696,16 @@
 {% endfor %}
 
 {% endblock %}
-
 {% block extra_js %}
 <script>
     const departmentSearchInput = document.getElementById('departmentSearch');
-    const facultySearchInput = document.getElementById('facultySearch');
     const departmentRows = Array.from(document.querySelectorAll('.department-row'));
     const searchEmptyRow = document.getElementById('searchEmptyRow');
     const editButtons = document.querySelectorAll('.edit-department-btn');
     const deleteButtons = document.querySelectorAll('.delete-department-btn');
 
     function filterDepartmentRows() {
-        const departmentKeyword = (departmentSearchInput.value || '').trim().toLowerCase();
-        const facultyKeyword = (facultySearchInput.value || '').trim().toLowerCase();
+        const keyword = (departmentSearchInput.value || '').trim().toLowerCase();
 
         let visibleCount = 0;
 
@@ -721,16 +714,9 @@
             const headText = row.dataset.head || '';
             const facultyText = row.dataset.faculty || '';
 
-            const matchesDepartment =
-                !departmentKeyword ||
-                departmentText.includes(departmentKeyword) ||
-                headText.includes(departmentKeyword);
+            const searchableText = `${departmentText} ${headText} ${facultyText}`;
 
-            const matchesFaculty =
-                !facultyKeyword ||
-                facultyText.includes(facultyKeyword);
-
-            if (matchesDepartment && matchesFaculty) {
+            if (!keyword || searchableText.includes(keyword)) {
                 row.classList.remove('hidden-row');
                 visibleCount += 1;
             } else {
@@ -749,10 +735,6 @@
 
     if (departmentSearchInput) {
         departmentSearchInput.addEventListener('input', filterDepartmentRows);
-    }
-
-    if (facultySearchInput) {
-        facultySearchInput.addEventListener('input', filterDepartmentRows);
     }
 
     editButtons.forEach(button => {

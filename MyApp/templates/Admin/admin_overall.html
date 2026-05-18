@@ -856,15 +856,15 @@
         </div>
 
         <div class="filter-toolbar">
-            <select id="resultTypeFilter" class="form-select">
+            <select id="resultTypeFilter" class="form-select d-none">
                 <option value="all">All Results</option>
                 <option value="office">Office Only</option>
-                <option value="head">Department Heads Only</option>
                 <option value="faculty">Faculty Only</option>
             </select>
 
             <select id="departmentFilter" class="form-select">
                 <option value="all">All Departments</option>
+                <option value="heads_only">Department Heads Only</option>
                 {% for dept in departments %}
                     <option value="{{ dept }}">{{ dept }}</option>
                 {% endfor %}
@@ -1213,8 +1213,20 @@
 
         return facultyResults.filter(item => {
             const matchesKeyword = String(item.name || '').toLowerCase().includes(keyword);
-            const matchesDepartment = selectedDepartment === 'all' || (item.department || '') === selectedDepartment;
-            const matchesType = selectedType === 'all' || (item.result_type || '') === selectedType;            return matchesKeyword && matchesDepartment && matchesType;
+
+            const isHeadsOnly = selectedDepartment === 'heads_only';
+
+            const matchesDepartment =
+                selectedDepartment === 'all' ||
+                isHeadsOnly ||
+                (item.department || '') === selectedDepartment;
+
+            const matchesType =
+                isHeadsOnly
+                    ? (item.result_type || '') === 'head'
+                    : selectedType === 'all' || (item.result_type || '') === selectedType;
+
+            return matchesKeyword && matchesDepartment && matchesType;
         });
     }
 
@@ -2300,54 +2312,15 @@ function openBatchPrintModal() {
         openPrintWindow(buildBatchIndividualPrintHtml(filtered, printTitle), printTitle);
     }
 
-    function exportResultsToCSV() {
-        const filtered = getFilteredResults();
+    function exportResultsToExcel() {
+        const selectedScheduleId = "{{ selected_schedule.id|default:'' }}";
 
-        if (!filtered.length) {
-            alert('No results available to export.');
+        if (!selectedScheduleId) {
+            alert('No evaluation schedule selected.');
             return;
         }
 
-        const rows = [[
-            'Evaluatee Name',
-            'Department',
-            'Overall Average',
-            'Average Total Score',
-            'Computed Rating (%)',
-            'Management of Teaching and Learning',
-            'Content Knowledge, Pedagogy, and Technology',
-            'Commitment and Transparency',
-            'Evaluator Count'
-        ]];
-
-        filtered.forEach(item => {
-            rows.push([
-                item.name || '',
-                item.department || '',
-                toFixedGrade(getOverallValue(item)),
-                toFixedGrade(item.average_total_score),
-                toFixedGrade(item.computed_rating),
-                toFixedGrade(getSection(item, 'management_teaching_learning')),
-                toFixedGrade(getSection(item, 'content_knowledge_pedagogy_technology')),
-                toFixedGrade(getSection(item, 'commitment_transparency')),
-                item.evaluator_count || 0
-            ]);
-        });
-
-        const csvContent = rows.map(row =>
-            row.map(value => `"${String(value).replace(/"/g, '""')}"`).join(',')
-        ).join('\n');
-
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-
-        link.href = url;
-        link.setAttribute('download', 'evaluation_results_summary.csv');
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
+        window.location.href = "{% url 'export_results_excel' %}?schedule=" + encodeURIComponent(selectedScheduleId);
     }
 
     if (facultySearchInput) {
@@ -2363,7 +2336,7 @@ function openBatchPrintModal() {
     }
 
     if (exportResultsBtn) {
-        exportResultsBtn.addEventListener('click', exportResultsToCSV);
+        exportResultsBtn.addEventListener('click', exportResultsToExcel);
     }
 
     if (printBatchBtn) {
@@ -2424,7 +2397,7 @@ function openBatchPrintModal() {
     window.printSinglePerson = printSinglePerson;
     window.openBatchPrintModal = openBatchPrintModal;
     window.printBatchSummary = printBatchSummary;
-    window.exportResultsToCSV = exportResultsToCSV;
+    window.exportResultsToExcel = exportResultsToExcel;
 
 
 

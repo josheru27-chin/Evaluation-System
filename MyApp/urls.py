@@ -17,6 +17,10 @@ urlpatterns = [
     path('dashboard/past-evaluations/', views.admin_past_evaluations, name='admin_past_evaluations'),
     path('head/past-evaluations/', views.head_past_evaluations, name='head_past_evaluations'),
     path('dashboard/pending/', views.admin_pending, name='admin_pending'),
+    path("dashboard/sef-set/", views.admin_sef_set, name="admin_sef_set"),
+    path('dashboard/excel-matcher/', views.excel_matcher, name='excel_matcher'),
+    path('dashboard/results-summary/export-excel/',views.export_results_excel,name='export_results_excel'),
+    path('dashboard/user-management/', views.admin_user_management, name='admin_user_management'),
 
     # Department actions
     path('dashboard/department/add/', views.add_department, name='add_department'),
