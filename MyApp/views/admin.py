@@ -3952,9 +3952,66 @@ def _build_sef_set_match_results(
     unmatched_sef = []
     unmatched_set = []
 
+    def build_unmatched_sef_item(sef_record):
+        sef_name = sef_record.get("name", "")
+        normalized_name = (
+            sef_record.get("normalized_name")
+            or _normalize_person_name(sef_name)
+        )
+
+        rank_data = _find_rank_data_for_person(
+            [
+                sef_name,
+                normalized_name,
+            ],
+            rank_lookup,
+        )
+
+        fallback_extra = _get_uploaded_person_extra_for_print(sef_name)
+
+        department_value = (
+            sef_record.get("department", "")
+            or fallback_extra.get("department", "")
+            or rank_data.get("department", "")
+        )
+
+        rank_value = (
+            rank_data.get("rank", "")
+            or sef_record.get("rank", "")
+            or fallback_extra.get("academic_rank", "")
+        )
+
+        sef_percentage = (sef_record.get("computed_rating") or "").strip()
+
+        if not sef_percentage:
+            sef_percentage = _rating_to_percentage(
+                computed_rating=sef_record.get("computed_rating", ""),
+                total_score=sef_record.get("total_score", ""),
+                mean_rating=sef_record.get("rating", ""),
+            )
+
+        return {
+            "name": sef_name,
+            "normalized_name": normalized_name,
+            "department": department_value,
+            "rank": rank_value,
+            "supervisor": sef_record.get("supervisor", ""),
+            "semester": sef_record.get("semester", ""),
+            "school_year": sef_record.get("school_year", ""),
+            "period": sef_record.get("period", ""),
+            "rating": sef_record.get("rating", ""),
+            "computed_rating": sef_percentage,
+            "sef_computed_rating": sef_percentage,
+            "total_score": sef_record.get("total_score", ""),
+            "sheet": sef_record.get("sheet", ""),
+            "row": sef_record.get("row", ""),
+            "match_type": "SEF Only",
+            "match_score": "",
+        }
+
     for key, records in sef_map.items():
         if key not in exact_keys and key not in fuzzy_matched_sef_keys:
-            unmatched_sef.append(records[0])
+            unmatched_sef.append(build_unmatched_sef_item(records[0]))
 
     for key, records in set_map.items():
         if key not in used_set_keys:

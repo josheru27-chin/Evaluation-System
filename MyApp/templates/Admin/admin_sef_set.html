@@ -1701,45 +1701,74 @@
                                     <th style="width:70px;">#</th>
                                     <th>Name</th>
                                     <th>Department</th>
+                                    <th>Rank</th>
                                     <th>SEF Rating</th>
                                     <th>Period</th>
+                                    <th class="text-center" style="width:170px;">Print</th>
                                 </tr>
                             </thead>
 
                             <tbody>
                                 {% for item in results.unmatched_sef %}
-                                    <tr class="unmatched-sef-row"
-                                        data-name="{{ item.name|default:''|lower }}"
-                                        data-department="{{ item.department|default:''|lower }}"
-                                        data-period="{{ item.period|default:''|lower }}">
-                                        <td class="fw-bold unmatched-sef-number">{{ forloop.counter }}</td>
-                                        <td><div class="faculty-name">{{ item.name }}</div></td>
-                                        <td>
-                                            {% if item.department %}
-                                                {{ item.department }}
-                                            {% else %}
-                                                <span class="text-muted">—</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            {% if item.computed_rating %}
-                                                {{ item.computed_rating }}%
-                                            {% elif item.rating %}
-                                                {{ item.rating }}%
-                                            {% elif item.total_score %}
-                                                {{ item.total_score }}
-                                            {% else %}
-                                                <span class="text-muted">—</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            {% if item.period %}
-                                                {{ item.period }}
-                                            {% else %}
-                                                <span class="text-muted">—</span>
-                                            {% endif %}
-                                        </td>
-                                    </tr>
+                                   <tr class="unmatched-sef-row"
+    data-name="{{ item.name|default:''|lower }}"
+    data-department="{{ item.department|default:''|lower }}"
+    data-period="{{ item.period|default:''|lower }}"
+    data-rank="{{ item.rank|default:''|lower }}">
+
+    <td class="fw-bold unmatched-sef-number">{{ forloop.counter }}</td>
+
+    <td>
+        <div class="faculty-name">{{ item.name }}</div>
+    </td>
+
+    <td>
+        {% if item.department %}
+            {{ item.department }}
+        {% else %}
+            <span class="text-muted">—</span>
+        {% endif %}
+    </td>
+
+    <td>
+        {% if item.rank %}
+            {{ item.rank }}
+        {% else %}
+            <span class="text-muted">—</span>
+        {% endif %}
+    </td>
+
+    <td>
+        {% if item.sef_computed_rating %}
+            {{ item.sef_computed_rating }}%
+        {% elif item.computed_rating %}
+            {{ item.computed_rating }}%
+        {% elif item.rating %}
+            {{ item.rating }}%
+        {% elif item.total_score %}
+            {{ item.total_score }}
+        {% else %}
+            <span class="text-muted">—</span>
+        {% endif %}
+    </td>
+
+    <td>
+        {% if item.period %}
+            {{ item.period }}
+        {% else %}
+            <span class="text-muted">—</span>
+        {% endif %}
+    </td>
+
+    <td class="text-center">
+        <button type="button"
+                class="btn btn-maroon btn-sm rounded-pill px-3"
+                onclick="printFaculty('unmatched-sef-{{ forloop.counter }}', 'unmatched-sef')">
+            <i class="bi bi-printer me-1"></i>
+            Print Annex D
+        </button>
+    </td>
+</tr>
                                 {% endfor %}
                             </tbody>
                         </table>
@@ -1987,6 +2016,166 @@
             </section>
 
         {% endfor %}
+
+
+
+        <!-- ── ANNEX D PAGES (Unmatched SEF only: SET blank) ── -->
+{% for item in results.unmatched_sef %}
+    <section class="print-page annex-d-page annex-d-exact"
+             data-print-id="unmatched-sef-{{ forloop.counter }}"
+             data-print-type="unmatched-sef">
+
+        <div class="annex-d-top-label">
+            <u><strong>ANNEX D-</strong></u>&nbsp; Faculty Evaluation and Development Acknowledgement Form
+        </div>
+        <br>
+
+        <div class="annex-d-title">
+            Faculty Evaluation and Development Acknowledgement Form
+        </div>
+
+        <div class="annex-d-section">A. &nbsp; Faculty Member Information</div>
+
+        <table class="annex-d-info-table">
+            <tbody>
+                <tr>
+                    <td>Name of Faculty</td>
+                    <td>{{ item.name|default:"" }}</td>
+                </tr>
+                <tr>
+                    <td>Department/College</td>
+                    <td>{{ item.department|default:"" }}</td>
+                </tr>
+                <tr>
+                    <td>Current Faculty Rank</td>
+                    <td>{{ item.rank|default:"" }}</td>
+                </tr>
+                <tr>
+                    <td>Semester/Term &amp; Academic Year</td>
+                    <td>
+                        {% if item.semester %}{{ item.semester }}{% endif %}
+                        {% if item.semester and item.school_year %} / {% endif %}
+                        {% if item.school_year %}{{ item.school_year }}{% endif %}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="annex-d-section">B. &nbsp; Faculty Evaluation Summary</div>
+
+        <table class="annex-d-summary-exact">
+            <thead>
+                <tr>
+                    <th colspan="2">Overall Rating</th>
+                </tr>
+                <tr>
+                    <th>Student Evaluation of Teachers (SET)</th>
+                    <th>Supervisor's Evaluation of Faculty (SEF)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>&nbsp;</td>
+                    <td>
+                        {% if item.sef_computed_rating %}
+                            {{ item.sef_computed_rating }}
+                        {% elif item.computed_rating %}
+                            {{ item.computed_rating }}
+                        {% elif item.rating %}
+                            {{ item.rating }}
+                        {% else %}
+                            &nbsp;
+                        {% endif %}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="annex-d-section" style="text-transform:none;">
+            C. &nbsp; Development Plan
+            <span style="font-weight:700;">(to be jointly accomplished by the Supervisor and Faculty)</span>
+        </div>
+
+        <table class="annex-d-development-exact">
+            <tbody>
+                <tr>
+                    <td>Areas for Improvement</td>
+                </tr>
+                <tr>
+                    <td>Proposed Learning and Development Activities</td>
+                </tr>
+                <tr>
+                    <td>Action Plan</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <p class="annex-d-ack">
+            I acknowledge that I have received and reviewed the faculty evaluation conducted for
+            the period mentioned above. I understand that my signature below does not
+            necessarily indicate agreement with the evaluation but confirms that I have been
+            given the opportunity to discuss it with my supervisor.
+        </p>
+
+        <table class="annex-d-sign-exact">
+            <colgroup>
+                <col class="col-label">
+                <col class="col-colon">
+                <col class="col-value">
+            </colgroup>
+            <tbody>
+                <tr>
+                    <th colspan="3">SUPERVISOR</th>
+                </tr>
+                <tr>
+                    <td class="annex-d-sign-label">Signature</td>
+                    <td class="annex-d-sign-colon">:</td>
+                    <td class="annex-d-sign-value"></td>
+                </tr>
+                <tr>
+                    <td class="annex-d-sign-label">Name</td>
+                    <td class="annex-d-sign-colon">:</td>
+                    <td class="annex-d-sign-value">
+                        {% if item.supervisor %}{{ item.supervisor }}{% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <td class="annex-d-sign-label">Date Signed</td>
+                    <td class="annex-d-sign-colon">:</td>
+                    <td class="annex-d-sign-value"></td>
+                </tr>
+
+                <tr>
+                    <th colspan="3">FACULTY</th>
+                </tr>
+                <tr>
+                    <td class="annex-d-sign-label">Signature</td>
+                    <td class="annex-d-sign-colon">:</td>
+                    <td class="annex-d-sign-value"></td>
+                </tr>
+                <tr>
+                    <td class="annex-d-sign-label">Name</td>
+                    <td class="annex-d-sign-colon">:</td>
+                    <td class="annex-d-sign-value">{{ item.name|default:"" }}</td>
+                </tr>
+                <tr>
+                    <td class="annex-d-sign-label">Date Signed</td>
+                    <td class="annex-d-sign-colon">:</td>
+                    <td class="annex-d-sign-value"></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="annex-d-prepared-by">
+            Prepared by:
+            <span class="prepared-sign-block">
+                <span class="prepared-by-print"></span>
+                <span class="prepared-role-label">OAA Secretary</span>
+            </span>
+        </div>
+
+    </section>
+{% endfor %}
     {% endif %}
 
     <!-- ── ANNEX B PAGES (Recorded SEF results) ── -->
@@ -2666,10 +2855,17 @@
             let visibleCount = 0;
 
             unmatchedSefRows.forEach(function (row) {
-                const name = row.dataset.name || "";
-                const department = row.dataset.department || "";
-                const period = row.dataset.period || "";
-                const isVisible = !query || name.includes(query) || department.includes(query) || period.includes(query);
+            const name = row.dataset.name || "";
+            const department = row.dataset.department || "";
+            const period = row.dataset.period || "";
+            const rank = row.dataset.rank || "";
+
+            const isVisible =
+                !query ||
+                name.includes(query) ||
+                department.includes(query) ||
+                period.includes(query) ||
+                rank.includes(query);
                 row.style.display = isVisible ? "" : "none";
 
                 if (isVisible) {
