@@ -3840,14 +3840,14 @@ def _build_sef_set_match_results(
         department_value = (
             sef_record.get("department", "")
             or set_record.get("department", "")
-            or rank_data.get("department", "")
             or fallback_extra.get("department", "")
+            or rank_data.get("department", "")
         )
 
         rank_value = (
-            sef_record.get("rank", "")
+            rank_data.get("rank", "")
+            or sef_record.get("rank", "")
             or set_record.get("rank", "")
-            or rank_data.get("rank", "")
             or fallback_extra.get("academic_rank", "")
         )
 
@@ -4326,12 +4326,15 @@ def excel_matcher(request):
     )
 
     request.session["sef_set_upload_batch_id"] = batch.id
-
     rank_message = ""
 
     if rank_file:
-        rank_message = f" Rank file was also processed. {match_results.get('total_rank_matched', 0)} matched rank(s) were attached to Annex D."
-
+        rank_message = (
+            f" Rank file was also processed. "
+            f"{len(rank_records)} rank row(s) were read from the uploaded rank file. "
+            f"{match_results.get('total_rank_matched', 0)} rank(s) were attached to matched Annex D records."
+        )
+        
     messages.success(
         request,
         f"Matching complete using recorded SEF records. "
