@@ -2158,7 +2158,7 @@ def admin_past_evaluations(request):
                 grouped[group_key]["section_values"][section_key].append(evaluator_sections[section_key])
 
             evaluator_total_score = round(float(evaluation.total_score or 0), 2)
-            evaluator_overall = round(float(evaluation.average_score or 0), 2)
+            evaluator_overall = float(evaluation.average_score or 0)
             evaluator_computed_rating = round((evaluator_total_score / 75) * 100, 2) if evaluator_total_score else 0
 
             grouped[group_key]["evaluators"].append({
@@ -2339,7 +2339,7 @@ def admin_past_evaluations(request):
             for section_key, values in item["section_values"].items():
                 section_averages[section_key] = round(sum(values) / len(values), 2) if values else 0
 
-            overall_average = round(sum(item["overall_values"]) / len(item["overall_values"]), 2) if item["overall_values"] else 0
+            overall_average = round(sum(item["overall_values"]) / len(item["overall_values"]), 3) if item["overall_values"] else 0
             average_total_score = round(sum(item["total_scores"]) / len(item["total_scores"]), 2) if item["total_scores"] else 0
             computed_rating = round(sum(item["computed_ratings"]) / len(item["computed_ratings"]), 2) if item["computed_ratings"] else 0
 

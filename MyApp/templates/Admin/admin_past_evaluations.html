@@ -735,11 +735,11 @@
 
                <div class="sector-grid modal-summary-grid">
                     <div class="sector-card">
-                        <h6>Total Average Grade</h6>
+                        <h6>Average Grade</h6>
                         <h4 id="modalOverallAvg">0.00</h4>
                     </div>
                     <div class="sector-card">
-                        <h6>Average Total Score</h6>
+                        <h6>Total Score (score/75)</h6>
                         <h4 id="modalAverageTotalScore">0.00</h4>
                     </div>
                     <div class="sector-card">
@@ -867,6 +867,10 @@
 
     function toFixedGrade(value) {
         return Number(value || 0).toFixed(2);
+    }
+
+    function toFixedTotalAverage(value) {
+        return Number(value || 0).toFixed(3);
     }
 
     function getSection(source, key) {
@@ -1069,7 +1073,7 @@
             `${getItemRoleLabel(item)} • ${item.department || 'No Department'} • ${item.evaluator_count || 0} evaluator(s)`;
 
         document.getElementById('modalOverallAvg').textContent =
-            toFixedGrade(getOverallValue(item));
+            toFixedTotalAverage(getOverallValue(item));
 
         document.getElementById('modalAverageTotalScore').textContent =
             toFixedGrade(getAverageTotalScore(item));
