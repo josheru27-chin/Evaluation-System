@@ -2676,14 +2676,22 @@ def _get_cell(row, index):
 
     return _clean_value(row[index].value)
 
+
 def _find_header_row_and_indexes(ws):
     name_headers = {
         "NAME",
         "FULLNAME",
+        "FACULTY",
+        "FACULTYMEMBER",
+        "FACULTYMEMBERNAME",
         "FACULTYNAME",
+        "FACULTYEMPLOYEE",
+        "FACULTYEMPLOYEENAME",
         "EVALUATEENAME",
         "EMPLOYEENAME",
+        "TEACHER",
         "TEACHERNAME",
+        "INSTRUCTOR",
         "INSTRUCTORNAME",
         "PERSONNAME",
     }
@@ -2735,7 +2743,7 @@ def _find_header_row_and_indexes(ws):
         "FINALRATING",
         "SCORE",
     ]
-    
+
     rank_headers = {
         "RANK",
         "FACULTYRANK",
@@ -2807,44 +2815,64 @@ def _find_header_row_and_indexes(ws):
         period_index = None
 
         for index, header in enumerate(headers):
-            if header in name_headers or header.endswith("NAME"):
-                name_index = index
+            if not header:
+                continue
 
             if header in first_name_headers:
                 first_name_index = index
+                continue
 
             if header in middle_name_headers:
                 middle_name_index = index
+                continue
 
             if header in last_name_headers:
                 last_name_index = index
-
-            if header in department_headers:
-                department_index = index
-
-            if header in remarks_headers:
-                remarks_index = index
-
-            if header in rank_headers:
-                rank_index = index
+                continue
 
             if header in supervisor_headers:
                 supervisor_index = index
+                continue
+
+            if header in name_headers:
+                name_index = index
+                continue
+
+            if header.endswith("NAME") and header not in supervisor_headers:
+                name_index = index
+                continue
+
+            if header in department_headers:
+                department_index = index
+                continue
+
+            if header in remarks_headers:
+                remarks_index = index
+                continue
+
+            if header in rank_headers:
+                rank_index = index
+                continue
 
             if header in semester_headers:
                 semester_index = index
+                continue
 
             if header in school_year_headers:
                 school_year_index = index
+                continue
 
             if header in period_headers:
                 period_index = index
+                continue
 
             if header in total_score_headers:
                 total_score_index = index
+                continue
 
             if "COMPUTEDRATING" in header:
                 computed_rating_index = index
+                continue
 
         for priority_header in rating_priority:
             if priority_header in headers:
@@ -3633,64 +3661,6 @@ def _get_recorded_sef_results(selected_schedule_id="all"):
     return recorded_results
 
 
-
-
-def _get_recorded_sef_records_for_matching(selected_schedule_id="all"):
-    recorded_results = _get_recorded_sef_results(selected_schedule_id)
-    sef_records = []
-
-    for item in recorded_results:
-        name = (item.get("name") or "").strip()
-        normalized_name = _normalize_person_name(name)
-
-        if not name or not normalized_name:
-            continue
-
-        computed_values = []
-        total_values = []
-
-        for evaluator in item.get("evaluators", []):
-            computed_value = _extract_number(evaluator.get("computed_rating", ""))
-            total_value = _extract_number(evaluator.get("total_score", ""))
-
-            if computed_value is not None:
-                computed_values.append(computed_value)
-
-            if total_value is not None:
-                total_values.append(total_value)
-
-        average_computed = (
-            sum(computed_values) / len(computed_values)
-            if computed_values
-            else None
-        )
-
-        average_total = (
-            sum(total_values) / len(total_values)
-            if total_values
-            else None
-        )
-
-        sef_records.append({
-            "name": name,
-            "normalized_name": normalized_name,
-            "department": item.get("department", ""),
-            "rank": item.get("academic_rank", ""),
-            "supervisor": item.get("supervisor_display", ""),
-            "semester": item.get("semester", ""),
-            "school_year": item.get("academic_year", ""),
-            "period": item.get("schedule_label", ""),
-            "rating": "",
-            "computed_rating": f"{average_computed:.2f}" if average_computed is not None else "",
-            "total_score": f"{average_total:.2f}" if average_total is not None else "",
-            "remarks": "",
-            "sheet": "Recorded SEF",
-            "row": "",
-        })
-
-    return sef_records
-
-
 def _get_recorded_sef_records_for_matching(selected_schedule_id="all"):
     """
     Build SEF matching records from submitted SEF database records.
@@ -3736,7 +3706,7 @@ def _get_recorded_sef_records_for_matching(selected_schedule_id="all"):
             "name": name,
             "normalized_name": normalized_name,
             "department": item.get("department", ""),
-            "rank": "",
+            "rank": item.get("academic_rank", "") or item.get("rank", ""),
             "supervisor": item.get("supervisor_display", ""),
             "semester": item.get("semester", ""),
             "school_year": item.get("academic_year", ""),
@@ -3750,7 +3720,6 @@ def _get_recorded_sef_records_for_matching(selected_schedule_id="all"):
         })
 
     return sef_records
-
 
 
 
@@ -3801,14 +3770,22 @@ def _get_uploaded_person_extra_for_print(name):
             }
 
     return empty_data
-
-
-def _build_sef_set_match_results(sef_records, set_records, sef_filename="", set_filename=""):
+def _build_sef_set_match_results(
+    sef_records,
+    set_records,
+    sef_filename="",
+    set_filename="",
+    rank_records=None,
+):
     sef_map = {}
     set_map = {}
+    rank_lookup = _build_rank_lookup_from_records(rank_records or [])
 
     for record in sef_records:
-        normalized_name = record.get("normalized_name") or _normalize_person_name(record.get("name", ""))
+        normalized_name = (
+            record.get("normalized_name")
+            or _normalize_person_name(record.get("name", ""))
+        )
 
         if not normalized_name:
             continue
@@ -3817,7 +3794,10 @@ def _build_sef_set_match_results(sef_records, set_records, sef_filename="", set_
         sef_map.setdefault(normalized_name, []).append(record)
 
     for record in set_records:
-        normalized_name = record.get("normalized_name") or _normalize_person_name(record.get("name", ""))
+        normalized_name = (
+            record.get("normalized_name")
+            or _normalize_person_name(record.get("name", ""))
+        )
 
         if not normalized_name:
             continue
@@ -3829,8 +3809,51 @@ def _build_sef_set_match_results(sef_records, set_records, sef_filename="", set_
 
     matched_results = []
     used_set_keys = set()
+    rank_matched_count = 0
 
     def build_item(sef_record, set_record, match_type, match_score):
+        nonlocal rank_matched_count
+
+        sef_name = sef_record.get("name", "")
+        set_name = set_record.get("name", "")
+
+        normalized_name = (
+            sef_record.get("normalized_name")
+            or set_record.get("normalized_name")
+            or _normalize_person_name(sef_name)
+            or _normalize_person_name(set_name)
+        )
+
+        rank_data = _find_rank_data_for_person(
+            [
+                sef_name,
+                set_name,
+                sef_record.get("normalized_name", ""),
+                set_record.get("normalized_name", ""),
+                normalized_name,
+            ],
+            rank_lookup,
+        )
+
+        fallback_extra = _get_uploaded_person_extra_for_print(sef_name or set_name)
+
+        department_value = (
+            sef_record.get("department", "")
+            or set_record.get("department", "")
+            or rank_data.get("department", "")
+            or fallback_extra.get("department", "")
+        )
+
+        rank_value = (
+            sef_record.get("rank", "")
+            or set_record.get("rank", "")
+            or rank_data.get("rank", "")
+            or fallback_extra.get("academic_rank", "")
+        )
+
+        if rank_value:
+            rank_matched_count += 1
+
         sef_percentage = (sef_record.get("computed_rating") or "").strip()
 
         if not sef_percentage:
@@ -3839,7 +3862,7 @@ def _build_sef_set_match_results(sef_records, set_records, sef_filename="", set_
                 total_score=sef_record.get("total_score", ""),
                 mean_rating=sef_record.get("rating", ""),
             )
-            
+
         set_percentage = _rating_to_percentage(
             computed_rating=set_record.get("computed_rating", ""),
             total_score=set_record.get("total_score", ""),
@@ -3847,23 +3870,28 @@ def _build_sef_set_match_results(sef_records, set_records, sef_filename="", set_
         )
 
         return {
-            "name": sef_record.get("name", ""),
-            "normalized_name": sef_record.get("normalized_name", ""),
-            "department": sef_record.get("department", "") or set_record.get("department", ""),
-            "rank": sef_record.get("rank", ""),
+            "name": sef_name or set_name,
+            "normalized_name": normalized_name,
+            "department": department_value,
+            "rank": rank_value,
             "supervisor": sef_record.get("supervisor", "") or set_record.get("supervisor", ""),
             "semester": sef_record.get("semester", "") or set_record.get("semester", ""),
             "school_year": sef_record.get("school_year", "") or set_record.get("school_year", ""),
             "period": sef_record.get("period", "") or set_record.get("period", ""),
-            "sef_name": sef_record.get("name", ""),
-            "set_name": set_record.get("name", ""),
+
+            "sef_name": sef_name,
+            "set_name": set_name,
+
             "sef_rating": sef_percentage,
             "sef_computed_rating": sef_percentage,
             "sef_total_score": sef_record.get("total_score", ""),
+
             "set_rating": set_percentage,
             "set_remarks": set_record.get("remarks", ""),
+
             "sef_sheet": sef_record.get("sheet", ""),
             "set_sheet": set_record.get("sheet", ""),
+
             "match_type": match_type,
             "match_score": match_score,
         }
@@ -3946,6 +3974,7 @@ def _build_sef_set_match_results(sef_records, set_records, sef_filename="", set_
         "total_sef": len(sef_records),
         "total_set": len(set_records),
         "total_matched": len(matched_results),
+        "total_rank_matched": rank_matched_count,
         "total_unmatched_sef": len(unmatched_sef),
         "total_unmatched_set": len(unmatched_set),
         "matched_results": matched_results,
@@ -3953,6 +3982,7 @@ def _build_sef_set_match_results(sef_records, set_records, sef_filename="", set_
         "unmatched_set": unmatched_set,
         "generated_at": timezone.localtime(timezone.now()).strftime("%B %d, %Y %I:%M %p"),
     }
+    
     
 def _save_sef_set_results_to_db(request, sef_file=None, set_file=None, match_results=None):
     match_results = match_results or {}
@@ -4211,6 +4241,7 @@ def excel_matcher(request):
         return redirect(f"{reverse('admin_sef_set')}?mode=excel")
 
     set_file = request.FILES.get("set_file")
+    rank_file = request.FILES.get("rank_file")
     selected_schedule_id = (request.POST.get("schedule_id") or "all").strip()
 
     if not set_file:
@@ -4219,6 +4250,10 @@ def excel_matcher(request):
 
     if not set_file.name.lower().endswith(".xlsx"):
         messages.error(request, "Please upload the SET file in .xlsx format.")
+        return redirect(f"{reverse('admin_sef_set')}?mode=excel")
+
+    if rank_file and not rank_file.name.lower().endswith(".xlsx"):
+        messages.error(request, "Please upload the rank file in .xlsx format.")
         return redirect(f"{reverse('admin_sef_set')}?mode=excel")
 
     recorded_sef_schedules = _get_available_recorded_sef_schedules()
@@ -4238,6 +4273,7 @@ def excel_matcher(request):
     try:
         sef_records = _get_recorded_sef_records_for_matching(selected_schedule_id)
         set_records = _extract_people_from_excel(set_file)
+        rank_records = _extract_people_from_excel(rank_file) if rank_file else []
 
     except ValueError as e:
         messages.error(request, str(e))
@@ -4279,6 +4315,7 @@ def excel_matcher(request):
         set_records=set_records,
         sef_filename=f"Recorded SEF - {schedule_label}",
         set_filename=set_file.name,
+        rank_records=rank_records,
     )
 
     batch = _save_sef_set_results_to_db(
@@ -4290,17 +4327,21 @@ def excel_matcher(request):
 
     request.session["sef_set_upload_batch_id"] = batch.id
 
+    rank_message = ""
+
+    if rank_file:
+        rank_message = f" Rank file was also processed. {match_results.get('total_rank_matched', 0)} matched rank(s) were attached to Annex D."
+
     messages.success(
         request,
         f"Matching complete using recorded SEF records. "
         f"{match_results['total_matched']} matched name(s), "
         f"{match_results['total_unmatched_sef']} SEF-only name(s), and "
         f"{match_results['total_unmatched_set']} SET-only name(s) found."
+        f"{rank_message}"
     )
 
     return redirect(f"{reverse('admin_sef_set')}?mode=excel")
-
-
 
 @role_required("UITC", "ADAA")
 def admin_user_management(request):
@@ -4515,3 +4556,126 @@ def admin_user_management(request):
     )
 
     return render(request, "admin/admin_user_management.html", context)
+
+
+def _expand_department_label(value):
+    value = _clean_value(value)
+
+    if not value:
+        return ""
+
+    return DEPARTMENT_MAP.get(value.upper(), value)
+
+def _build_rank_lookup_from_records(rank_records):
+    """
+    Builds a searchable rank lookup from the uploaded rank Excel file.
+
+    Expected rank file columns can be:
+    Department | No. | Faculty | Rank | ...
+    or:
+    Name | Rank
+    or:
+    Faculty Name | Academic Rank
+    """
+
+    rank_lookup = {}
+
+    for record in rank_records or []:
+        name = _clean_value(record.get("name", ""))
+        normalized_name = (
+            record.get("normalized_name")
+            or _normalize_person_name(name)
+        )
+
+        if not normalized_name:
+            continue
+
+        rank_value = _clean_value(record.get("rank", ""))
+        department_value = _expand_department_label(record.get("department", ""))
+
+        if not rank_value and not department_value:
+            continue
+
+        existing = rank_lookup.setdefault(normalized_name, {
+            "name": name,
+            "normalized_name": normalized_name,
+            "rank": "",
+            "department": "",
+            "sheet": record.get("sheet", ""),
+            "row": record.get("row", ""),
+        })
+
+        if rank_value and not existing["rank"]:
+            existing["rank"] = rank_value
+
+        if department_value and not existing["department"]:
+            existing["department"] = department_value
+
+    return rank_lookup
+
+
+def _find_rank_data_for_person(possible_names, rank_lookup):
+    """
+    Finds rank data using the same flexible/fuzzy matching style used by SEF + SET matching.
+
+    possible_names can include:
+    - SEF name
+    - SET name
+    - normalized SEF name
+    - normalized SET name
+    """
+
+    if not rank_lookup:
+        return {}
+
+    candidate_keys = list(rank_lookup.keys())
+
+    normalized_candidates = []
+
+    for value in possible_names or []:
+        if not value:
+            continue
+
+        normalized = _normalize_person_name(value)
+
+        if normalized and normalized not in normalized_candidates:
+            normalized_candidates.append(normalized)
+
+    # 1. Exact normalized match first
+    for normalized in normalized_candidates:
+        if normalized in rank_lookup:
+            return rank_lookup.get(normalized, {})
+
+    # 2. Fuzzy match using your existing name matching logic
+    used_keys = set()
+
+    for normalized in normalized_candidates:
+        matched_key, score = _find_fuzzy_match(
+            normalized,
+            candidate_keys,
+            used_keys,
+        )
+
+        if matched_key and score >= 0.82:
+            return rank_lookup.get(matched_key, {})
+
+    # 3. Looser token containment fallback
+    for normalized in normalized_candidates:
+        source_tokens = _token_set(normalized)
+
+        if not source_tokens:
+            continue
+
+        for candidate_key in candidate_keys:
+            candidate_tokens = _token_set(candidate_key)
+
+            if not candidate_tokens:
+                continue
+
+            common_tokens = source_tokens & candidate_tokens
+
+            # This helps when one file has middle name and the other does not.
+            if len(common_tokens) >= 2:
+                return rank_lookup.get(candidate_key, {})
+
+    return {}

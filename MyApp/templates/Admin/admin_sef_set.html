@@ -1410,8 +1410,7 @@
                             <div class="filter-label">Search</div>
                             <div class="search-box">
                                 <i class="bi bi-search"></i>
-                                <input type="text" id="excelSearchInput" class="form-control" placeholder="Search faculty name or department...">
-                            </div>
+                            <input type="text" id="excelSearchInput" class="form-control" placeholder="Search faculty name, department, or rank...">                            </div>
                         </div>
 
                         <div class="col-lg-3">
@@ -1433,52 +1432,61 @@
                     <div class="matched-table-scroll">
                         <table class="table table-hover align-middle mb-0" id="excelResultsTable">
                             <thead>
-                                <tr>
-                                    <th class="text-center" style="width:55px;">
-                                        <input type="checkbox" class="batch-check" id="annexDSelectAllVisible" title="Select visible rows">
-                                    </th>
-                                    <th style="width:70px;">#</th>
-                                    <th>Faculty Name</th>
-                                    <th>Department</th>
-                                    <th class="text-center" style="width:190px;">Print</th>
-                                </tr>
-                            </thead>
+    <tr>
+        <th class="text-center" style="width:55px;">
+            <input type="checkbox" class="batch-check" id="annexDSelectAllVisible" title="Select visible rows">
+        </th>
+        <th style="width:70px;">#</th>
+        <th>Faculty Name</th>
+        <th>Department</th>
+        <th>Rank</th>
+        <th class="text-center" style="width:190px;">Print</th>
+    </tr>
+</thead>
 
-                            <tbody>
-                                {% for item in results.matched_results %}
-                                    <tr
-                                        class="excel-row"
-                                        data-name="{{ item.name|lower }}"
-                                        data-department="{{ item.department|default:''|lower }}"
-                                        data-department-label="{{ item.department|default:'' }}"
-                                    >
-                                        <td class="text-center">
-                                            <input type="checkbox" class="batch-check annex-d-row-check" value="{{ forloop.counter }}">
-                                        </td>
-                                        <td class="fw-bold row-number"></td>
-                                        <td class="faculty-name">{{ item.name }}</td>
-                                        <td>
-                                            {% if item.department %}
-                                                {{ item.department }}
-                                            {% else %}
-                                                <span class="text-muted">—</span>
-                                            {% endif %}
-                                        </td>
-                                        <td class="text-center">
-                                            <button type="button" class="btn btn-maroon btn-sm rounded-pill px-3" onclick="printFaculty('{{ forloop.counter }}', 'combined')">
-                                                <i class="bi bi-printer me-1"></i>
-                                                Print Annex D
-                                            </button>
-                                        </td>
-                                    </tr>
-                                {% empty %}
-                                    <tr>
-                                        <td colspan="5" class="text-center text-muted py-4">
-                                            No matched names found.
-                                        </td>
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
+<tbody>
+    {% for item in results.matched_results %}
+        <tr
+            class="excel-row"
+            data-name="{{ item.name|lower }}"
+            data-department="{{ item.department|default:''|lower }}"
+            data-department-label="{{ item.department|default:'' }}"
+            data-rank="{{ item.rank|default:''|lower }}"
+        >
+            <td class="text-center">
+                <input type="checkbox" class="batch-check annex-d-row-check" value="{{ forloop.counter }}">
+            </td>
+            <td class="fw-bold row-number"></td>
+            <td class="faculty-name">{{ item.name }}</td>
+            <td>
+                {% if item.department %}
+                    {{ item.department }}
+                {% else %}
+                    <span class="text-muted">—</span>
+                {% endif %}
+            </td>
+            <td>
+                {% if item.rank %}
+                    {{ item.rank }}
+                {% else %}
+                    <span class="text-muted">—</span>
+                {% endif %}
+            </td>
+            <td class="text-center">
+                <button type="button" class="btn btn-maroon btn-sm rounded-pill px-3" onclick="printFaculty('{{ forloop.counter }}', 'combined')">
+                    <i class="bi bi-printer me-1"></i>
+                    Print Annex D
+                </button>
+            </td>
+        </tr>
+    {% empty %}
+        <tr>
+            <td colspan="6" class="text-center text-muted py-4">
+                No matched names found.
+            </td>
+        </tr>
+    {% endfor %}
+</tbody>
                         </table>
                     </div>
 
@@ -1549,17 +1557,27 @@
     {% endif %}
 </div>
 
-<!-- Upload SET Excel Modal -->
+
+
+
+
+
+
+
+
+<!-- Upload SET + Rank Excel Modal -->
 <div class="modal fade no-print" id="uploadExcelModal" tabindex="-1" aria-labelledby="uploadExcelModalLabel" aria-hidden="true" data-bs-backdrop="static">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
         <div class="modal-content border-0 shadow-lg">
             <div class="modal-header modal-header-maroon">
                 <div>
                     <h5 class="modal-title fw-bold" id="uploadExcelModalLabel">
                         <i class="bi bi-file-earmark-excel me-2"></i>
-                        Upload SET Excel File
+                        Upload SET and Rank Excel File
                     </h5>
-                    <p class="mb-0 small opacity-75">Choose the recorded SEF schedule, then upload one SET Excel file.</p>
+                    <p class="mb-0 small opacity-75">
+                        Choose the recorded SEF schedule, upload the SET Excel file, and optionally upload the rank file.
+                    </p>
                 </div>
 
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -1571,11 +1589,11 @@
                 <div class="modal-body p-4">
                     <div class="alert alert-light border rounded-4 mb-4">
                         <i class="bi bi-info-circle me-2" style="color:#981b2e;"></i>
-                        The system will compare recorded SEF names from the database against names from the uploaded SET Excel file.
+                        The system will compare recorded SEF names from the database against names from the uploaded SET Excel file. If you upload the rank file, the faculty rank will appear in Annex D.
                     </div>
 
                     <div class="row g-4">
-                        <div class="col-lg-5">
+                        <div class="col-lg-4">
                             <div class="upload-box">
                                 <div class="upload-modal-icon"><i class="bi bi-database-check"></i></div>
                                 <h5 class="fw-bold mb-2" style="color:#981b2e;">Recorded SEF Source</h5>
@@ -1596,13 +1614,29 @@
                             </div>
                         </div>
 
-                        <div class="col-lg-7">
+                        <div class="col-lg-4">
                             <div class="upload-box">
                                 <div class="upload-modal-icon"><i class="bi bi-file-earmark-spreadsheet-fill"></i></div>
                                 <h5 class="fw-bold mb-2" style="color:#981b2e;">SET Excel File</h5>
-                                <p class="text-muted small mb-3">Upload the Student Evaluation of Teachers file only.</p>
+                                <p class="text-muted small mb-3">
+                                    Upload the Student Evaluation of Teachers file.
+                                </p>
                                 <input type="file" name="set_file" class="form-control rounded-3" accept=".xlsx" required>
-                                <div class="small text-muted mt-2">Accepted format: .xlsx</div>
+                                <div class="small text-muted mt-2">Required. Accepted format: .xlsx</div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-4">
+                            <div class="upload-box">
+                                <div class="upload-modal-icon"><i class="bi bi-person-vcard-fill"></i></div>
+                                <h5 class="fw-bold mb-2" style="color:#981b2e;">Rank Excel File</h5>
+                                <p class="text-muted small mb-3">
+                                    Upload the faculty rank file with <strong>Faculty</strong> and <strong>Rank</strong> columns.
+                                </p>
+                                <input type="file" name="rank_file" class="form-control rounded-3" accept=".xlsx">
+                                <div class="small text-muted mt-2">
+                                    Optional. Example: faculty overload compensation Excel file.
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1610,13 +1644,16 @@
 
                 <div class="modal-footer bg-light border-0 p-4">
                     <button type="button" class="btn btn-outline-secondary rounded-pill fw-bold px-4" data-bs-dismiss="modal">Cancel</button>
-                    <button type="reset" class="btn btn-outline-maroon">Clear File</button>
-                    <button type="submit" class="btn btn-maroon"><i class="bi bi-search me-2"></i>Match Names</button>
+                    <button type="reset" class="btn btn-outline-maroon">Clear Files</button>
+                    <button type="submit" class="btn btn-maroon">
+                        <i class="bi bi-search me-2"></i>Match Names
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+
 
 <!-- Recorded SEF Without SET Match Modal -->
 <div class="modal fade no-print" id="unmatchedSefModal" tabindex="-1" aria-labelledby="unmatchedSefModalLabel" aria-hidden="true">
@@ -2285,71 +2322,117 @@
         let pendingPrintType = null;
         let pendingBatchPrintIds = [];
 
-        function setupFilter(options) {
-            const table = document.getElementById(options.tableId);
-            if (!table) return;
+       function setupFilter(options) {
+    const table = document.getElementById(options.tableId);
+    if (!table) return;
 
-            const searchInput = document.getElementById(options.searchId);
-            const departmentSelect = document.getElementById(options.departmentId);
-            const countInfo = document.getElementById(options.countId);
-            const emptyDiv = document.getElementById(options.emptyId);
-            const rows = Array.from(table.querySelectorAll(options.rowSelector));
+    const searchInput = document.getElementById(options.searchId);
+    const departmentSelect = document.getElementById(options.departmentId);
+    const countInfo = document.getElementById(options.countId);
+    const emptyDiv = document.getElementById(options.emptyId);
+    const rows = Array.from(table.querySelectorAll(options.rowSelector));
 
-            // Populate department select dynamically
-            if (departmentSelect) {
-                const depts = [...new Set(rows.map(function (r) {
-                    return r.dataset.departmentLabel || "";
-                }).filter(Boolean))].sort();
+    // Populate department select dynamically.
+    // Prevent duplicate options when setupFilter runs again.
+    if (departmentSelect) {
+        const existingValues = Array.from(departmentSelect.options).map(function (option) {
+            return option.value;
+        });
 
-                depts.forEach(function (dept) {
-                    const opt = document.createElement("option");
-                    opt.value = dept.toLowerCase();
-                    opt.textContent = dept;
-                    departmentSelect.appendChild(opt);
-                });
+        const depts = [...new Set(rows.map(function (row) {
+            return row.dataset.departmentLabel || "";
+        }).filter(Boolean))].sort();
+
+        depts.forEach(function (dept) {
+            const value = dept.toLowerCase();
+
+            if (existingValues.includes(value)) {
+                return;
             }
 
-            function applyFilter() {
-                const query = searchInput ? searchInput.value.trim().toLowerCase() : "";
-                const dept = departmentSelect ? departmentSelect.value : "all";
-                let count = 0;
+            const opt = document.createElement("option");
+            opt.value = value;
+            opt.textContent = dept;
+            departmentSelect.appendChild(opt);
+        });
+    }
 
-                rows.forEach(function (row) {
-                    const name = row.dataset.name || "";
-                    const rowDept = row.dataset.department || "";
-                    const matchName = !query || name.includes(query);
-                    const matchDept = dept === "all" || rowDept === dept;
-                    const visible = matchName && matchDept;
-                    row.style.display = visible ? "" : "none";
-                    if (visible) count++;
-                });
+    function applyFilter() {
+        const query = searchInput ? searchInput.value.trim().toLowerCase() : "";
+        const dept = departmentSelect ? departmentSelect.value : "all";
+        let count = 0;
 
-                // Re-number visible rows
-                let num = 0;
-                rows.forEach(function (row) {
-                    if (row.style.display !== "none") {
-                        num++;
-                        const cell = row.querySelector(".row-number");
-                        if (cell) cell.textContent = num;
-                    }
-                });
+        rows.forEach(function (row) {
+            const name = row.dataset.name || "";
+            const rowDept = row.dataset.department || "";
+            const rank = row.dataset.rank || "";
+            const supervisor = row.dataset.supervisor || "";
+            const type = row.dataset.type || "";
 
-                if (countInfo) countInfo.textContent = "Showing " + count + " record(s)";
-                if (table && emptyDiv) {
-                    if (count === 0) {
-                        table.closest(".matched-table-scroll").classList.add("d-none");
-                        emptyDiv.classList.remove("d-none");
-                    } else {
-                        table.closest(".matched-table-scroll").classList.remove("d-none");
-                        emptyDiv.classList.add("d-none");
-                    }
+            const searchableText = [
+                name,
+                rowDept,
+                rank,
+                supervisor,
+                type
+            ].join(" ");
+
+            const matchQuery = !query || searchableText.includes(query);
+            const matchDept = dept === "all" || rowDept === dept;
+
+            const visible = matchQuery && matchDept;
+
+            row.style.display = visible ? "" : "none";
+
+            if (visible) {
+                count++;
+            }
+        });
+
+        // Re-number visible rows
+        let num = 0;
+
+        rows.forEach(function (row) {
+            if (row.style.display !== "none") {
+                num++;
+                const cell = row.querySelector(".row-number");
+                if (cell) {
+                    cell.textContent = num;
                 }
             }
+        });
 
-            if (searchInput) searchInput.addEventListener("input", applyFilter);
-            if (departmentSelect) departmentSelect.addEventListener("change", applyFilter);
-            applyFilter();
+        if (countInfo) {
+            countInfo.textContent = "Showing " + count + " record(s)";
         }
+
+        if (table && emptyDiv) {
+            const scrollWrapper = table.closest(".matched-table-scroll");
+
+            if (count === 0) {
+                if (scrollWrapper) scrollWrapper.classList.add("d-none");
+                emptyDiv.classList.remove("d-none");
+            } else {
+                if (scrollWrapper) scrollWrapper.classList.remove("d-none");
+                emptyDiv.classList.add("d-none");
+            }
+        }
+
+        updateRecordedBatchUI();
+        updateAnnexDBatchUI();
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener("input", applyFilter);
+    }
+
+    if (departmentSelect) {
+        departmentSelect.addEventListener("change", applyFilter);
+    }
+
+    applyFilter();
+}
+
 
         function clearSelectedPrintPages() {
             document.querySelectorAll(".selected-print-page").forEach(function (page) {
