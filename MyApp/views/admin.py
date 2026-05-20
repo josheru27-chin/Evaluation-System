@@ -2638,6 +2638,7 @@ def _normalize_person_name(name):
     name = str(name).strip().lower()
     name = re.sub(r"^\s*\d+\s+", "", name)
 
+    # Convert "LAST, FIRST MIDDLE" into "FIRST MIDDLE LAST"
     if "," in name:
         parts = [p.strip() for p in name.split(",") if p.strip()]
         if len(parts) >= 2:
@@ -2657,13 +2658,15 @@ def _normalize_person_name(name):
         if token in ignored_tokens:
             continue
 
+        # Ignore middle initials only
         if len(token) == 1:
             continue
 
         tokens.append(token)
 
-    tokens = sorted(tokens)
-
+    # IMPORTANT:
+    # Do NOT sort tokens.
+    # Sorting makes "Juan Santos" and "Santos Juan" too loose.
     return " ".join(tokens)
 
 
@@ -3045,7 +3048,44 @@ def _extract_people_from_excel(uploaded_file):
 def _token_set(normalized_name):
     return set(normalized_name.split())
 
+def _get_first_last_from_normalized_name(normalized_name):
+    tokens = [token for token in str(normalized_name or "").split() if token]
 
+    if len(tokens) < 2:
+        return "", ""
+
+    first_name = tokens[0]
+    last_name = tokens[-1]
+
+    return first_name, last_name
+
+
+def _is_safe_name_match(source_key, candidate_key):
+    """
+    Prevents matching different people just because they have the same surname.
+    Example blocked:
+    - Juan Santos
+    - Maria Santos
+    """
+
+    source_first, source_last = _get_first_last_from_normalized_name(source_key)
+    candidate_first, candidate_last = _get_first_last_from_normalized_name(candidate_key)
+
+    if not source_first or not source_last or not candidate_first or not candidate_last:
+        return False
+
+    first_score = SequenceMatcher(None, source_first, candidate_first).ratio()
+    last_score = SequenceMatcher(None, source_last, candidate_last).ratio()
+
+    # First name must match or be almost identical
+    if source_first != candidate_first and first_score < 0.92:
+        return False
+
+    # Last name must also be strict
+    if source_last != candidate_last and last_score < 0.96:
+        return False
+
+    return True
 def _find_fuzzy_match(source_key, candidate_keys, used_keys):
     source_tokens = _token_set(source_key)
     best_key = None
@@ -3060,6 +3100,11 @@ def _find_fuzzy_match(source_key, candidate_keys, used_keys):
         if not source_tokens or not candidate_tokens:
             continue
 
+        # IMPORTANT:
+        # Prevent same-surname-only matching.
+        if not _is_safe_name_match(source_key, candidate_key):
+            continue
+
         shorter_tokens = source_tokens
         longer_tokens = candidate_tokens
 
@@ -3069,11 +3114,10 @@ def _find_fuzzy_match(source_key, candidate_keys, used_keys):
 
         subset_match = shorter_tokens.issubset(longer_tokens) and len(shorter_tokens) >= 2
         similarity = SequenceMatcher(None, source_key, candidate_key).ratio()
-        common_tokens = source_tokens & candidate_tokens
 
         if subset_match:
             score = max(similarity, 0.90)
-        elif common_tokens and similarity >= 0.82:
+        elif similarity >= 0.88:
             score = similarity
         else:
             continue
@@ -3083,7 +3127,6 @@ def _find_fuzzy_match(source_key, candidate_keys, used_keys):
             best_key = candidate_key
 
     return best_key, best_score
-
 
 # ============================================================
 # RECORDED SEF PRINT DATA
@@ -3770,6 +3813,7 @@ def _get_uploaded_person_extra_for_print(name):
             }
 
     return empty_data
+
 def _build_sef_set_match_results(
     sef_records,
     set_records,
@@ -3833,7 +3877,7 @@ def _build_sef_set_match_results(
                 normalized_name,
             ],
             rank_lookup,
-        )
+        ) or {}
 
         fallback_extra = _get_uploaded_person_extra_for_print(sef_name or set_name)
 
@@ -3965,7 +4009,7 @@ def _build_sef_set_match_results(
                 normalized_name,
             ],
             rank_lookup,
-        )
+        ) or {}
 
         fallback_extra = _get_uploaded_person_extra_for_print(sef_name)
 
@@ -4673,23 +4717,19 @@ def _build_rank_lookup_from_records(rank_records):
 
     return rank_lookup
 
-
 def _find_rank_data_for_person(possible_names, rank_lookup):
     """
-    Finds rank data using the same flexible/fuzzy matching style used by SEF + SET matching.
+    Finds rank data safely.
 
-    possible_names can include:
-    - SEF name
-    - SET name
-    - normalized SEF name
-    - normalized SET name
+    IMPORTANT:
+    This must always return a dictionary.
+    If no rank match is found, return {} instead of None.
     """
 
     if not rank_lookup:
         return {}
 
     candidate_keys = list(rank_lookup.keys())
-
     normalized_candidates = []
 
     for value in possible_names or []:
@@ -4706,7 +4746,7 @@ def _find_rank_data_for_person(possible_names, rank_lookup):
         if normalized in rank_lookup:
             return rank_lookup.get(normalized, {})
 
-    # 2. Fuzzy match using your existing name matching logic
+    # 2. Safe fuzzy match
     used_keys = set()
 
     for normalized in normalized_candidates:
@@ -4716,10 +4756,10 @@ def _find_rank_data_for_person(possible_names, rank_lookup):
             used_keys,
         )
 
-        if matched_key and score >= 0.82:
+        if matched_key and score >= 0.88:
             return rank_lookup.get(matched_key, {})
 
-    # 3. Looser token containment fallback
+    # 3. Safer token containment fallback
     for normalized in normalized_candidates:
         source_tokens = _token_set(normalized)
 
@@ -4734,8 +4774,10 @@ def _find_rank_data_for_person(possible_names, rank_lookup):
 
             common_tokens = source_tokens & candidate_tokens
 
-            # This helps when one file has middle name and the other does not.
-            if len(common_tokens) >= 2:
+            # Only allow fallback if first name and last name are safe.
+            if len(common_tokens) >= 2 and _is_safe_name_match(normalized, candidate_key):
                 return rank_lookup.get(candidate_key, {})
 
+    # VERY IMPORTANT:
+    # Without this, Python returns None and rank_data.get() will crash.
     return {}
