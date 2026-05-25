@@ -12,6 +12,7 @@ urlpatterns = [
     # Admin
     path('dashboard/login/', views.admin_login, name='admin_login'),
     path('dashboard/department/', views.admin_department, name='admin_department'),
+    path('faculty/update/', views.update_faculty_member, name='update_faculty_member'),
     path('dashboard/results-summary/', views.admin_results_summary, name='admin_results_summary'),
     path('dashboard/manage/', views.admin_manage, name='admin_manage'),
     path('dashboard/past-evaluations/', views.admin_past_evaluations, name='admin_past_evaluations'),

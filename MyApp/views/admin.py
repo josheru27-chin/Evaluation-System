@@ -880,6 +880,235 @@ def delete_department(request, dept_id):
     messages.success(request, f"Department '{department_name}' was deleted successfully.")
     return redirect("admin_department")
 
+@role_required("UITC", "ADAA")
+def update_faculty_member(request):
+    if request.method != "POST":
+        return redirect("admin_department")
+
+    faculty_id = request.POST.get("faculty_id")
+    faculty_name = (request.POST.get("faculty_name") or "").strip()
+    faculty_email = (request.POST.get("faculty_email") or "").strip()
+    schedule_id = request.POST.get("schedule_id")
+
+    if not faculty_id:
+        messages.error(request, "Faculty member not found.")
+        return redirect("admin_department")
+
+    faculty = get_object_or_404(FacultyMember, id=faculty_id)
+
+    if not faculty_name:
+        messages.error(request, "Faculty name is required.")
+        return redirect("admin_department")
+
+    # Store old name for DepartmentHead matching
+    old_name = faculty.name
+
+    # ───────────────────────────────────────────────
+    # 1. Update FacultyMember
+    # ───────────────────────────────────────────────
+    faculty.name = faculty_name
+    faculty.email = faculty_email
+    faculty.save()
+
+    # ───────────────────────────────────────────────
+    # 2. Update DepartmentHead (if this faculty is a head)
+    #    Match by: same department + same schedule + old name
+    # ───────────────────────────────────────────────
+    if faculty.schedule and faculty.department:
+        try:
+            head = DepartmentHead.objects.filter(
+                schedule=faculty.schedule,
+                department=faculty.department,
+                name=old_name
+            ).first()
+
+            if head:
+                head.name = faculty_name
+                head.email = faculty_email
+                head.save()
+        except Exception:
+            pass
+
+    # ───────────────────────────────────────────────
+    # 3. Update FacultyEvaluation where this faculty is EVALUATEE
+    #    Update BY FOREIGN KEY — not by name matching!
+    # ───────────────────────────────────────────────
+    try:
+        FacultyEvaluation.objects.filter(
+            evaluatee_faculty=faculty
+        ).update(
+            evaluatee_name=faculty_name
+        )
+    except Exception:
+        pass
+
+    # ───────────────────────────────────────────────
+    # 4. Update FacultyEvaluation where this faculty is EVALUATOR
+    #    (via their DepartmentHead role)
+    # ───────────────────────────────────────────────
+    try:
+        if faculty.schedule and faculty.department:
+            head = DepartmentHead.objects.filter(
+                schedule=faculty.schedule,
+                department=faculty.department,
+                name=faculty_name  # already updated above
+            ).first()
+
+            if head:
+                FacultyEvaluation.objects.filter(
+                    evaluator_head=head
+                ).update(
+                    evaluator_name=faculty_name,
+                    evaluator_department=faculty.department.name if faculty.department else ""
+                )
+    except Exception:
+        pass
+
+    # ───────────────────────────────────────────────
+    # 5. Update FacultyEvaluationResponse — EVALUATEE side
+    #    We must find all evaluations for this faculty, then update responses
+    # ───────────────────────────────────────────────
+    try:
+        FacultyEvaluationResponse.objects.filter(
+            evaluation__evaluatee_faculty=faculty
+        ).update(
+            evaluatee_name=faculty_name
+        )
+    except Exception:
+        pass
+
+    # ───────────────────────────────────────────────
+    # 6. Update FacultyEvaluationResponse — EVALUATOR side
+    # ───────────────────────────────────────────────
+    try:
+        if faculty.schedule and faculty.department:
+            head = DepartmentHead.objects.filter(
+                schedule=faculty.schedule,
+                department=faculty.department,
+                name=faculty_name
+            ).first()
+
+            if head:
+                FacultyEvaluationResponse.objects.filter(
+                    evaluation__evaluator_head=head
+                ).update(
+                    evaluator_name=faculty_name
+                )
+    except Exception:
+        pass
+
+    # ───────────────────────────────────────────────
+    # 7. Update HeadEvaluation — EVALUATEE side
+    #    Find the DepartmentHead for this faculty, then update HeadEvaluation
+    # ───────────────────────────────────────────────
+    try:
+        if faculty.schedule and faculty.department:
+            head = DepartmentHead.objects.filter(
+                schedule=faculty.schedule,
+                department=faculty.department,
+                name=faculty_name
+            ).first()
+
+            if head:
+                HeadEvaluation.objects.filter(
+                    evaluatee_head=head
+                ).update(
+                    evaluatee_name=faculty_name
+                )
+    except Exception:
+        pass
+
+    # ───────────────────────────────────────────────
+    # 8. Update HeadEvaluationResponse — EVALUATEE side
+    # ───────────────────────────────────────────────
+    try:
+        if faculty.schedule and faculty.department:
+            head = DepartmentHead.objects.filter(
+                schedule=faculty.schedule,
+                department=faculty.department,
+                name=faculty_name
+            ).first()
+
+            if head:
+                HeadEvaluationResponse.objects.filter(
+                    evaluation__evaluatee_head=head
+                ).update(
+                    evaluatee_name=faculty_name
+                )
+    except Exception:
+        pass
+
+    # ───────────────────────────────────────────────
+    # 9. Update HeadEvaluationResponse — EVALUATOR side
+    #    (if this faculty evaluates as an officer)
+    # ───────────────────────────────────────────────
+    try:
+        if faculty.schedule and faculty.department:
+            head = DepartmentHead.objects.filter(
+                schedule=faculty.schedule,
+                department=faculty.department,
+                name=faculty_name
+            ).first()
+
+            if head:
+                HeadEvaluationResponse.objects.filter(
+                    evaluation__evaluator_officer__name=faculty_name
+                ).update(
+                    evaluator_name=faculty_name
+                )
+    except Exception:
+        pass
+
+    # ───────────────────────────────────────────────
+    # 10. Update OfficeEvaluation / OfficeEvaluationResponse
+    #     Check if this faculty has an EvaluationOfficer role
+    # ───────────────────────────────────────────────
+    try:
+        if faculty.schedule:
+            officer = EvaluationOfficer.objects.filter(
+                schedule=faculty.schedule,
+                name=old_name
+            ).first()
+
+            if officer:
+                officer.name = faculty_name
+                officer.email = faculty_email
+                officer.save()
+
+                OfficeEvaluation.objects.filter(
+                    evaluatee_officer=officer
+                ).update(
+                    evaluatee_name=faculty_name
+                )
+                OfficeEvaluation.objects.filter(
+                    evaluator_officer=officer
+                ).update(
+                    evaluator_name=faculty_name
+                )
+
+                OfficeEvaluationResponse.objects.filter(
+                    evaluation__evaluatee_officer=officer
+                ).update(
+                    evaluatee_name=faculty_name
+                )
+                OfficeEvaluationResponse.objects.filter(
+                    evaluation__evaluator_officer=officer
+                ).update(
+                    evaluator_name=faculty_name
+                )
+    except Exception:
+        pass
+
+    messages.success(
+        request,
+        f"Faculty member '{faculty_name}' updated successfully across all related records."
+    )
+
+    redirect_url = reverse("admin_department")
+    if schedule_id:
+        redirect_url = f"{redirect_url}?schedule={schedule_id}"
+    return redirect(redirect_url)
+
 @role_required("UITC", "ADAA", "STAFF")
 def admin_results_summary(request):
     schedules = EvaluationSchedule.objects.all().order_by("-start_datetime", "-created_at")
