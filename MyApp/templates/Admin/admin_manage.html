@@ -443,22 +443,20 @@
                     </td>
                     <td class="text-end">
                         <div class="action-group">
-                            {% if item.computed_status == "Open" %}
-                            <button
-                                type="button"
-                                class="btn-icon-soft editScheduleBtn"
-                                title="Edit Schedule"
-                                data-id="{{ item.id }}"
-                                data-title="{{ item.title }}"
-                                data-academic_year="{{ item.academic_year }}"
-                                data-semester="{{ item.semester }}"
-                                data-start="{{ item.start_datetime|date:'Y-m-d\\TH:i' }}"
-                                data-end="{{ item.end_datetime|date:'Y-m-d\\TH:i' }}"
-                                data-notes="{{ item.notes|default_if_none:''|escapejs }}"
-                            >
-                                <i class="bi bi-pencil-square"></i>
-                            </button>
-                            {% endif %}
+                                <button
+                                    type="button"
+                                    class="btn-icon-soft editScheduleBtn"
+                                    title="Edit Schedule"
+                                    data-id="{{ item.id }}"
+                                    data-title="{{ item.title }}"
+                                    data-academic_year="{{ item.academic_year }}"
+                                    data-semester="{{ item.semester }}"
+                                    data-start="{{ item.start_datetime|date:'Y-m-d\\TH:i' }}"
+                                    data-end="{{ item.end_datetime|date:'Y-m-d\\TH:i' }}"
+                                    data-notes="{{ item.notes|default_if_none:''|escapejs }}"
+                                >
+                                    <i class="bi bi-pencil-square"></i>
+                                </button>
 
                             <button
                                 type="button"
@@ -563,13 +561,17 @@
                         <div class="col-md-6">
                             <label class="form-label">Opening Date and Time</label>
                             <input type="datetime-local" id="edit_start_datetime" name="start_datetime" class="form-control" required>
-                            <small class="text-muted mt-1 d-block" id="editStartDateHint">Cannot select past dates.</small>
+                            <small class="text-muted mt-1 d-block" id="editStartDateHint">
+                                Old dates are allowed when editing. Keep this unchanged if you only need to update the semester or details.
+                            </small>                        
                         </div>
 
                         <div class="col-md-6">
                             <label class="form-label">Closing Date and Time</label>
                             <input type="datetime-local" id="edit_end_datetime" name="end_datetime" class="form-control" required>
-                            <small class="text-muted mt-1 d-block" id="editEndDateHint">Must be at least 12 hours after the opening date.</small>
+                            <small class="text-muted mt-1 d-block" id="editEndDateHint">
+                                Old dates are allowed when editing. Closing date must only be later than opening date.
+                            </small>                        
                         </div>
 
                         <div class="col-lg-8">
@@ -770,21 +772,22 @@
         const now = new Date();
         const todayLocalISO = toLocalISOString(now);
 
-        // Main form: start cannot be in the past
+        // Create form only: prevent past dates when creating new schedule
         if (startInput) {
             startInput.min = todayLocalISO;
         }
-        // Main form: end initially cannot be in the past either
+
         if (endInput) {
             endInput.min = todayLocalISO;
         }
 
-        // Edit modal: same rules
+        // Edit modal: everything must be editable, including old dates
         if (editStartInput) {
-            editStartInput.min = todayLocalISO;
+            editStartInput.removeAttribute('min');
         }
+
         if (editEndInput) {
-            editEndInput.min = todayLocalISO;
+            editEndInput.removeAttribute('min');
         }
     }
 
@@ -834,25 +837,16 @@
         if (editEndInput) editEndInput.value = button.dataset.end || '';
         if (editEvaluationNotesInput) editEvaluationNotesInput.value = button.dataset.notes || '';
 
-        // Apply date constraints for edit modal
+        // Edit modal: everything is editable, including old opening and closing dates.
+        // No min-date restriction is applied here.
         if (editStartInput) {
-            const now = new Date();
-            editStartInput.min = toLocalISOString(now);
-
-            // Set end min to 12 hours after start (or today if no start)
-            if (editStartInput.value) {
-                const minEnd = addTwelveHours(editStartInput.value);
-                editEndInput.min = minEnd;
-                // Suggest 12 hours after if closing date is empty or invalid
-                if (!editEndInput.value) {
-                    editEndInput.value = minEnd;
-                } else if (new Date(editEndInput.value) < new Date(minEnd)) {
-                    editEndInput.value = '';
-                }
-            } else {
-                editEndInput.min = toLocalISOString(now);
-            }
+            editStartInput.removeAttribute('min');
         }
+
+        if (editEndInput) {
+            editEndInput.removeAttribute('min');
+        }
+
         updateEditDurationPreview();
 
         if (editModalEl && typeof bootstrap !== 'undefined') {
@@ -961,11 +955,7 @@
         }
 
         if (editStartInput) {
-            editStartInput.addEventListener('change', function () {
-                updateEndMinFromStart(editStartInput, editEndInput);
-                updateEditDurationPreview();
-            });
-
+            editStartInput.addEventListener('change', updateEditDurationPreview);
             editStartInput.addEventListener('input', updateEditDurationPreview);
         }
 

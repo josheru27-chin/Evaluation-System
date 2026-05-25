@@ -661,23 +661,29 @@ def admin_manage(request):
                 )
                 return redirect("admin_manage")
 
-            # ONLY ONE SCHEDULE TOTAL IN THE SYSTEM
+            # ONLY ONE OPEN SCHEDULE AT A TIME
+            # This only blocks if the schedule being saved would become Open right now.
             now = timezone.localtime(timezone.now())
 
-            existing_schedule = EvaluationSchedule.objects.filter(
-                start_datetime__lte=now,
-                end_datetime__gte=now
+            submitted_schedule_will_be_open_now = (
+                start_datetime <= now <= end_datetime
             )
 
-            if schedule_id:
-                existing_schedule = existing_schedule.exclude(id=schedule_id)
-
-            if existing_schedule.exists():
-                messages.error(
-                    request,
-                    "Only one evaluation schedule is allowed. Wait for it to finish before creating a new one."
+            if submitted_schedule_will_be_open_now:
+                existing_schedule = EvaluationSchedule.objects.filter(
+                    start_datetime__lte=now,
+                    end_datetime__gte=now
                 )
-                return redirect("admin_manage")
+
+                if schedule_id:
+                    existing_schedule = existing_schedule.exclude(id=schedule_id)
+
+                if existing_schedule.exists():
+                    messages.error(
+                        request,
+                        "Only one evaluation schedule can be open at a time."
+                    )
+                    return redirect("admin_manage")
 
             if schedule_id:
                 schedule = get_object_or_404(EvaluationSchedule, id=schedule_id)
